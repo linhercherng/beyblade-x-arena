@@ -11,6 +11,7 @@ export interface TopReport {
   rpm: number;
 }
 export interface Round {
+  engineVersion?: 1 | 2;
   index: number;
   slot: number;
   seed: number;
@@ -71,6 +72,7 @@ export function applyRound(
   if (m.winner !== null) throw new Error("此局已結束");
   const beys = [m.teams[0][m.slot], m.teams[1][m.slot]] as [string, string];
   m.rounds.push({
+    engineVersion: battle?.version ?? 2,
     index: m.rounds.length + 1,
     slot: m.slot,
     seed: roundSeed(m),

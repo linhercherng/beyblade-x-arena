@@ -1,104 +1,384 @@
 {
-  "simulations": 800,
-  "minSeconds": 1.4416666666666667,
-  "maxSeconds": 41.43333333333333,
-  "dashes": 690,
-  "finishes": {
-    "spin": 675,
-    "burst": 85,
-    "over": 33,
-    "extreme": 7
+  "engineVersion": 2,
+  "method": "四類型等量對手、每對互換玩家側；平手計入出戰分母，另列0.5分制。校準與驗收使用不同種子。蓄力覆蓋遊戲可用0.65–1，三個落點與0–30度傾角。",
+  "tuning": {
+    "friction": 0.034,
+    "staminaFriction": 0.0001,
+    "impactSpin": 0.0004,
+    "burstLoss": 18,
+    "lip": 2,
+    "gyroLift": 60,
+    "attackSpeed": 4.5
   },
-  "pairs": {
-    "attack vs attack": {
-      "wins": 33,
-      "losses": 43,
-      "draws": 4,
-      "seconds": 797.3666666666667,
-      "count": 80,
-      "winRate": 41.3,
-      "meanSeconds": 10
+  "calibration": {
+    "samples": 256,
+    "firstSeed": 1,
+    "battles": 4096,
+    "minSeconds": 16.358,
+    "maxSeconds": 38.408,
+    "meanSeconds": 27.768,
+    "p05": 23,
+    "p95": 33.758,
+    "outsideTarget": 0,
+    "finishes": {
+      "spin": 3856,
+      "burst": 239,
+      "over": 1,
+      "extreme": 0
     },
-    "attack vs defense": {
-      "wins": 1,
-      "losses": 79,
-      "draws": 0,
-      "seconds": 1551.7333333333338,
-      "count": 80,
-      "winRate": 1.3,
-      "meanSeconds": 19.4
+    "dashes": 10945,
+    "types": {
+      "attack": {
+        "played": 2048,
+        "wins": 1004,
+        "draws": 2,
+        "points": 1005,
+        "winRate": 49.023,
+        "scoreRate": 49.072
+      },
+      "defense": {
+        "played": 2048,
+        "wins": 938,
+        "draws": 2,
+        "points": 939,
+        "winRate": 45.801,
+        "scoreRate": 45.85
+      },
+      "stamina": {
+        "played": 2048,
+        "wins": 1186,
+        "draws": 0,
+        "points": 1186,
+        "winRate": 57.91,
+        "scoreRate": 57.91
+      },
+      "balance": {
+        "played": 2048,
+        "wins": 965,
+        "draws": 2,
+        "points": 966,
+        "winRate": 47.119,
+        "scoreRate": 47.168
+      }
     },
-    "attack vs stamina": {
-      "wins": 64,
-      "losses": 16,
-      "draws": 0,
-      "seconds": 647.4583333333333,
-      "count": 80,
-      "winRate": 80,
-      "meanSeconds": 8.1
-    },
-    "attack vs balance": {
-      "wins": 4,
-      "losses": 76,
-      "draws": 0,
-      "seconds": 1507.6749999999995,
-      "count": 80,
-      "winRate": 5,
-      "meanSeconds": 18.8
-    },
-    "defense vs defense": {
-      "wins": 45,
-      "losses": 35,
-      "draws": 0,
-      "seconds": 2255.7916666666665,
-      "count": 80,
-      "winRate": 56.3,
-      "meanSeconds": 28.2
-    },
-    "defense vs stamina": {
-      "wins": 0,
-      "losses": 80,
-      "draws": 0,
-      "seconds": 2316.774999999999,
-      "count": 80,
-      "winRate": 0,
-      "meanSeconds": 29
-    },
-    "defense vs balance": {
-      "wins": 8,
-      "losses": 72,
-      "draws": 0,
-      "seconds": 2236.9416666666666,
-      "count": 80,
-      "winRate": 10,
-      "meanSeconds": 28
-    },
-    "stamina vs stamina": {
-      "wins": 42,
-      "losses": 37,
-      "draws": 1,
-      "seconds": 3090.7750000000005,
-      "count": 80,
-      "winRate": 52.5,
-      "meanSeconds": 38.6
-    },
-    "stamina vs balance": {
-      "wins": 80,
-      "losses": 0,
-      "draws": 0,
-      "seconds": 2412.9916666666677,
-      "count": 80,
-      "winRate": 100,
-      "meanSeconds": 30.2
-    },
-    "balance vs balance": {
-      "wins": 37,
-      "losses": 43,
-      "draws": 0,
-      "seconds": 2292.299999999999,
-      "count": 80,
-      "winRate": 46.3,
-      "meanSeconds": 28.7
+    "pairs": {
+      "attack:attack": {
+        "played": 512,
+        "wins": 256,
+        "draws": 0,
+        "seconds": 13387.08333333333,
+        "winRate": 50,
+        "meanSeconds": 26.147
+      },
+      "attack:defense": {
+        "played": 512,
+        "wins": 270,
+        "draws": 1,
+        "seconds": 13744.891666666676,
+        "winRate": 52.734,
+        "meanSeconds": 26.845
+      },
+      "defense:attack": {
+        "played": 512,
+        "wins": 241,
+        "draws": 1,
+        "seconds": 13744.891666666676,
+        "winRate": 47.07,
+        "meanSeconds": 26.845
+      },
+      "attack:stamina": {
+        "played": 512,
+        "wins": 210,
+        "draws": 0,
+        "seconds": 13787.450000000003,
+        "winRate": 41.016,
+        "meanSeconds": 26.929
+      },
+      "stamina:attack": {
+        "played": 512,
+        "wins": 302,
+        "draws": 0,
+        "seconds": 13787.450000000003,
+        "winRate": 58.984,
+        "meanSeconds": 26.929
+      },
+      "attack:balance": {
+        "played": 512,
+        "wins": 268,
+        "draws": 1,
+        "seconds": 13805.79166666666,
+        "winRate": 52.344,
+        "meanSeconds": 26.964
+      },
+      "balance:attack": {
+        "played": 512,
+        "wins": 243,
+        "draws": 1,
+        "seconds": 13805.79166666666,
+        "winRate": 47.461,
+        "meanSeconds": 26.964
+      },
+      "defense:defense": {
+        "played": 512,
+        "wins": 256,
+        "draws": 0,
+        "seconds": 14339.666666666684,
+        "winRate": 50,
+        "meanSeconds": 28.007
+      },
+      "defense:stamina": {
+        "played": 512,
+        "wins": 192,
+        "draws": 0,
+        "seconds": 14738.699999999988,
+        "winRate": 37.5,
+        "meanSeconds": 28.787
+      },
+      "stamina:defense": {
+        "played": 512,
+        "wins": 320,
+        "draws": 0,
+        "seconds": 14738.699999999988,
+        "winRate": 62.5,
+        "meanSeconds": 28.787
+      },
+      "defense:balance": {
+        "played": 512,
+        "wins": 249,
+        "draws": 1,
+        "seconds": 14328.700000000026,
+        "winRate": 48.633,
+        "meanSeconds": 27.986
+      },
+      "balance:defense": {
+        "played": 512,
+        "wins": 262,
+        "draws": 1,
+        "seconds": 14328.700000000026,
+        "winRate": 51.172,
+        "meanSeconds": 27.986
+      },
+      "stamina:stamina": {
+        "played": 512,
+        "wins": 256,
+        "draws": 0,
+        "seconds": 15174.649999999994,
+        "winRate": 50,
+        "meanSeconds": 29.638
+      },
+      "stamina:balance": {
+        "played": 512,
+        "wins": 308,
+        "draws": 0,
+        "seconds": 14691.558333333347,
+        "winRate": 60.156,
+        "meanSeconds": 28.694
+      },
+      "balance:stamina": {
+        "played": 512,
+        "wins": 204,
+        "draws": 0,
+        "seconds": 14691.558333333347,
+        "winRate": 39.844,
+        "meanSeconds": 28.694
+      },
+      "balance:balance": {
+        "played": 512,
+        "wins": 256,
+        "draws": 0,
+        "seconds": 14379.566666666662,
+        "winRate": 50,
+        "meanSeconds": 28.085
+      }
     }
+  },
+  "validation": {
+    "samples": 1024,
+    "firstSeed": 20261112,
+    "battles": 16384,
+    "minSeconds": 15.083,
+    "maxSeconds": 39.25,
+    "meanSeconds": 27.78,
+    "p05": 22.992,
+    "p95": 33.808,
+    "outsideTarget": 0,
+    "finishes": {
+      "spin": 15427,
+      "burst": 956,
+      "over": 0,
+      "extreme": 1
+    },
+    "dashes": 43750,
+    "types": {
+      "attack": {
+        "played": 8192,
+        "wins": 4034,
+        "draws": 7,
+        "points": 4037.5,
+        "winRate": 49.243,
+        "scoreRate": 49.286
+      },
+      "defense": {
+        "played": 8192,
+        "wins": 3797,
+        "draws": 3,
+        "points": 3798.5,
+        "winRate": 46.35,
+        "scoreRate": 46.368
+      },
+      "stamina": {
+        "played": 8192,
+        "wins": 4613,
+        "draws": 6,
+        "points": 4616,
+        "winRate": 56.311,
+        "scoreRate": 56.348
+      },
+      "balance": {
+        "played": 8192,
+        "wins": 3930,
+        "draws": 4,
+        "points": 3932,
+        "winRate": 47.974,
+        "scoreRate": 47.998
+      }
+    },
+    "pairs": {
+      "attack:attack": {
+        "played": 2048,
+        "wins": 1024,
+        "draws": 0,
+        "seconds": 53670.91666666645,
+        "winRate": 50,
+        "meanSeconds": 26.207
+      },
+      "attack:defense": {
+        "played": 2048,
+        "wins": 1086,
+        "draws": 2,
+        "seconds": 55292.25833333338,
+        "winRate": 53.027,
+        "meanSeconds": 26.998
+      },
+      "defense:attack": {
+        "played": 2048,
+        "wins": 960,
+        "draws": 2,
+        "seconds": 55292.25833333338,
+        "winRate": 46.875,
+        "meanSeconds": 26.998
+      },
+      "attack:stamina": {
+        "played": 2048,
+        "wins": 870,
+        "draws": 2,
+        "seconds": 54563.97500000003,
+        "winRate": 42.48,
+        "meanSeconds": 26.643
+      },
+      "stamina:attack": {
+        "played": 2048,
+        "wins": 1176,
+        "draws": 2,
+        "seconds": 54563.97500000003,
+        "winRate": 57.422,
+        "meanSeconds": 26.643
+      },
+      "attack:balance": {
+        "played": 2048,
+        "wins": 1054,
+        "draws": 3,
+        "seconds": 55447.21666666668,
+        "winRate": 51.465,
+        "meanSeconds": 27.074
+      },
+      "balance:attack": {
+        "played": 2048,
+        "wins": 991,
+        "draws": 3,
+        "seconds": 55447.21666666668,
+        "winRate": 48.389,
+        "meanSeconds": 27.074
+      },
+      "defense:defense": {
+        "played": 2048,
+        "wins": 1024,
+        "draws": 0,
+        "seconds": 57400.94999999989,
+        "winRate": 50,
+        "meanSeconds": 28.028
+      },
+      "defense:stamina": {
+        "played": 2048,
+        "wins": 833,
+        "draws": 1,
+        "seconds": 58805.47499999987,
+        "winRate": 40.674,
+        "meanSeconds": 28.714
+      },
+      "stamina:defense": {
+        "played": 2048,
+        "wins": 1214,
+        "draws": 1,
+        "seconds": 58805.47499999987,
+        "winRate": 59.277,
+        "meanSeconds": 28.714
+      },
+      "defense:balance": {
+        "played": 2048,
+        "wins": 980,
+        "draws": 0,
+        "seconds": 57554.491666666596,
+        "winRate": 47.852,
+        "meanSeconds": 28.103
+      },
+      "balance:defense": {
+        "played": 2048,
+        "wins": 1068,
+        "draws": 0,
+        "seconds": 57554.491666666596,
+        "winRate": 52.148,
+        "meanSeconds": 28.103
+      },
+      "stamina:stamina": {
+        "played": 2048,
+        "wins": 1023,
+        "draws": 2,
+        "seconds": 60600.549999999945,
+        "winRate": 49.951,
+        "meanSeconds": 29.59
+      },
+      "stamina:balance": {
+        "played": 2048,
+        "wins": 1200,
+        "draws": 1,
+        "seconds": 58869.79166666661,
+        "winRate": 58.594,
+        "meanSeconds": 28.745
+      },
+      "balance:stamina": {
+        "played": 2048,
+        "wins": 847,
+        "draws": 1,
+        "seconds": 58869.79166666661,
+        "winRate": 41.357,
+        "meanSeconds": 28.745
+      },
+      "balance:balance": {
+        "played": 2048,
+        "wins": 1024,
+        "draws": 0,
+        "seconds": 57563.43333333331,
+        "winRate": 50,
+        "meanSeconds": 28.107
+      }
+    }
+  },
+  "edges": {
+    "battles": 3984,
+    "minSeconds": 15.041666666666666,
+    "maxSeconds": 39.61666666666667,
+    "outsideTarget": 0,
+    "failures": []
   }
 }

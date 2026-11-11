@@ -9,12 +9,10 @@ export default defineConfig({
     channel: "chrome",
     headless: true,
     screenshot: "only-on-failure",
-    trace: "retain-on-failure",
+    trace: "off",
     launchOptions: {
       args: [
         "--enable-webgl",
-        "--use-gl=angle",
-        "--use-angle=swiftshader",
         "--enable-unsafe-swiftshader",
       ],
     },

@@ -180,6 +180,9 @@ export function validateMatch(v: unknown): Match {
   for (const [index, r] of v.rounds.entries()) {
     if (
       !isObject(r) ||
+      (r.engineVersion !== undefined &&
+        r.engineVersion !== 1 &&
+        r.engineVersion !== 2) ||
       r.index !== index + 1 ||
       r.slot !== slot ||
       !integer(r.seed, 0xffffffff) ||

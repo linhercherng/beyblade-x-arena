@@ -1,0 +1,666 @@
+{
+  "bx-01-dran-sword": {
+    "atk": 93,
+    "def": 48,
+    "sta": 49,
+    "dash": 88,
+    "burst": 80,
+    "weight": 67
+  },
+  "bx-02-hells-scythe": {
+    "atk": 70,
+    "def": 70,
+    "sta": 75,
+    "dash": 65,
+    "burst": 81,
+    "weight": 63
+  },
+  "bx-03-wizard-arrow": {
+    "atk": 43,
+    "def": 64,
+    "sta": 99,
+    "dash": 38,
+    "burst": 59,
+    "weight": 70
+  },
+  "bx-04-knight-shield": {
+    "atk": 42,
+    "def": 85,
+    "sta": 61,
+    "dash": 33,
+    "burst": 91,
+    "weight": 71
+  },
+  "bx-13-knight-lance": {
+    "atk": 48,
+    "def": 95,
+    "sta": 62,
+    "dash": 33,
+    "burst": 91,
+    "weight": 75
+  },
+  "bx-14-shark-edge": {
+    "atk": 90,
+    "def": 46,
+    "sta": 47,
+    "dash": 88,
+    "burst": 80,
+    "weight": 85
+  },
+  "bx-15-leon-claw": {
+    "atk": 65,
+    "def": 64,
+    "sta": 67,
+    "dash": 65,
+    "burst": 80,
+    "weight": 67
+  },
+  "bx-16-viper-tail": {
+    "atk": 33,
+    "def": 58,
+    "sta": 91,
+    "dash": 38,
+    "burst": 58,
+    "weight": 59
+  },
+  "bx-19-rhino-horn": {
+    "atk": 41,
+    "def": 89,
+    "sta": 60,
+    "dash": 33,
+    "burst": 91,
+    "weight": 84
+  },
+  "bx-20-dran-dagger": {
+    "atk": 82,
+    "def": 45,
+    "sta": 50,
+    "dash": 88,
+    "burst": 80,
+    "weight": 82
+  },
+  "bx-21-hells-chain": {
+    "atk": 72,
+    "def": 75,
+    "sta": 73,
+    "dash": 65,
+    "burst": 80,
+    "weight": 81
+  },
+  "bx-23-phoenix-wing": {
+    "atk": 89,
+    "def": 38,
+    "sta": 38,
+    "dash": 97,
+    "burst": 76,
+    "weight": 76
+  },
+  "bx-24-wyvern-gale": {
+    "atk": 40,
+    "def": 63,
+    "sta": 91,
+    "dash": 47,
+    "burst": 58,
+    "weight": 57
+  },
+  "bx-26-unicorn-sting": {
+    "atk": 64,
+    "def": 72,
+    "sta": 71,
+    "dash": 74,
+    "burst": 80,
+    "weight": 83
+  },
+  "bx-27-sphinx-cowl": {
+    "atk": 41,
+    "def": 96,
+    "sta": 70,
+    "dash": 42,
+    "burst": 87,
+    "weight": 79
+  },
+  "bx-31-tyranno-beat": {
+    "atk": 93,
+    "def": 45,
+    "sta": 43,
+    "dash": 88,
+    "burst": 78,
+    "weight": 80
+  },
+  "bx-33-weiss-tiger": {
+    "atk": 74,
+    "def": 75,
+    "sta": 78,
+    "dash": 65,
+    "burst": 81,
+    "weight": 83
+  },
+  "bx-34-cobalt-dragoon": {
+    "atk": 92,
+    "def": 41,
+    "sta": 44,
+    "dash": 88,
+    "burst": 81,
+    "weight": 63
+  },
+  "bx-35-black-shell": {
+    "atk": 46,
+    "def": 89,
+    "sta": 70,
+    "dash": 33,
+    "burst": 94,
+    "weight": 88
+  },
+  "bx-36-whale-wave": {
+    "atk": 71,
+    "def": 67,
+    "sta": 75,
+    "dash": 65,
+    "burst": 77,
+    "weight": 70
+  },
+  "bx-37-bear-scratch": {
+    "atk": 91,
+    "def": 42,
+    "sta": 38,
+    "dash": 88,
+    "burst": 79,
+    "weight": 82
+  },
+  "bx-38-crimson-garuda": {
+    "atk": 64,
+    "def": 69,
+    "sta": 71,
+    "dash": 65,
+    "burst": 79,
+    "weight": 64
+  },
+  "bx-39-shelter-drake": {
+    "atk": 64,
+    "def": 66,
+    "sta": 75,
+    "dash": 74,
+    "burst": 76,
+    "weight": 77
+  },
+  "bx-44-tricera-press": {
+    "atk": 44,
+    "def": 91,
+    "sta": 66,
+    "dash": 33,
+    "burst": 89,
+    "weight": 73
+  },
+  "bx-45-samurai-calibur": {
+    "atk": 63,
+    "def": 72,
+    "sta": 74,
+    "dash": 65,
+    "burst": 78,
+    "weight": 74
+  },
+  "bx-46-cobalt-drake": {
+    "atk": 87,
+    "def": 48,
+    "sta": 38,
+    "dash": 88,
+    "burst": 76,
+    "weight": 78
+  },
+  "bx-46-goat-tackle": {
+    "atk": 65,
+    "def": 73,
+    "sta": 71,
+    "dash": 65,
+    "burst": 77,
+    "weight": 72
+  },
+  "bx-48-mammoth-tusk": {
+    "atk": 43,
+    "def": 97,
+    "sta": 69,
+    "dash": 33,
+    "burst": 92,
+    "weight": 73
+  },
+  "bx-49-dran-strike": {
+    "atk": 93,
+    "def": 41,
+    "sta": 44,
+    "dash": 88,
+    "burst": 81,
+    "weight": 74
+  },
+  "bx-50-heavens-ring": {
+    "atk": 41,
+    "def": 97,
+    "sta": 68,
+    "dash": 33,
+    "burst": 94,
+    "weight": 86
+  },
+  "bx-52-luster-dragoon": {
+    "atk": 93,
+    "def": 43,
+    "sta": 47,
+    "dash": 88,
+    "burst": 78,
+    "weight": 77
+  },
+  "bx-54-sieg-superion": {
+    "atk": 73,
+    "def": 68,
+    "sta": 75,
+    "dash": 65,
+    "burst": 82,
+    "weight": 65
+  },
+  "ux-01-dran-buster": {
+    "atk": 91,
+    "def": 42,
+    "sta": 42,
+    "dash": 88,
+    "burst": 82,
+    "weight": 74
+  },
+  "ux-02-hells-hammer": {
+    "atk": 75,
+    "def": 75,
+    "sta": 70,
+    "dash": 65,
+    "burst": 80,
+    "weight": 79
+  },
+  "ux-03-wizard-rod": {
+    "atk": 41,
+    "def": 64,
+    "sta": 94,
+    "dash": 38,
+    "burst": 60,
+    "weight": 87
+  },
+  "ux-05-shinobi-shadow": {
+    "atk": 43,
+    "def": 93,
+    "sta": 62,
+    "dash": 33,
+    "burst": 93,
+    "weight": 98
+  },
+  "ux-06-leon-crest": {
+    "atk": 47,
+    "def": 89,
+    "sta": 61,
+    "dash": 42,
+    "burst": 92,
+    "weight": 100
+  },
+  "ux-07-phoenix-rudder": {
+    "atk": 37,
+    "def": 63,
+    "sta": 96,
+    "dash": 47,
+    "burst": 57,
+    "weight": 82
+  },
+  "ux-08-silver-wolf": {
+    "atk": 39,
+    "def": 63,
+    "sta": 98,
+    "dash": 38,
+    "burst": 59,
+    "weight": 73
+  },
+  "ux-09-samurai-saber": {
+    "atk": 90,
+    "def": 47,
+    "sta": 39,
+    "dash": 88,
+    "burst": 80,
+    "weight": 79
+  },
+  "ux-10-knight-mail": {
+    "atk": 42,
+    "def": 96,
+    "sta": 63,
+    "dash": 33,
+    "burst": 91,
+    "weight": 100
+  },
+  "ux-10-ptera-swing": {
+    "atk": 41,
+    "def": 60,
+    "sta": 96,
+    "dash": 38,
+    "burst": 58,
+    "weight": 66
+  },
+  "ux-11-impact-drake": {
+    "atk": 87,
+    "def": 37,
+    "sta": 43,
+    "dash": 88,
+    "burst": 76,
+    "weight": 99
+  },
+  "ux-12-ghost-circle": {
+    "atk": 44,
+    "def": 56,
+    "sta": 91,
+    "dash": 47,
+    "burst": 62,
+    "weight": 88
+  },
+  "ux-13-golem-rock": {
+    "atk": 47,
+    "def": 93,
+    "sta": 67,
+    "dash": 33,
+    "burst": 96,
+    "weight": 87
+  },
+  "ux-14-scorpio-spear": {
+    "atk": 69,
+    "def": 68,
+    "sta": 69,
+    "dash": 65,
+    "burst": 82,
+    "weight": 96
+  },
+  "ux-15-shark-scale": {
+    "atk": 82,
+    "def": 38,
+    "sta": 46,
+    "dash": 88,
+    "burst": 81,
+    "weight": 90
+  },
+  "ux-15-tyranno-roar": {
+    "atk": 90,
+    "def": 42,
+    "sta": 39,
+    "dash": 88,
+    "burst": 80,
+    "weight": 89
+  },
+  "ux-16-clock-mirage": {
+    "atk": 45,
+    "def": 63,
+    "sta": 94,
+    "dash": 38,
+    "burst": 57,
+    "weight": 76
+  },
+  "ux-17-meteor-dragoon": {
+    "atk": 93,
+    "def": 47,
+    "sta": 41,
+    "dash": 88,
+    "burst": 79,
+    "weight": 91
+  },
+  "ux-18-mummy-curse": {
+    "atk": 45,
+    "def": 93,
+    "sta": 67,
+    "dash": 33,
+    "burst": 92,
+    "weight": 96
+  },
+  "ux-19-bullet-griffon": {
+    "atk": 66,
+    "def": 76,
+    "sta": 68,
+    "dash": 65,
+    "burst": 80,
+    "weight": 85
+  },
+  "ux-20-glory-valkyrie": {
+    "atk": 86,
+    "def": 42,
+    "sta": 46,
+    "dash": 88,
+    "burst": 79,
+    "weight": 86
+  },
+  "ux-21-hells-nether": {
+    "atk": 68,
+    "def": 72,
+    "sta": 68,
+    "dash": 65,
+    "burst": 80,
+    "weight": 82
+  },
+  "ux-21-wyvern-hover": {
+    "atk": 39,
+    "def": 59,
+    "sta": 97,
+    "dash": 38,
+    "burst": 56,
+    "weight": 71
+  },
+  "bx-53-aero-pegasus": {
+    "atk": 84,
+    "def": 40,
+    "sta": 41,
+    "dash": 88,
+    "burst": 79,
+    "weight": 88
+  },
+  "cx-01-dran-brave-slash": {
+    "atk": 86,
+    "def": 44,
+    "sta": 49,
+    "dash": 88,
+    "burst": 78,
+    "weight": 76
+  },
+  "cx-02-wizard-arc-round": {
+    "atk": 41,
+    "def": 61,
+    "sta": 88,
+    "dash": 38,
+    "burst": 62,
+    "weight": 69
+  },
+  "cx-03-perseus-dark-bumper": {
+    "atk": 44,
+    "def": 97,
+    "sta": 61,
+    "dash": 33,
+    "burst": 89,
+    "weight": 94
+  },
+  "cx-05-hells-reaper-turn": {
+    "atk": 72,
+    "def": 70,
+    "sta": 78,
+    "dash": 65,
+    "burst": 79,
+    "weight": 87
+  },
+  "cx-05-rhino-reaper-charge": {
+    "atk": 39,
+    "def": 88,
+    "sta": 63,
+    "dash": 33,
+    "burst": 94,
+    "weight": 92
+  },
+  "cx-05-hells-arc-turn": {
+    "atk": 37,
+    "def": 63,
+    "sta": 99,
+    "dash": 38,
+    "burst": 59,
+    "weight": 67
+  },
+  "cx-06-fox-brush-jaggy": {
+    "atk": 90,
+    "def": 42,
+    "sta": 39,
+    "dash": 88,
+    "burst": 75,
+    "weight": 79
+  },
+  "cx-07-pegasus-blast-assault": {
+    "atk": 94,
+    "def": 47,
+    "sta": 44,
+    "dash": 88,
+    "burst": 79,
+    "weight": 81
+  },
+  "cx-08-cerberus-flame-wheel": {
+    "atk": 40,
+    "def": 63,
+    "sta": 95,
+    "dash": 38,
+    "burst": 58,
+    "weight": 62
+  },
+  "cx-08-whale-flame-massive": {
+    "atk": 66,
+    "def": 65,
+    "sta": 71,
+    "dash": 65,
+    "burst": 78,
+    "weight": 73
+  },
+  "cx-08-cerberus-dark-wheel": {
+    "atk": 86,
+    "def": 48,
+    "sta": 43,
+    "dash": 88,
+    "burst": 82,
+    "weight": 86
+  },
+  "cx-09-sol-eclipse-dual": {
+    "atk": 74,
+    "def": 65,
+    "sta": 71,
+    "dash": 65,
+    "burst": 79,
+    "weight": 77
+  },
+  "cx-10-wolf-hunt-free": {
+    "atk": 42,
+    "def": 55,
+    "sta": 99,
+    "dash": 38,
+    "burst": 65,
+    "weight": 80
+  },
+  "cx-11-emperor-might-heavy": {
+    "atk": 70,
+    "def": 65,
+    "sta": 67,
+    "dash": 65,
+    "burst": 80,
+    "weight": 88
+  },
+  "cx-12-phoenix-flare-zillion": {
+    "atk": 45,
+    "def": 97,
+    "sta": 66,
+    "dash": 33,
+    "burst": 87,
+    "weight": 90
+  },
+  "cx-13-bahamut-blitz-break-knuckle": {
+    "atk": 84,
+    "def": 37,
+    "sta": 40,
+    "dash": 88,
+    "burst": 83,
+    "weight": 86
+  },
+  "cx-14-knight-fortress-guard-vertical": {
+    "atk": 44,
+    "def": 87,
+    "sta": 59,
+    "dash": 33,
+    "burst": 89,
+    "weight": 100
+  },
+  "cx-15-ragna-rage-flow-erase": {
+    "atk": 38,
+    "def": 66,
+    "sta": 94,
+    "dash": 38,
+    "burst": 62,
+    "weight": 63
+  },
+  "cx-17-unicorn-delta-peak-odd": {
+    "atk": 67,
+    "def": 69,
+    "sta": 71,
+    "dash": 65,
+    "burst": 81,
+    "weight": 88
+  },
+  "cx-18-brachio-whip-outer-wheel": {
+    "atk": 36,
+    "def": 56,
+    "sta": 96,
+    "dash": 38,
+    "burst": 60,
+    "weight": 82
+  },
+  "cx-19-croco-tread-tough-quell": {
+    "atk": 47,
+    "def": 95,
+    "sta": 70,
+    "dash": 42,
+    "burst": 95,
+    "weight": 95
+  },
+  "cx-20-phoenix-force-weight-heavy": {
+    "atk": 68,
+    "def": 74,
+    "sta": 78,
+    "dash": 65,
+    "burst": 79,
+    "weight": 88
+  },
+  "ux-15-hells-brave-jaggy": {
+    "atk": 84,
+    "def": 45,
+    "sta": 43,
+    "dash": 97,
+    "burst": 80,
+    "weight": 73
+  },
+  "ux-18-pegasus-brush-massive": {
+    "atk": 47,
+    "def": 91,
+    "sta": 68,
+    "dash": 33,
+    "burst": 91,
+    "weight": 97
+  },
+  "ux-18-sol-brave-charge": {
+    "atk": 71,
+    "def": 67,
+    "sta": 73,
+    "dash": 65,
+    "burst": 76,
+    "weight": 86
+  },
+  "bx-50-wolf-flame-dual": {
+    "atk": 84,
+    "def": 48,
+    "sta": 40,
+    "dash": 88,
+    "burst": 75,
+    "weight": 87
+  },
+  "bx-50-cerberus-reaper-bumper": {
+    "atk": 39,
+    "def": 63,
+    "sta": 89,
+    "dash": 38,
+    "burst": 62,
+    "weight": 78
+  }
+}

@@ -14,6 +14,61 @@ import {
   createMatch,
   scoreMatch,
 } from "../src/match.ts";
+test("輕擦護牆只依實際法向衝量耗轉，不按每個tick扣固定轉速", () => {
+  const s = createBattle(
+    BEYS[0],
+    BEYS[1],
+    [
+      { power: 0.95, lane: 1, angle: 0 },
+      { power: 0.95, lane: 1, angle: 0 },
+    ],
+    1,
+  );
+  const t = s.tops[0];
+  for (let n = 0; n < 120; n++) {
+    t.x = 3;
+    t.z = 3;
+    t.vx = 0.01;
+    t.vz = 0.01;
+    t.hitUntil = 100;
+    stepBattle(s);
+  }
+  assert.ok(t.rpm > 0.9, `輕擦一秒後轉速 ${t.rpm}`);
+});
+test("新引擎仍能依物理狀態產生越界、極限及爆裂終結", () => {
+  const launches = [
+    { power: 0.95, lane: 1, angle: 0 },
+    { power: 0.95, lane: 1, angle: 0 },
+  ];
+  for (const finish of ["over", "extreme"] as const) {
+    const s = createBattle(BEYS[0], BEYS[1], launches, 2),
+      t = s.tops[0];
+    Object.assign(s.tops[1], { x: -1, z: -1 });
+    Object.assign(t, {
+      x: finish === "over" ? 4.12 : 0,
+      z: finish === "over" ? 0 : 4.12,
+      vx: finish === "over" ? 7 : 0,
+      vz: finish === "over" ? 0 : 7,
+      rpm: 0.05,
+      hitUntil: 100,
+    });
+    for (let i = 0; i < 30 && !s.result; i++) stepBattle(s);
+    assert.equal(s.result?.finish, finish);
+    assert.equal(s.result?.winner, 1);
+  }
+  const s = createBattle(BEYS[0], BEYS[1], launches, 2);
+  Object.assign(s.tops[0], {
+    x: -0.3,
+    z: 0,
+    vx: 5,
+    vz: 0,
+    rpm: 0.1,
+    burst: 0.01,
+  });
+  Object.assign(s.tops[1], { x: 0.3, z: 0, vx: -5, vz: 0, rpm: 0.1 });
+  stepBattle(s);
+  assert.equal(s.result?.finish, "burst");
+});
 
 test("企劃書完整 83 顆，型號重複仍有獨立 ID，零件合成數值有效", () => {
   assert.equal(BEYS.length, 83);

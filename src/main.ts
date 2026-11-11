@@ -1,4 +1,5 @@
 import "./style.css";
+import { PRODUCT_IMAGES } from "./appearance.ts";
 import {
   BEYS,
   TYPE,
@@ -124,21 +125,14 @@ const btn = (label: string, action: string, cls = "", extra = "") =>
 const tag = (b: Bey) =>
   `<span class="type-tag" style="--type:${b.color}">${TYPE[b.type].icon} ${TYPE[b.type].label}</span>`;
 function art(b: Bey, size = 100) {
-  const lobes =
-    b.type === "attack"
-      ? 3
-      : b.type === "defense"
-        ? 8
-        : b.type === "stamina"
-          ? 12
-          : 5;
-  const points = Array.from({ length: lobes * 4 }, (_, i) => {
-    const a = (i / (lobes * 4)) * Math.PI * 2,
-      r = i % 4 === 0 ? 43 : i % 4 === 1 ? 32 : 36;
-    return `${50 + Math.cos(a) * r},${50 + Math.sin(a) * r}`;
-  }).join(" ");
-  const uid = `g-${b.id}-${size}`;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" class="bey-art" aria-hidden="true"><defs><linearGradient id="${uid}" x2="1" y2="1"><stop stop-color="#f2f5f2"/><stop offset=".45" stop-color="#768492"/><stop offset=".7" stop-color="#d9e5df"/><stop offset="1" stop-color="#435669"/></linearGradient></defs><ellipse cx="50" cy="60" rx="35" ry="28" fill="#000" opacity=".3"/><g transform="translate(0 -3)"><polygon points="${points}" fill="url(#${uid})" stroke="#111e2b" stroke-width="2"/><circle cx="50" cy="50" r="28" fill="${b.color}"/><path d="M22 50L50 22 78 50 50 78z" fill="#142335" opacity=".5"/><circle cx="50" cy="50" r="17" fill="#172332" stroke="${b.color}" stroke-width="3"/><path d="M43 40l8 7 8-7-5 11 5 10-9-7-8 6 4-10z" fill="${b.color}"/><circle cx="50" cy="50" r="32" fill="none" stroke="#ecf9ef" stroke-opacity=".7" stroke-width="2"/></g></svg>`;
+  const image = PRODUCT_IMAGES[b.id];
+  const [x, y, w, h] = image.imageBounds;
+  const scale = 1 / Math.max(w * image.width, h * image.height);
+  const width = image.width * scale * 100,
+    height = image.height * scale * 100;
+  const left = 50 - (x + w / 2) * width,
+    top = 50 - (y + h / 2) * height;
+  return `<span class="bey-art product-photo ${image.transparent ? "" : "photo-white"}" style="--art-size:${size}px"><img src="${image.src}" alt="${safe(image.label)}" loading="lazy" decoding="async" style="width:${width}%;height:${height}%;left:${left}%;top:${top}%"/></span>`;
 }
 function radar(b: Bey) {
   const keys = Object.keys(STAT_LABEL) as (keyof Stats)[];
@@ -171,7 +165,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>原創造型・粉絲遊戲<br>版本 0.1.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.2.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -195,7 +189,7 @@ function home() {
   arena?.setBeys([BEYS[0], BEYS[11]]);
   const c = profile.modes.cpu[0];
   shell(
-    `${title("YOUR NEXT BATTLE STARTS HERE", "準備好，突破極限。", "選好你的三顆搭檔，讓每一次碰撞都決定勝負。", `<span class="season"><i></i> ARENA / 01</span>`)}<div class="home-layout"><section class="hero-arena"><div class="arena-corner"><span class="live-dot"></span> LIVE SIMULATION <span>原創 3D 競技場</span></div><div class="arena-copy"><span class="eyebrow">LET IT RIP.</span><h2>一擊，<br>扭轉戰局<span>。</span></h2><p>金屬碰撞、齒軌衝刺。<br>你的隊伍，你的致勝一瞬。</p></div><div id="stage" class="home-stage"></div><div class="hero-bottom"><span><i></i> REAL-TIME PHYSICS</span><span>拖曳競技場旋轉視角 ↔</span></div><div class="arena-watermark">X</div></section><section class="setup panel"><div class="section-index">01 <span>／ 選擇你的挑戰</span></div><h2>進入競技場</h2><p class="muted">三顆陀螺。四分定勝負。</p><div class="mode-options">${btn('<span class="mode-icon">↗</span><span><strong>單人挑戰</strong><small>1P vs CPU</small></span><span class="radio"></span>', "mode", "mode-card " + (mode === "cpu" ? "selected" : ""), 'data-value="cpu"')}${btn('<span class="mode-icon">⚔</span><span><strong>同機對戰</strong><small>1P vs 2P</small></span><span class="radio"></span>', "mode", "mode-card " + (mode === "local" ? "selected" : ""), 'data-value="local"')}</div><label class="field-label" for="difficulty">電腦難度</label><div class="difficulty-options">${Object.entries(
+    `${title("YOUR NEXT BATTLE STARTS HERE", "準備好，突破極限。", "選好你的三顆搭檔，讓每一次碰撞都決定勝負。", `<span class="season"><i></i> ARENA / 01</span>`)}<div class="home-layout"><section class="hero-arena"><div class="arena-corner"><span class="live-dot"></span> LIVE SIMULATION <span>3D 競技場</span></div><div class="arena-copy"><span class="eyebrow">LET IT RIP.</span><h2>一擊，<br>扭轉戰局<span>。</span></h2><p>金屬碰撞、齒軌衝刺。<br>你的隊伍，你的致勝一瞬。</p></div><div id="stage" class="home-stage"></div><div class="hero-bottom"><span><i></i> REAL-TIME PHYSICS</span><span>拖曳競技場旋轉視角 ↔</span></div><div class="arena-watermark">X</div></section><section class="setup panel"><div class="section-index">01 <span>／ 選擇你的挑戰</span></div><h2>進入競技場</h2><p class="muted">三顆陀螺。四分定勝負。</p><div class="mode-options">${btn('<span class="mode-icon">↗</span><span><strong>單人挑戰</strong><small>1P vs CPU</small></span><span class="radio"></span>', "mode", "mode-card " + (mode === "cpu" ? "selected" : ""), 'data-value="cpu"')}${btn('<span class="mode-icon">⚔</span><span><strong>同機對戰</strong><small>1P vs 2P</small></span><span class="radio"></span>', "mode", "mode-card " + (mode === "local" ? "selected" : ""), 'data-value="local"')}</div><label class="field-label" for="difficulty">電腦難度</label><div class="difficulty-options">${Object.entries(
       DIFFICULTY,
     )
       .map(([key, label]) =>
@@ -208,7 +202,7 @@ function home() {
       )
       .join(
         "",
-      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>83 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 原創模型與合成音效</small></div>`,
+      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>83 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 實物參考與合成音效</small></div>`,
   );
 }
 function filters() {
@@ -229,7 +223,7 @@ function cards() {
     .map((b) => {
       const index = teams[teamPlayer].findIndex((v) => v.id === b.id),
         selected = screen === "team" && index >= 0;
-      return `<article class="bey-card ${selected ? "chosen" : ""}" style="--type:${b.color}"><div class="card-meta"><span>${b.code} <em>${b.line}</em></span>${tag(b)}</div><button class="art-button" data-action="detail" data-id="${b.id}" aria-label="查看 ${b.name} 資訊">${art(b, 130)}<span class="art-detail">查看 3D ↗</span></button><div class="card-content"><h2>${b.name}</h2><div class="combo">${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet} / ${b.bit} <span>${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><p>${safe(b.feature)}</p><div class="mini-stats"><span>攻 <b>${b.stats.atk}</b></span><span>防 <b>${b.stats.def}</b></span><span>持 <b>${b.stats.sta}</b></span></div>${screen === "team" ? btn(selected ? `已選 ${["先鋒", "中堅", "大將"][index]} ✓` : "加入隊伍 ＋", "select", selected ? "select-bey selected" : "select-bey", `data-id="${b.id}" ${!selected && teams[teamPlayer].length === 3 ? "disabled" : ""}`) : btn("卡牌詳細資料 ↗", "detail", "detail-link", `data-id="${b.id}"`)}</div></article>`;
+      return `<article class="bey-card ${selected ? "chosen" : ""}" style="--type:${b.color}"><div class="card-meta"><span>${b.code} <em>${b.line}</em></span>${tag(b)}</div><button class="art-button" data-action="detail" data-id="${b.id}" aria-label="查看 ${b.name} 資訊">${art(b, 130)}<span class="art-detail">查看卡牌 ↗</span></button><div class="card-content"><h2>${b.name}</h2><div class="combo">${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet} / ${b.bit} <span>${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><p>${safe(b.feature)}</p><div class="mini-stats"><span>攻 <b>${b.stats.atk}</b></span><span>防 <b>${b.stats.def}</b></span><span>持 <b>${b.stats.sta}</b></span></div>${screen === "team" ? btn(selected ? `已選 ${["先鋒", "中堅", "大將"][index]} ✓` : "加入隊伍 ＋", "select", selected ? "select-bey selected" : "select-bey", `data-id="${b.id}" ${!selected && teams[teamPlayer].length === 3 ? "disabled" : ""}`) : btn("卡牌詳細資料 ↗", "detail", "detail-link", `data-id="${b.id}"`)}</div></article>`;
     })
     .join(
       "",
@@ -238,7 +232,7 @@ function cards() {
 function catalog() {
   screen = "catalog";
   shell(
-    `${title("BEY ARCHIVE", "找到你的致勝搭檔。", "83 顆原廠組合。點開卡牌，探索零件與獨特性能。", btn("開始組隊 →", "play", "primary"))}${filters()}<div id="catalog-list">${cards()}</div><p class="source-note">類型與日本發售日已依 Takara Tomy 官方資料核對；未來商品標示為預定。所有模型、數值和戰鬥表現為本遊戲原創設定。</p>`,
+    `${title("BEY ARCHIVE", "找到你的致勝搭檔。", "83 顆原廠組合。點開卡牌，探索零件與獨特性能。", btn("開始組隊 →", "play", "primary"))}${filters()}<div id="catalog-list">${cards()}</div><p class="source-note">類型與日本發售日已依 Takara Tomy 官方資料核對；未來商品標示為預定。實物圖引自 BeyGear 與官方商品頁；3D 輪廓為近似，數值為遊戲設定。</p>`,
   );
 }
 function startTeam() {
@@ -492,7 +486,7 @@ function showDetail(id: string) {
   modalReturnBeys = screen === "home" ? [BEYS[0], BEYS[11]] : [];
   const br = profile.beys[id];
   byId("modal-root")!.innerHTML =
-    `<div class="modal-backdrop"><section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><div class="detail-top"><span class="eyebrow">${b.code} / ${b.line} LINE</span>${btn("×", "close-modal", "close-button", 'aria-label="關閉卡牌"')}</div><div class="detail-layout"><div class="detail-visual"><div id="detail-stage"></div><span>拖曳旋轉 3D 模型 ↔</span></div><div><div>${tag(b)} <span class="spin-label">${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><h2 id="detail-title">${b.name}</h2><p class="detail-feature">${b.feature}</p><div class="part-list"><div><small>戰刃</small><b>${b.name}</b></div><div><small>棘輪</small><b>${b.integrated ? (b.integrated === "blade" ? "與戰刃一體" : "與軸心一體") : b.ratchet}</b></div><div><small>軸心</small><b>${b.bit} · ${bits[b.bit].name}</b></div>${b.line === "CX" ? `<div><small>CX 結構</small><b>${b.cxParts.join(" / ")}</b></div>` : ""}<div><small>發售日</small><b>${b.released ?? "未確認"}${b.released && b.released > new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" }) ? "（預定）" : ""}</b></div></div></div></div><div class="detail-bottom">${radar(b)}<div class="stat-numbers">${Object.entries(
+    `<div class="modal-backdrop"><section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><div class="detail-top"><span class="eyebrow">${b.code} / ${b.line} LINE</span>${btn("×", "close-modal", "close-button", 'aria-label="關閉卡牌"')}</div><div class="detail-layout"><div class="detail-visual"><div id="detail-stage"></div><a class="reference-photo" href="${PRODUCT_IMAGES[b.id].source}" target="_blank" rel="noopener">${art(b, 65)}<small>實際產品參考圖 ↗</small></a><span>依實物俯視圖建立輪廓近似，可拖曳旋轉 ↔</span></div><div><div>${tag(b)} <span class="spin-label">${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><h2 id="detail-title">${b.name}</h2><p class="detail-feature">${b.feature}</p><div class="part-list"><div><small>戰刃</small><b>${b.name}</b></div><div><small>棘輪</small><b>${b.integrated ? (b.integrated === "blade" ? "與戰刃一體" : "與軸心一體") : b.ratchet}</b></div><div><small>軸心</small><b>${b.bit} · ${bits[b.bit].name}</b></div>${b.line === "CX" ? `<div><small>CX 結構</small><b>${b.cxParts.join(" / ")}</b></div>` : ""}<div><small>發售日</small><b>${b.released ?? "未確認"}${b.released && b.released > new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" }) ? "（預定）" : ""}</b></div></div></div></div><div class="detail-bottom">${radar(b)}<div class="stat-numbers">${Object.entries(
       b.stats,
     )
       .map(
@@ -516,7 +510,7 @@ function closeModal() {
 }
 function help() {
   byId("modal-root")!.innerHTML =
-    `<div class="modal-backdrop"><section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">${btn("×", "close-modal", "close-button", 'aria-label="關閉規則"')}<div class="eyebrow">HOW TO PLAY</div><h2 id="help-title">三顆王牌，先搶四分。</h2><ol><li>各選三顆不同戰刃，排定先鋒、中堅、大將。</li><li>設定落點與傾角，在黃綠最佳區鎖定蓄力。1P 用 A / S / D 與空白鍵；2P 用方向鍵與 Enter。</li><li>發射後自動碰撞。每場可呼喊一次，兩秒內提高齒軌衝刺能力。呼喊不補充轉速。</li><li>旋轉終結 1 分、越界與爆裂 2 分、極限終結 3 分。雙方同時終結重打。</li><li>三場後依原順序循環，先得 4 分獲勝。戰績可備份並重播。</li></ol><p>數值是遊戲平衡設定；相性由模擬表現產生。Beyblade 與型號名稱屬原權利人；本作為非官方粉絲作品，所有造型與聲音原創。</p>${btn("準備好了 →", "close-modal", "primary")}</section></div>`;
+    `<div class="modal-backdrop"><section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">${btn("×", "close-modal", "close-button", 'aria-label="關閉規則"')}<div class="eyebrow">HOW TO PLAY</div><h2 id="help-title">三顆王牌，先搶四分。</h2><ol><li>各選三顆不同戰刃，排定先鋒、中堅、大將。</li><li>設定落點與傾角，在黃綠最佳區鎖定蓄力。1P 用 A / S / D 與空白鍵；2P 用方向鍵與 Enter。</li><li>發射後自動碰撞。每場可呼喊一次，兩秒內提高齒軌衝刺能力。呼喊不補充轉速。</li><li>旋轉終結 1 分、越界與爆裂 2 分、極限終結 3 分。雙方同時終結重打。</li><li>三場後依原順序循環，先得 4 分獲勝。戰績可備份並重播。</li></ol><p>數值是遊戲平衡設定；相性由模擬表現產生。Beyblade 與型號名稱屬原權利人；本作為非官方粉絲作品，產品圖片來自 BeyGear 與 Takara Tomy，3D 側面為近似模型，聲音為原創合成。</p>${btn("準備好了 →", "close-modal", "primary")}</section></div>`;
   document.body.classList.add("modal-open");
   byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
 }
@@ -564,7 +558,13 @@ function startReplay(id: string, index: number) {
   processed = false;
   finishStart = 0;
   accumulator = 0;
-  battle = createBattle(getBey(r.beys[0]), getBey(r.beys[1]), r.inputs, r.seed);
+  battle = createBattle(
+    getBey(r.beys[0]),
+    getBey(r.beys[1]),
+    r.inputs,
+    r.seed,
+    r.engineVersion ?? 1,
+  );
   arena?.setBeys(r.beys.map(getBey));
   renderArena();
 }
@@ -861,7 +861,7 @@ function updateHud() {
   if (timer) timer.textContent = battle.time.toFixed(1) + " 秒";
 }
 function frame(time: number) {
-  const realDt = Math.min(0.05, (time - lastFrame) / 1000 || 0);
+  const realDt = Math.min(0.25, (time - lastFrame) / 1000 || 0);
   lastFrame = time;
   now = time;
   const active = (screen === "battle" || screen === "replay") && !paused;

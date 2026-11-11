@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
+import { PRODUCT_IMAGES } from "./appearance.ts";
 import { type Battle, type BattleEvent, RADIUS } from "./physics.ts";
 
 function metal(color: THREE.ColorRepresentation, roughness = 0.28) {
@@ -26,35 +27,27 @@ export function beyModel(b: Bey) {
   const blade = new THREE.Group(),
     ratchet = new THREE.Group(),
     bit = new THREE.Group();
-  const lobes =
-    b.type === "attack"
-      ? 3
-      : b.type === "defense"
-        ? 8
-        : b.type === "stamina"
-          ? 12
-          : 5;
+  const reference = PRODUCT_IMAGES[b.id];
+  const primary = reference.primaryColor,
+    secondary = reference.secondaryColor;
   const shape = new THREE.Shape();
-  for (let i = 0; i <= lobes * 4; i++) {
-    const a = (i / (lobes * 4)) * Math.PI * 2;
-    const r =
-      0.42 +
-      (i % 4 === 0
-        ? b.type === "attack"
-          ? 0.16
-          : 0.07
-        : i % 4 === 1
-          ? 0.04
-          : 0);
-    if (i === 0) shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-    else shape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+  const contour = reference.shape.map((radius, i) => {
+    const angle = (i / reference.shape.length) * Math.PI * 2;
+    return new THREE.Vector2(
+      Math.cos(angle) * radius * 0.52,
+      -Math.sin(angle) * radius * 0.52,
+    );
+  });
+  for (const [i, p] of contour.entries()) {
+    if (i === 0) shape.moveTo(p.x, p.y);
+    else shape.lineTo(p.x, p.y);
   }
   const edge = mesh(
     new THREE.ExtrudeGeometry(shape, {
       depth: 0.11,
       bevelEnabled: true,
-      bevelSize: 0.025,
-      bevelThickness: 0.025,
+      bevelSize: 0.009,
+      bevelThickness: 0.009,
       bevelSegments: 2,
       steps: 1,
     }),
@@ -64,55 +57,53 @@ export function beyModel(b: Bey) {
   edge.position.y = 0.26;
   blade.add(edge);
   const base = mesh(
-    new THREE.CylinderGeometry(0.39, 0.32, 0.12, 24),
-    metal(b.color),
+    new THREE.CylinderGeometry(0.38, 0.32, 0.12, 24),
+    metal(primary),
     0,
     0.27,
   );
   blade.add(base);
-  const crown = mesh(
-    new THREE.CylinderGeometry(0.24, 0.33, 0.13, lobes),
-    metal(b.color),
-    0,
-    0.4,
-  );
-  blade.add(crown);
-  const hub = mesh(
-    new THREE.CylinderGeometry(0.15, 0.18, 0.04, 12),
-    metal("#16202d"),
-    0,
-    0.49,
-  );
-  blade.add(hub);
-  const emblem = mesh(
-    new THREE.OctahedronGeometry(0.105, 0),
-    new THREE.MeshStandardMaterial({
-      color: "#edffb0",
-      emissive: b.color,
-      emissiveIntensity: 0.4,
-      metalness: 0.7,
-      roughness: 0.25,
-    }),
-    0,
-    0.53,
-  );
-  emblem.scale.y = 0.3;
-  blade.add(emblem);
-  const rim = ring(0.29, 0.013, b.color);
-  rim.position.y = 0.45;
-  blade.add(rim);
-  for (let i = 0; i < lobes; i++) {
-    const a = (i / lobes) * Math.PI * 2;
-    const accent = mesh(
-      new THREE.BoxGeometry(0.12, 0.035, 0.06),
-      metal(b.color),
-      Math.cos(a) * 0.41,
-      0.4,
-      Math.sin(a) * 0.41,
+  // 頂面使用原始產品圖；外緣厚度與側面是依俯視輪廓建立的近似模型。
+  const texture = new THREE.TextureLoader().load(reference.src);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  const vertices: number[] = [],
+    uvs: number[] = [];
+  const [bx, by, bw, bh] = reference.imageBounds;
+  const radiusPixels =
+    Math.max(bw * reference.width, bh * reference.height) / 2;
+  const vertex = (x: number, z: number) => {
+    vertices.push(x, 0.385, z);
+    uvs.push(
+      bx + bw / 2 + ((x / 0.52) * radiusPixels) / reference.width,
+      1 - by - bh / 2 - ((z / 0.52) * radiusPixels) / reference.height,
     );
-    accent.rotation.y = -a;
-    blade.add(accent);
+  };
+  for (let i = 0; i < contour.length; i++) {
+    const p = contour[i],
+      q = contour[(i + 1) % contour.length];
+    vertex(0, 0);
+    vertex(q.x, -q.y);
+    vertex(p.x, -p.y);
   }
+  const surface = new THREE.BufferGeometry();
+  surface.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(vertices, 3),
+  );
+  surface.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  surface.computeVertexNormals();
+  blade.add(
+    mesh(
+      surface,
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        alphaTest: 0.08,
+        side: THREE.DoubleSide,
+      }),
+    ),
+  );
   ratchet.add(
     mesh(
       new THREE.CylinderGeometry(
@@ -121,21 +112,27 @@ export function beyModel(b: Bey) {
         0.12,
         Math.max(3, Math.min(12, Number(b.ratchet.split("-")[0]) || 6)),
       ),
-      metal("#e1e7e8"),
+      metal(secondary),
       0,
       0.19,
     ),
   );
   bit.add(
     mesh(
-      new THREE.CylinderGeometry(0.16, 0.055, 0.17, 12),
-      metal(b.color),
+      new THREE.CylinderGeometry(
+        0.16,
+        b.type === "attack" ? 0.095 : 0.045,
+        0.17 + (b.height - 60) * 0.0015,
+        12,
+      ),
+      metal(primary),
       0,
       0.055,
     ),
   );
   group.add(blade, ratchet, bit);
   group.userData.parts = [blade, ratchet, bit];
+  group.userData.productImage = reference.src;
   return group;
 }
 
@@ -201,6 +198,7 @@ export class Arena {
       "aria-label",
       "原創立體陀螺競技場，可拖曳旋轉視角",
     );
+    this.renderer.domElement.setAttribute('role','img');
     this.scene.add(new THREE.HemisphereLight("#dcecff", "#1a2636", 3));
     const key = new THREE.DirectionalLight("#d8f3ff", 4);
     key.position.set(3, 9, 5);
@@ -382,6 +380,15 @@ export class Arena {
   attach(host: HTMLElement, mode: "home" | "battle" | "inspect" = "home") {
     if (this.host) this.observer.unobserve(this.host);
     this.host = host;
+    if (this.mode !== mode) {
+      this.camera.position.set(
+        ...((mode === "inspect" ? [0, 1.75, 2.5] : [9, 10, 12.5]) as [
+          number,
+          number,
+          number,
+        ]),
+      );
+    }
     this.mode = mode;
     host.append(this.renderer.domElement);
     this.observer.observe(host);
@@ -398,13 +405,21 @@ export class Arena {
     this.renderer.setSize(w, h);
   }
   setBeys(beys: Bey[]) {
+    this.renderer.domElement.setAttribute(
+      "aria-label",
+      beys.map((b) => b.name).join(" 對 ") +
+        "：實物貼圖與輪廓近似立體模型，可拖曳旋轉",
+    );
     this.models.forEach((g) => {
       this.scene.remove(g);
       g.traverse((o) => {
         if (o instanceof THREE.Mesh) {
           o.geometry.dispose();
           const ms = Array.isArray(o.material) ? o.material : [o.material];
-          ms.forEach((m) => m.dispose());
+          ms.forEach((m) => {
+            if (m instanceof THREE.MeshBasicMaterial) m.map?.dispose();
+            m.dispose();
+          });
         }
       });
     });

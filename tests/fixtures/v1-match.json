@@ -1,0 +1,223 @@
+{
+  "id": "20891459-3ee9-453b-9240-0fe078cdcc9c",
+  "date": "2026-11-11T16:30:53.236Z",
+  "mode": "cpu",
+  "difficulty": "normal",
+  "teams": [
+    [
+      "bx-01-dran-sword",
+      "bx-04-knight-shield",
+      "bx-03-wizard-arrow"
+    ],
+    [
+      "bx-01-dran-sword",
+      "cx-14-knight-fortress-guard-vertical",
+      "ux-08-silver-wolf"
+    ]
+  ],
+  "scores": [
+    1,
+    4
+  ],
+  "slot": 0,
+  "rounds": [
+    {
+      "index": 1,
+      "slot": 0,
+      "seed": 1991133680,
+      "beys": [
+        "bx-01-dran-sword",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9340026412395496,
+          "lane": 0,
+          "angle": 10
+        },
+        {
+          "power": 0.9611785833258182,
+          "lane": 2,
+          "angle": 21
+        }
+      ],
+      "shouts": [
+        [
+          46
+        ],
+        []
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "over",
+        "points": 2,
+        "time": 5.291666666666667
+      },
+      "reports": [
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 12.969599379272069,
+          "maxImpulse": 12.969599379272069,
+          "dashes": 2,
+          "rpm": 0.6425536885809182
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 12.969599379272069,
+          "maxImpulse": 12.969599379272069,
+          "dashes": 1,
+          "rpm": 0.6888452711399013
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "slot": 1,
+      "seed": 1991141599,
+      "beys": [
+        "bx-04-knight-shield",
+        "cx-14-knight-fortress-guard-vertical"
+      ],
+      "inputs": [
+        {
+          "power": 0.9367382175106375,
+          "lane": 0,
+          "angle": 10
+        },
+        {
+          "power": 0.9694619037769735,
+          "lane": 0,
+          "angle": 1
+        }
+      ],
+      "shouts": [
+        [
+          120
+        ],
+        []
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "spin",
+        "points": 1,
+        "time": 27.53333333333333
+      },
+      "reports": [
+        {
+          "id": "bx-04-knight-shield",
+          "impulse": 4.9209125043999515,
+          "maxImpulse": 0.6521980040964516,
+          "dashes": 0,
+          "rpm": 0
+        },
+        {
+          "id": "cx-14-knight-fortress-guard-vertical",
+          "impulse": 5.278797050174495,
+          "maxImpulse": 0.6996305862125572,
+          "dashes": 0,
+          "rpm": 0.026712041364199527
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "slot": 2,
+      "seed": 1991149518,
+      "beys": [
+        "bx-03-wizard-arrow",
+        "ux-08-silver-wolf"
+      ],
+      "inputs": [
+        {
+          "power": 0.8803708274866855,
+          "lane": 0,
+          "angle": 10
+        },
+        {
+          "power": 0.8577452242281288,
+          "lane": 1,
+          "angle": 6
+        }
+      ],
+      "shouts": [
+        [
+          168
+        ],
+        []
+      ],
+      "result": {
+        "winner": 0,
+        "finish": "spin",
+        "points": 1,
+        "time": 36.725
+      },
+      "reports": [
+        {
+          "id": "bx-03-wizard-arrow",
+          "impulse": 0.3248097134740847,
+          "maxImpulse": 0.3248097134740847,
+          "dashes": 0,
+          "rpm": 0.048354486320772994
+        },
+        {
+          "id": "ux-08-silver-wolf",
+          "impulse": 0.3045091063819544,
+          "maxImpulse": 0.3045091063819544,
+          "dashes": 0,
+          "rpm": 0
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "slot": 0,
+      "seed": 1991157437,
+      "beys": [
+        "bx-01-dran-sword",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.6829746081426746,
+          "lane": 0,
+          "angle": 10
+        },
+        {
+          "power": 0.866028544679284,
+          "lane": 2,
+          "angle": 12
+        }
+      ],
+      "shouts": [
+        [
+          0
+        ],
+        []
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "spin",
+        "points": 1,
+        "time": 16.55
+      },
+      "reports": [
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 6.25716885735601,
+          "maxImpulse": 6.25716885735601,
+          "dashes": 1,
+          "rpm": 0
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 6.25716885735601,
+          "maxImpulse": 6.25716885735601,
+          "dashes": 1,
+          "rpm": 0.20923336984599525
+        }
+      ]
+    }
+  ],
+  "winner": 1,
+  "seed": 1991125761
+}

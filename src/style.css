@@ -12,6 +12,81 @@
   --text: #e9edf2;
   --mono: "Barlow Condensed", Impact, sans-serif;
 }
+.product-photo {
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  vertical-align: middle;
+  isolation: isolate;
+  width: var(--art-size);
+  height: var(--art-size);
+}
+.product-photo img {
+  position: absolute;
+  max-width: none;
+  object-fit: fill;
+  pointer-events: none;
+}
+.photo-white {
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+.reference-photo {
+  position: absolute;
+  right: 0;
+  bottom: 25px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px;
+  background: #0d1620dd;
+  border: 1px solid #3b4e63;
+  border-radius: 5px;
+  z-index: 2;
+}
+.reference-photo small {
+  font-size: 8px;
+  max-width: 65px;
+  color: #b8cadb;
+}
+.detail-layout > div {
+  min-width: 0;
+}
+#detail-stage canvas {
+  display: block;
+  max-width: 100%;
+}
+.lineup-slot > .bey-art {
+  flex-shrink: 0;
+}
+.mini-beys .product-photo {
+  overflow: hidden;
+}
+@media (max-width: 1250px) {
+  .mini-beys .product-photo {
+    --art-size: 48px !important;
+  }
+  .mvp .product-photo {
+    --art-size: 65px !important;
+  }
+}
+@media (max-width: 1000px) {
+  .mini-beys .product-photo {
+    --art-size: 65px !important;
+  }
+}
+@media (max-width: 760px) {
+  .mini-beys .product-photo {
+    --art-size: 50px !important;
+  }
+  .art-button .product-photo {
+    --art-size: 110px !important;
+  }
+  .mvp .product-photo {
+    --art-size: 75px !important;
+  }
+}
 * {
   box-sizing: border-box;
 }
@@ -666,11 +741,11 @@ main {
   min-width: 130px;
   width: 130px;
 }
-.mini-beys svg {
+.mini-beys .bey-art {
   margin-right: -20px;
   transform: rotate(-15deg);
 }
-.mini-beys svg:nth-child(2) {
+.mini-beys .bey-art:nth-child(2) {
   transform: translateY(-5px) rotate(15deg);
 }
 .round-arrow {
@@ -2091,7 +2166,7 @@ tbody tr:last-child td {
     width: 90px;
     min-width: 90px;
   }
-  .mini-beys svg {
+  .mini-beys .bey-art {
     width: 48px;
   }
   .catalog-callout h3 {
@@ -2136,7 +2211,7 @@ tbody tr:last-child td {
   .mvp h2 {
     font-size: 15px;
   }
-  .mvp svg {
+  .mvp .bey-art {
     width: 65px;
   }
   .result-hero h1 {
@@ -2249,7 +2324,7 @@ tbody tr:last-child td {
     width: 140px;
     min-width: 140px;
   }
-  .mini-beys svg {
+  .mini-beys .bey-art {
     width: 65px;
   }
   .catalog-callout .round-arrow {
@@ -2513,7 +2588,7 @@ tbody tr:last-child td {
     width: 104px;
     min-width: 104px;
   }
-  .mini-beys svg {
+  .mini-beys .bey-art {
     width: 50px;
     margin-right: -14px;
   }
@@ -2574,7 +2649,7 @@ tbody tr:last-child td {
     min-height: 126px;
     padding: 8px 0 2px;
   }
-  .art-button svg {
+  .art-button .bey-art {
     width: 110px;
     height: 110px;
   }
@@ -2935,7 +3010,7 @@ tbody tr:last-child td {
   .mvp h2 {
     font-size: 20px;
   }
-  .mvp svg {
+  .mvp .bey-art {
     width: 75px;
   }
   .result-buttons {

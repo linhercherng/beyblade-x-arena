@@ -85,10 +85,10 @@ const known = new Set(
   ),
 );
 const profiles: Record<BeyType, [number, number, number, number, number]> = {
-  attack: [88, 43, 44, 88, 76],
-  defense: [42, 91, 65, 33, 90],
-  stamina: [39, 61, 94, 38, 58],
-  balance: [69, 70, 73, 65, 77],
+  attack: [84, 59, 80, 88, 76],
+  defense: [58, 84, 72, 33, 84],
+  stamina: [56, 58, 84, 38, 62],
+  balance: [72, 70, 74, 65, 73],
 };
 export const bits: Record<string, Bit> = {};
 for (const [type, group] of bitGroups)

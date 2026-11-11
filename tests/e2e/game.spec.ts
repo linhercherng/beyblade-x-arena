@@ -1,6 +1,92 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 const action = (page: Page, a: string) => page.locator(`[data-action="${a}"]`);
+test("83張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  await action(page, "catalog").first().click();
+  const sources = await page
+    .locator(".bey-card .product-photo img")
+    .evaluateAll((imgs) =>
+      imgs.map((img) => (img as HTMLImageElement).getAttribute("src")!),
+    );
+  expect(new Set(sources).size).toBe(83);
+  for (const src of sources)
+    expect((await page.request.get(src)).ok(), src).toBe(true);
+  await expect
+    .poll(() =>
+      page
+        .locator(".bey-card .product-photo img")
+        .first()
+        .evaluate((img) => (img as HTMLImageElement).naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  await page.screenshot({ path: "artifacts/catalog-real-products.png" });
+  await page
+    .getByRole("button", { name: "查看 Dran Sword 資訊", exact: true })
+    .click();
+  await expect(
+    page.getByRole("img", { name: /Dran Sword：實物貼圖/ }),
+  ).toBeVisible();
+  expect(
+    await page.locator(".detail-layout").evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return [...el.children].every(
+        (c) => c.getBoundingClientRect().right <= r.right + 1,
+      );
+    }),
+  ).toBe(true);
+  await page.screenshot({ path: "artifacts/dran-sword-real-model.png" });
+  await page.keyboard.press("Escape");
+  await page.getByRole("searchbox").fill("Dran Brave");
+  await page
+    .getByRole("button", { name: "查看 Dran Brave Slash 資訊", exact: true })
+    .click();
+  await expect(
+    page.getByRole("img", { name: /Dran Brave Slash：實物貼圖/ }),
+  ).toBeVisible();
+  await page.screenshot({ path: "artifacts/dran-brave-real-model.png" });
+  await page.keyboard.press("Escape");
+  await page.getByRole("searchbox").fill("");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({ path: "artifacts/catalog-real-products-mobile.png" });
+  expect(errors).toEqual([]);
+});
+test("已發布v1戰績匯入後仍使用舊引擎正確重播", async ({ page }) => {
+  const m = JSON.parse(readFileSync("tests/fixtures/v1-match.json", "utf8"));
+  const count = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
+  const profile = {
+    version: 1,
+    modes: { cpu: [count, count], local: [count, count] },
+    beys: {},
+    finishes: { spin: 0, over: 0, burst: 0, extreme: 0 },
+    matrix: {},
+    recent: [m],
+    highs: [],
+  };
+  await page.goto("/");
+  await action(page, "stats").click();
+  await page
+    .locator("#backup-file")
+    .setInputFiles({
+      name: "v1.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(profile)),
+    });
+  await expect(page.locator("#toast")).toContainText("已匯入");
+  await page.locator(".history-row summary").click();
+  await action(page, "replay").first().click();
+  await expect(page.locator("#toast")).toContainText("結果與原對戰一致", {
+    timeout: 60000,
+  });
+});
 test("首屏 3D 畫面與手機寬度正常", async ({ page }) => {
   mkdirSync("artifacts", { recursive: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -8,7 +94,11 @@ test("首屏 3D 畫面與手機寬度正常", async ({ page }) => {
   await expect(page.locator("canvas")).toBeVisible();
   await page.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
   await page.screenshot({ path: "artifacts/home-mobile.png", fullPage: true });
 });
 async function buildTeam(page: Page) {
@@ -93,13 +183,11 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
     timeout: 45000,
   });
   await expect(page.locator("#toast")).toContainText("結果與原對戰一致");
-  await page
-    .locator("#backup-file")
-    .setInputFiles({
-      name: "bad.json",
-      mimeType: "application/json",
-      buffer: Buffer.from('{"version":1}'),
-    });
+  await page.locator("#backup-file").setInputFiles({
+    name: "bad.json",
+    mimeType: "application/json",
+    buffer: Buffer.from('{"version":1}'),
+  });
   await expect(page.locator("#toast")).toContainText("備份格式無效");
   await expect(page.locator(".history-row")).toHaveCount(1);
   const download = page.waitForEvent("download");

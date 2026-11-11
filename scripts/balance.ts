@@ -1,76 +1,45 @@
-import { BEYS, type BeyType } from "../src/catalog.ts";
-import { createBattle, stepBattle, shout } from "../src/physics.ts";
 import { writeFileSync } from "node:fs";
-const types: BeyType[] = ["attack", "defense", "stamina", "balance"];
-const totals: Record<
-  string,
-  {
-    wins: number;
-    losses: number;
-    draws: number;
-    seconds: number;
-    count: number;
-  }
-> = {};
-const finishes: Record<string, number> = {};
-let min = Infinity,
-  max = 0,
-  dashes = 0;
-for (let i = 0; i < 4; i++)
-  for (let j = i; j < 4; j++)
-    for (let seed = 1; seed <= 80; seed++) {
-      const poolA = BEYS.filter((b) => b.type === types[i]),
-        poolB = BEYS.filter((b) => b.type === types[j]);
-      const a = poolA[seed % poolA.length],
-        b = poolB[(seed * 7) % poolB.length];
-      const inputs = [
-        { power: 0.95, lane: seed % 3, angle: seed % 25 },
-        { power: 0.95, lane: (seed + 1) % 3, angle: (seed * 3) % 25 },
-      ];
-      const s = createBattle(a, b, inputs, seed);
-      while (!s.result && s.time < 90) {
-        if (s.tick === 720) shout(s, 0);
-        if (s.tick === 840) shout(s, 1);
-        stepBattle(s);
-      }
-      if (!s.result) throw new Error(`未終結 ${a.name}/${b.name}`);
-      const key = `${types[i]} vs ${types[j]}`;
-      const t = (totals[key] ??= {
-        wins: 0,
-        losses: 0,
-        draws: 0,
-        seconds: 0,
-        count: 0,
-      });
-      if (s.result.winner === 0) t.wins++;
-      else if (s.result.winner === 1) t.losses++;
-      else t.draws++;
-      t.seconds += s.time;
-      t.count++;
-      min = Math.min(min, s.time);
-      max = Math.max(max, s.time);
-      dashes += s.tops.reduce((n, t) => n + t.dashes, 0);
-      finishes[s.result.finish] = (finishes[s.result.finish] ?? 0) + 1;
-    }
+import assert from "node:assert/strict";
+import { runSuite, runEdges } from "./balance-suite.ts";
+import { ENGINE_VERSION, TUNING } from "../src/physics.ts";
+const calibration = runSuite(256, 1);
+const validation = runSuite(1024, 20261112);
+const edges = runEdges();
 const report = {
-  simulations: Object.values(totals).reduce((n, v) => n + v.count, 0),
-  minSeconds: min,
-  maxSeconds: max,
-  dashes,
-  finishes,
-  pairs: Object.fromEntries(
-    Object.entries(totals).map(([k, t]) => [
-      k,
-      {
-        ...t,
-        winRate: Math.round((t.wins / t.count) * 1000) / 10,
-        meanSeconds: Math.round((t.seconds / t.count) * 10) / 10,
-      },
-    ]),
-  ),
+  engineVersion: ENGINE_VERSION,
+  method:
+    "四類型等量對手、每對互換玩家側；平手計入出戰分母，另列0.5分制。校準與驗收使用不同種子。蓄力覆蓋遊戲可用0.65–1，三個落點與0–30度傾角。",
+  tuning: TUNING,
+  calibration,
+  validation,
+  edges,
 };
 writeFileSync(
   new URL("../docs/balance-report.json", import.meta.url),
   JSON.stringify(report, null, 2) + "\n",
 );
-console.log(JSON.stringify(report, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      engineVersion: ENGINE_VERSION,
+      calibrationBattles: calibration.battles,
+      validationBattles: validation.battles,
+      edges,
+      types: validation.types,
+      minSeconds: validation.minSeconds,
+      maxSeconds: validation.maxSeconds,
+      finishes: validation.finishes,
+    },
+    null,
+    2,
+  ),
+);
+for (const suite of [calibration, validation]) {
+  for (const [type, result] of Object.entries(suite.types))
+    assert.ok(
+      result.winRate >= 40 && result.winRate <= 60,
+      `${type}: ${result.winRate}%`,
+    );
+  assert.equal(suite.outsideTarget, 0, `有${suite.outsideTarget}場超出15–40秒`);
+}
+assert.equal(edges.outsideTarget, 0, "邊界輸入超出15–40秒");

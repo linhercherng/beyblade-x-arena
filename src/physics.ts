@@ -1,4 +1,19 @@
 import type { Bey } from "./catalog.ts";
+import {
+  createBattle as createLegacyBattle,
+  stepBattle as stepLegacyBattle,
+} from "./physics-v1.ts";
+import legacyStats from "./legacy-stats.json" with { type: "json" };
+export const ENGINE_VERSION = 2;
+export const TUNING = {
+  friction: 0.034,
+  staminaFriction: 0.0001,
+  impactSpin: 0.0004,
+  burstLoss: 18,
+  lip: 2,
+  gyroLift: 60,
+  attackSpeed: 4.5,
+};
 export const DT = 1 / 120;
 export const RADIUS = 4.25;
 export const TOP_RADIUS = 0.39;
@@ -48,6 +63,7 @@ export interface BattleEvent {
   time: number;
 }
 export interface Battle {
+  version?: 1 | 2;
   tops: [Top, Top];
   time: number;
   tick: number;
@@ -69,7 +85,18 @@ export function createBattle(
   b: Bey,
   inputs: readonly Launch[],
   seed: number,
+  version: 1 | 2 = ENGINE_VERSION,
 ): Battle {
+  if (version === 1) {
+    const original = (b: Bey) => ({
+      ...b,
+      stats: (legacyStats as Record<string, Bey["stats"]>)[b.id] ?? b.stats,
+    });
+    return {
+      ...createLegacyBattle(original(a), original(b), inputs, seed),
+      version: 1,
+    };
+  }
   const random = rng(seed);
   const tops = [a, b].map((bey, i) => {
     const input = inputs[i];
@@ -113,6 +140,7 @@ export function createBattle(
     };
   }) as [Top, Top];
   return {
+    version,
     tops,
     time: 0,
     tick: 0,
@@ -149,6 +177,10 @@ export function shout(s: Battle, player: 0 | 1) {
   return true;
 }
 export function stepBattle(s: Battle) {
+  if (s.version === 1) {
+    stepLegacyBattle(s);
+    return;
+  }
   if (s.result) return;
   s.tick++;
   s.time = s.tick * DT;
@@ -160,7 +192,7 @@ export function stepBattle(s: Battle) {
     const moving =
       t.bey.type === "attack" || (t.bey.type === "balance" && t.tilt > 0.15);
     const target = moving
-      ? 0.2 + 3.5 * (0.5 + 0.5 * Math.sin(s.time * 1.7 + i * 1.9))
+      ? 0.2 + 3.85 * (0.5 + 0.5 * Math.sin(s.time * 1.7 + i * 1.9))
       : t.bey.type === "stamina"
         ? 0.45
         : 0.25;
@@ -169,7 +201,12 @@ export function stepBattle(s: Battle) {
     const radial =
       (target - r) * 4.5 - rv * 1.8 - Math.min(25, (tv * tv) / r) * 0.8;
     const tangent =
-      ((moving ? 4.5 : 0.7) * Math.max(0.15, t.rpm) * spin - tv) * 1.8;
+      ((moving
+        ? TUNING.attackSpeed * (0.6 + 0.4 * t.rpm)
+        : 0.7 * Math.max(0.15, t.rpm)) *
+        spin -
+        tv) *
+      1.8;
     const wobble = Math.sin(s.time * 19 + i * 2) * t.tilt * 0.8;
     const steering = s.time < t.hitUntil || s.time < t.dashUntil ? 0.07 : 1;
     t.vx += ((radial * t.x) / r - (tangent * t.z) / r + wobble) * DT * steering;
@@ -185,10 +222,11 @@ export function stepBattle(s: Battle) {
     }
     t.x += t.vx * DT;
     t.z += t.vz * DT;
-    const endurance = 0.048 - t.bey.stats.sta * 0.00027;
+    const endurance =
+      TUNING.friction - t.bey.stats.sta * TUNING.staminaFriction;
     t.rpm = Math.max(
       0,
-      t.rpm - DT * (endurance + speed * 0.0007 + t.tilt * 0.011),
+      t.rpm - DT * (endurance + speed * 0.00005 + t.tilt * 0.0015),
     );
     t.rotation += spin * t.rpm * DT * 65;
     const newR = Math.hypot(t.x, t.z);
@@ -208,7 +246,7 @@ export function stepBattle(s: Battle) {
         t.dashUntil = s.time + 0.65;
         t.railCooldown = s.time + 2.8;
         t.dashes++;
-        t.rpm = Math.max(0, t.rpm - 0.015);
+        t.rpm = Math.max(0, t.rpm - 0.003);
         s.events.push({
           type: "dash",
           x: t.x,
@@ -220,8 +258,11 @@ export function stepBattle(s: Battle) {
       }
     }
     if (newR > RADIUS - TOP_RADIUS * 0.4) {
-      const sidePocket = Math.abs(t.z) < 0.6 && Math.abs(t.x) > 3.8;
-      const extremePocket = t.z > 3.8 && Math.abs(t.x) < 0.78;
+      const outwardSpeed = (t.vx * t.x + t.vz * t.z) / newR;
+      const canClearLip = outwardSpeed > TUNING.lip + TUNING.gyroLift * t.rpm;
+      const sidePocket =
+        Math.abs(t.z) < 0.6 && Math.abs(t.x) > 3.8 && canClearLip;
+      const extremePocket = t.z > 3.8 && Math.abs(t.x) < 0.78 && canClearLip;
       if (!sidePocket && !extremePocket) {
         const nx = t.x / newR,
           nz = t.z / newR,
@@ -229,7 +270,7 @@ export function stepBattle(s: Battle) {
         if (outward > 0) {
           t.vx -= 1.65 * outward * nx;
           t.vz -= 1.65 * outward * nz;
-          t.rpm = Math.max(0, t.rpm - 0.001);
+          t.rpm = Math.max(0, t.rpm - Math.min(0.004, outward * 0.0002));
         }
         t.x = nx * (RADIUS - TOP_RADIUS * 0.4);
         t.z = nz * (RADIUS - TOP_RADIUS * 0.4);
@@ -271,11 +312,14 @@ export function stepBattle(s: Battle) {
         defender.vz += (sign * hit * nz) / mass;
         defender.hitUntil = s.time + 0.65;
         defender.tilt = Math.min(1, defender.tilt + hit / 35);
-        defender.rpm = Math.max(0, defender.rpm - hit * 0.004);
+        defender.rpm = Math.max(0, defender.rpm - hit * TUNING.impactSpin);
         const impact = hit / (1 + defender.bey.stats.def / 100);
         if (impact > 2.5)
           defender.burst -=
-            (impact - 2.5) * 2.8 * (s.time < attacker.dashUntil ? 2 : 1);
+            (impact - 2.5) *
+            TUNING.burstLoss *
+            Math.pow(1 - defender.rpm, 8) *
+            (s.time < attacker.dashUntil ? 2 : 1);
         attacker.impulse += hit;
         attacker.maxImpulse = Math.max(attacker.maxImpulse, hit);
       }
