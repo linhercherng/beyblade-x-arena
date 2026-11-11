@@ -1,0 +1,362 @@
+{
+  "bits": {
+    "M": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx45.html"
+    },
+    "FF": {
+      "type": "attack",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx49.html"
+    },
+    "DS": {
+      "type": "defense",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html"
+    },
+    "LP": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx54.html"
+    },
+    "Z": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux14.html"
+    },
+    "J": {
+      "type": "attack",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux17.html"
+    },
+    "W": {
+      "type": "defense",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx03.html"
+    },
+    "K": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html"
+    },
+    "GR": {
+      "type": "attack",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx06.html"
+    },
+    "Tr": {
+      "type": "attack",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx07.html"
+    },
+    "WB": {
+      "type": "stamina",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html"
+    },
+    "TK": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx09.html"
+    },
+    "Op": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx11.html"
+    },
+    "WW": {
+      "type": "defense",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx12.html"
+    },
+    "I": {
+      "type": "attack",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx13.html"
+    },
+    "Y": {
+      "type": "stamina",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx15.html"
+    },
+    "GU": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx17.html"
+    },
+    "Nr": {
+      "type": "stamina",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx18.html"
+    },
+    "MT": {
+      "type": "balance",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html"
+    }
+  },
+  "releases": {
+    "BX-01": {
+      "date": "2023-07-15",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx01.html"
+    },
+    "BX-02": {
+      "date": "2023-07-15",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx02.html"
+    },
+    "BX-03": {
+      "date": "2023-07-15",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx03.html"
+    },
+    "BX-04": {
+      "date": "2023-07-15",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx04.html"
+    },
+    "BX-13": {
+      "date": "2023-08-10",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx13.html"
+    },
+    "BX-14": {
+      "date": "2023-09-09",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx14.html"
+    },
+    "BX-15": {
+      "date": "2023-10-07",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx15.html"
+    },
+    "BX-16": {
+      "date": "2023-10-07",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx16.html"
+    },
+    "BX-19": {
+      "date": "2023-11-02",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx19.html"
+    },
+    "BX-20": {
+      "date": "2023-11-02",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx20.html"
+    },
+    "BX-21": {
+      "date": "2023-11-02",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx21.html"
+    },
+    "BX-23": {
+      "date": "2023-12-27",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx23.html"
+    },
+    "BX-24": {
+      "date": "2023-12-27",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx24.html"
+    },
+    "BX-26": {
+      "date": "2024-01-27",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx26.html"
+    },
+    "BX-27": {
+      "date": "2024-02-22",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx27.html"
+    },
+    "UX-01": {
+      "date": "2024-03-30",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux01.html"
+    },
+    "UX-02": {
+      "date": "2024-03-30",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux02.html"
+    },
+    "UX-03": {
+      "date": "2024-03-30",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux03.html"
+    },
+    "BX-31": {
+      "date": "2024-04-27",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx31.html"
+    },
+    "UX-05": {
+      "date": "2024-05-18",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux05.html"
+    },
+    "BX-33": {
+      "date": "2024-06-15",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx33.html"
+    },
+    "BX-34": {
+      "date": "2024-07-13",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx34.html"
+    },
+    "BX-35": {
+      "date": "2024-07-13",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx35.html"
+    },
+    "UX-06": {
+      "date": "2024-08-10",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux06.html"
+    },
+    "UX-07": {
+      "date": "2024-08-10",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux07.html"
+    },
+    "BX-36": {
+      "date": "2024-09-14",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx36.html"
+    },
+    "UX-08": {
+      "date": "2024-10-12",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux08.html"
+    },
+    "BX-37": {
+      "date": "2024-10-12",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx37.html"
+    },
+    "BX-38": {
+      "date": "2024-11-02",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx38.html"
+    },
+    "UX-09": {
+      "date": "2024-11-02",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux09.html"
+    },
+    "UX-10": {
+      "date": "2024-11-02",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux10.html"
+    },
+    "UX-11": {
+      "date": "2024-12-28",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux11.html"
+    },
+    "UX-12": {
+      "date": "2024-12-28",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux12.html"
+    },
+    "UX-13": {
+      "date": "2025-01-25",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux13.html"
+    },
+    "BX-39": {
+      "date": "2025-02-15",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx39.html"
+    },
+    "CX-01": {
+      "date": "2025-03-29",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx01.html"
+    },
+    "CX-02": {
+      "date": "2025-03-29",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx02.html"
+    },
+    "CX-03": {
+      "date": "2025-03-29",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx03.html"
+    },
+    "CX-05": {
+      "date": "2025-04-26",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html"
+    },
+    "UX-14": {
+      "date": "2025-04-26",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux14.html"
+    },
+    "CX-06": {
+      "date": "2025-05-17",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx06.html"
+    },
+    "BX-44": {
+      "date": "2025-06-28",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx44.html"
+    },
+    "CX-07": {
+      "date": "2025-07-19",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx07.html"
+    },
+    "CX-08": {
+      "date": "2025-07-19",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html"
+    },
+    "BX-45": {
+      "date": "2025-08-09",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx45.html"
+    },
+    "UX-15": {
+      "date": "2025-08-09",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux15.html"
+    },
+    "CX-09": {
+      "date": "2025-09-27",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx09.html"
+    },
+    "BX-46": {
+      "date": "2025-10-11",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx46.html"
+    },
+    "UX-16": {
+      "date": "2025-10-11",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux16.html"
+    },
+    "CX-10": {
+      "date": "2025-11-01",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx10.html"
+    },
+    "CX-11": {
+      "date": "2025-11-01",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx11.html"
+    },
+    "UX-17": {
+      "date": "2025-12-27",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux17.html"
+    },
+    "UX-18": {
+      "date": "2025-12-27",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux18.html"
+    },
+    "CX-12": {
+      "date": "2026-01-24",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx12.html"
+    },
+    "BX-48": {
+      "date": "2026-02-14",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx48.html"
+    },
+    "CX-13": {
+      "date": "2026-03-28",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx13.html"
+    },
+    "CX-14": {
+      "date": "2026-03-28",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx14.html"
+    },
+    "CX-15": {
+      "date": "2026-03-28",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx15.html"
+    },
+    "UX-19": {
+      "date": "2026-04-25",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux19.html"
+    },
+    "CX-17": {
+      "date": "2026-04-25",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx17.html"
+    },
+    "BX-49": {
+      "date": "2026-05-16",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx49.html"
+    },
+    "CX-18": {
+      "date": "2026-06-13",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx18.html"
+    },
+    "BX-50": {
+      "date": "2026-07-11",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html"
+    },
+    "UX-20": {
+      "date": "2026-07-11",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux20.html"
+    },
+    "UX-21": {
+      "date": "2026-08-08",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux21.html"
+    },
+    "CX-19": {
+      "date": "2026-09-12",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx19.html"
+    },
+    "BX-52": {
+      "date": "2026-10-10",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx52.html"
+    },
+    "BX-53": {
+      "date": "2026-10-10",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx53.html"
+    },
+    "BX-54": {
+      "date": "2026-11-21",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx54.html"
+    },
+    "CX-20": {
+      "date": "2026-11-21",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html"
+    }
+  }
+}
