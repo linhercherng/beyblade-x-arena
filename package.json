@@ -12,6 +12,15 @@
     "balance": "node --experimental-strip-types scripts/balance.ts",
     "catalog": "node scripts/import-catalog.mjs"
   },
-  "dependencies": { "three": "^0.180.0", "idb": "^8.0.3" },
-  "devDependencies": { "@types/three": "^0.180.0", "typescript": "^5.9.3", "vite": "^7.1.12", "@playwright/test": "^1.56.1", "@types/node": "^22.18.0" }
+  "dependencies": {
+    "three": "^0.180.0",
+    "idb": "^8.0.3"
+  },
+  "devDependencies": {
+    "@types/three": "^0.180.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^22.18.0"
+  }
 }
