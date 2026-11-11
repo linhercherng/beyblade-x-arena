@@ -1,0 +1,197 @@
+import { test, expect, type Page } from "@playwright/test";
+import { mkdirSync } from "node:fs";
+const action = (page: Page, a: string) => page.locator(`[data-action="${a}"]`);
+test("首屏 3D 畫面與手機寬度正常", async ({ page }) => {
+  mkdirSync("artifacts", { recursive: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  await expect(page.locator("canvas")).toBeVisible();
+  await page.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: "artifacts/home-mobile.png", fullPage: true });
+});
+async function buildTeam(page: Page) {
+  await action(page, "quick").click();
+  await action(page, "confirm-team").click();
+}
+async function playMatch(page: Page, local = false) {
+  await action(page, "begin-match").click();
+  let rounds = 0;
+  while (rounds++ < 14) {
+    await expect(action(page, "lock").first()).toBeVisible();
+    await page.keyboard.press("a");
+    await page.keyboard.press("Space");
+    if (local) {
+      await page.keyboard.press("ArrowRight");
+      await page.keyboard.press("Enter");
+    }
+    await expect(page.locator("#app")).toHaveAttribute(
+      "data-screen",
+      "battle",
+      { timeout: 12000 },
+    );
+    await page.keyboard.press("Space");
+    await expect(action(page, "shout").first()).toBeDisabled();
+    if (local) {
+      await page.keyboard.press("Enter");
+      await expect(action(page, "shout").nth(1)).toBeDisabled();
+    }
+    // 展示時長可切換 4 倍，但模擬仍採同一固定步長。
+    while ((await action(page, "speed").textContent()) !== "4×")
+      await action(page, "speed").click();
+    await expect(
+      page.locator('[data-action="next-round"], [data-action="rematch"]'),
+    ).toBeVisible({ timeout: 45000 });
+    if (await action(page, "rematch").isVisible()) return;
+    await action(page, "next-round").click();
+  }
+  throw new Error("超過14場仍未結算");
+}
+test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備份", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "準備好，突破極限。" }),
+  ).toBeVisible();
+  await expect(page.locator("canvas")).toBeVisible();
+  mkdirSync("artifacts", { recursive: true });
+  await page.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
+  await action(page, "catalog").first().click();
+  await expect(page.locator(".bey-card")).toHaveCount(83);
+  await page.getByRole("searchbox").fill("Wizard Rod");
+  await expect(page.locator(".bey-card")).toHaveCount(1);
+  await page.locator(".art-button").click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.locator("#detail-stage canvas")).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText("2024-03-30");
+  await page.screenshot({ path: "artifacts/card-desktop.png" });
+  await page.keyboard.press("Escape");
+  await action(page, "play").first().click();
+  await buildTeam(page);
+  await playMatch(page);
+  await page.screenshot({
+    path: "artifacts/results-desktop.png",
+    fullPage: true,
+  });
+  await expect(page.locator("h1")).toContainText(/漂亮的一戰|再挑戰/);
+  await action(page, "stats").click();
+  await expect(page.locator(".history-row")).toHaveCount(1);
+  await page.reload();
+  await action(page, "stats").click();
+  await expect(page.locator(".history-row")).toHaveCount(1);
+  await page.locator(".history-row summary").click();
+  await action(page, "replay").first().click();
+  await expect(page.locator("h1")).toHaveText("對戰重播");
+  await action(page, "speed").click();
+  await action(page, "speed").click();
+  await expect(page.locator("h1")).toHaveText("每一場，都留下軌跡。", {
+    timeout: 45000,
+  });
+  await expect(page.locator("#toast")).toContainText("結果與原對戰一致");
+  await page
+    .locator("#backup-file")
+    .setInputFiles({
+      name: "bad.json",
+      mimeType: "application/json",
+      buffer: Buffer.from('{"version":1}'),
+    });
+  await expect(page.locator("#toast")).toContainText("備份格式無效");
+  await expect(page.locator(".history-row")).toHaveCount(1);
+  const download = page.waitForEvent("download");
+  await action(page, "export").click();
+  const d = await download;
+  await d.saveAs("artifacts/backup.json");
+  await page.locator("#backup-file").setInputFiles("artifacts/backup.json");
+  await expect(page.locator("#toast")).toContainText("已匯入");
+  expect(errors).toEqual([]);
+});
+test("手機：響應式配置與2P遮蔽、鍵盤分鍵、完整一局", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.screenshot({ path: "artifacts/home-mobile.png", fullPage: true });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.locator('[data-action="mode"][data-value="local"]').click();
+  await action(page, "play").first().click();
+  await buildTeam(page);
+  await expect(page.locator("h1")).toHaveText("請交給 2P 玩家");
+  await expect(page.locator(".bey-card")).toHaveCount(0);
+  await action(page, "handoff").click();
+  await buildTeam(page);
+  await playMatch(page, true);
+  await expect(page.locator("h1")).toContainText(/漂亮的一戰|2P，拿下勝利/);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await action(page, "stats").click();
+  await page.locator('[data-action="stats-mode"][data-value="local"]').click();
+  await expect(page.locator(".stats-metrics").first()).toContainText("1");
+  await page.screenshot({ path: "artifacts/stats-mobile.png", fullPage: true });
+  expect(errors).toEqual([]);
+});
+test("暫停時鍵盤不會繞過遮罩鎖定發射，恢復後可正常倒數", async ({ page }) => {
+  await page.goto("/");
+  await action(page, "play").first().click();
+  await buildTeam(page);
+  await action(page, "begin-match").click();
+  await page.locator("#pause-button").click();
+  await expect(page.locator("#pause-overlay")).toBeVisible();
+  await page.keyboard.press("Space");
+  await expect(page.locator("#app")).toHaveAttribute("data-screen", "launch");
+  await expect(action(page, "lock").first()).toBeEnabled();
+  await page.locator('#pause-overlay [data-action="pause"]').click();
+  await page.keyboard.press("Space");
+  await expect(page.locator("#app")).toHaveAttribute(
+    "data-screen",
+    "countdown",
+  );
+  await expect(page.locator("#pause-overlay")).toBeHidden();
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => {
+    const start = performance.now();
+    while (performance.now() - start < 3500) {
+      /* 模擬分頁停止 rAF */
+    }
+  });
+  await page.locator('#pause-overlay [data-action="pause"]').click();
+  await expect(page.locator("#app")).toHaveAttribute(
+    "data-screen",
+    "countdown",
+  );
+  await expect(page.locator("#battle-message strong")).toHaveText("3");
+  await expect(page.locator("#app")).toHaveAttribute("data-screen", "battle", {
+    timeout: 10000,
+  });
+});
+test("瀏覽器禁用設定儲存時可啟動與切換音效", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.addInitScript(() =>
+    Object.defineProperty(window, "localStorage", {
+      get() {
+        throw new DOMException("Storage blocked by policy", "SecurityError");
+      },
+    }),
+  );
+  await page.goto("/");
+  await expect(page.locator("h1")).toHaveText("準備好，突破極限。");
+  await page.getByRole("button", { name: "切換音效" }).click();
+  await expect(page.getByRole("button", { name: "切換音效" })).toHaveText(
+    "音效 關",
+  );
+  await action(page, "play").first().click();
+  await expect(page.locator("h1")).toHaveText("1P，你的三顆王牌。");
+  expect(errors).toEqual([]);
+});

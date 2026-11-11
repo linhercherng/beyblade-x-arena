@@ -1,0 +1,104 @@
+{
+  "simulations": 800,
+  "minSeconds": 1.4416666666666667,
+  "maxSeconds": 41.43333333333333,
+  "dashes": 690,
+  "finishes": {
+    "spin": 675,
+    "burst": 85,
+    "over": 33,
+    "extreme": 7
+  },
+  "pairs": {
+    "attack vs attack": {
+      "wins": 33,
+      "losses": 43,
+      "draws": 4,
+      "seconds": 797.3666666666667,
+      "count": 80,
+      "winRate": 41.3,
+      "meanSeconds": 10
+    },
+    "attack vs defense": {
+      "wins": 1,
+      "losses": 79,
+      "draws": 0,
+      "seconds": 1551.7333333333338,
+      "count": 80,
+      "winRate": 1.3,
+      "meanSeconds": 19.4
+    },
+    "attack vs stamina": {
+      "wins": 64,
+      "losses": 16,
+      "draws": 0,
+      "seconds": 647.4583333333333,
+      "count": 80,
+      "winRate": 80,
+      "meanSeconds": 8.1
+    },
+    "attack vs balance": {
+      "wins": 4,
+      "losses": 76,
+      "draws": 0,
+      "seconds": 1507.6749999999995,
+      "count": 80,
+      "winRate": 5,
+      "meanSeconds": 18.8
+    },
+    "defense vs defense": {
+      "wins": 45,
+      "losses": 35,
+      "draws": 0,
+      "seconds": 2255.7916666666665,
+      "count": 80,
+      "winRate": 56.3,
+      "meanSeconds": 28.2
+    },
+    "defense vs stamina": {
+      "wins": 0,
+      "losses": 80,
+      "draws": 0,
+      "seconds": 2316.774999999999,
+      "count": 80,
+      "winRate": 0,
+      "meanSeconds": 29
+    },
+    "defense vs balance": {
+      "wins": 8,
+      "losses": 72,
+      "draws": 0,
+      "seconds": 2236.9416666666666,
+      "count": 80,
+      "winRate": 10,
+      "meanSeconds": 28
+    },
+    "stamina vs stamina": {
+      "wins": 42,
+      "losses": 37,
+      "draws": 1,
+      "seconds": 3090.7750000000005,
+      "count": 80,
+      "winRate": 52.5,
+      "meanSeconds": 38.6
+    },
+    "stamina vs balance": {
+      "wins": 80,
+      "losses": 0,
+      "draws": 0,
+      "seconds": 2412.9916666666677,
+      "count": 80,
+      "winRate": 100,
+      "meanSeconds": 30.2
+    },
+    "balance vs balance": {
+      "wins": 37,
+      "losses": 43,
+      "draws": 0,
+      "seconds": 2292.299999999999,
+      "count": 80,
+      "winRate": 46.3,
+      "meanSeconds": 28.7
+    }
+  }
+}

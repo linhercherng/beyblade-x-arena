@@ -1,0 +1,28 @@
+import { defineConfig } from "@playwright/test";
+export default defineConfig({
+  testDir: "./tests/e2e",
+  timeout: 180000,
+  expect: { timeout: 10000 },
+  workers: 1,
+  use: {
+    baseURL: "http://127.0.0.1:5178",
+    channel: "chrome",
+    headless: true,
+    screenshot: "only-on-failure",
+    trace: "retain-on-failure",
+    launchOptions: {
+      args: [
+        "--enable-webgl",
+        "--use-gl=angle",
+        "--use-angle=swiftshader",
+        "--enable-unsafe-swiftshader",
+      ],
+    },
+  },
+  webServer: {
+    command: "npm run dev",
+    url: "http://127.0.0.1:5178",
+    reuseExistingServer: true,
+    timeout: 30000,
+  },
+});
