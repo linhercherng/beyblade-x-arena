@@ -1,0 +1,46 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>碰撞回饋驗證</title>
+<style>body{margin:0;background:#101927;color:#e9edf2;font:16px sans-serif}header{position:absolute;top:16px;left:20px;z-index:2}button{padding:8px 16px;margin:4px}#stage{height:100vh}small{display:block;margin:8px;color:#adbccc}</style>
+<header>碰撞回饋：蒼龍神劍／深淵魔鯊<br><button id="light">輕擦</button><button id="medium">碰撞</button><button id="heavy">重擊</button><button id="rapid">密集重擊</button><button id="bgm">交戰配樂</button><button id="capture">擷取下一次碰撞</button><button id="pause">暫停畫面</button><button id="mute">靜音</button><input id="volume" aria-label="配樂音量" type="range" min="0" max="1" step=".1" value=".6"><small>隔離聲光驗證，不修改正式物理或戰績；點選按鈕啟用聲音</small></header><div id="stage"></div>
+<script type="module">
+import { Arena } from "/src/arena.ts";
+import { Sound } from "/src/audio.ts";
+import { BEYS } from "/src/catalog.ts";
+import { createBattle } from "/src/physics.ts";
+const arena = new Arena(), sound = new Sound();
+arena.setBeys([BEYS[0],BEYS[11]]); arena.attach(document.querySelector("#stage"),"battle");
+const battle = createBattle(BEYS[0],BEYS[11],[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],13);
+battle.tops.forEach((t,i)=>{ t.x=i?.43:-.43; t.z=0; });
+let mode=null, paused=false, capture=false, last=0, meters, peakSfx=0, musicAtPeak=0, peakMix=0;
+function rms(analyser) { const data=new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(data); return {rms:Math.sqrt(data.reduce((s,v)=>s+v*v,0)/data.length),peak:data.reduce((m,v)=>Math.max(m,Math.abs(v)),0)}; }
+document.addEventListener("click",e=>{
+  if(e.target.tagName!=="BUTTON")return;
+  sound.unlock();
+  if(!meters){ meters=[sound.sfx,sound.musicDuck??sound.music,sound.master].map(bus=>{const a=sound.ctx.createAnalyser(); a.fftSize=512;bus.connect(a);return a;}); }
+  const id=e.target.id;
+  if(id==="capture") {capture=true;return;}
+  if(id==="pause") {paused=!paused;return;}
+  if(id==="mute") {sound.toggle();return;}
+  if(id==="bgm") {mode="battle";return;}
+  const strength={light:.5,medium:4,heavy:14,rapid:14}[id];
+  if(strength===undefined)return;
+  peakSfx=musicAtPeak=peakMix=0;
+  for(let i=0;i<(id==="rapid"?30:1);i++){
+    const hit={type:"hit",x:0,z:0,strength,player:0,time:1};
+    arena.event(hit);sound.event(hit);
+  }
+  if(capture){arena.draw(.06,battle);paused=true;capture=false;}
+});
+document.querySelector("input").oninput=e=>sound.setMusicVolume(Number(e.target.value));
+function frame(time){
+ const dt=Math.min(.05,(time-last)/1000||0);last=time;
+ if(!paused)battle.tops.forEach((t,i)=>t.rotation+=dt*(i?-18:18));
+ arena.draw(paused?0:dt,battle);sound.update(null,false,mode);
+ if(meters){const s=rms(meters[0]),m=rms(meters[1]);if(s.rms>peakSfx){peakSfx=s.rms;musicAtPeak=m.rms;}peakMix=Math.max(peakMix,rms(meters[2]).peak);}
+ requestAnimationFrame(frame);
+}
+window.impactMetrics=()=>({particles:arena.particles.length,shake:arena.shake,reduced:arena.reduced,
+ streaks:arena.sparkStreaks?.geometry.drawRange.count??0, flashes:arena.impactFlashes?.filter(f=>f.material.opacity>0).length??0,
+ duck:sound.musicDuck?.gain.value??1,music:sound.music?.gain.value??0,playing:sound.playing?.mode,
+ peakSfx,musicAtPeak,peakMix,quaternion:arena.camera.quaternion.toArray()});
+requestAnimationFrame(frame);
+</script></html>

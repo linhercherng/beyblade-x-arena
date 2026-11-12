@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
+import { impactProfile, impactShake } from "./impact.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
@@ -32,6 +33,7 @@ interface Particle {
   p: THREE.Vector3;
   v: THREE.Vector3;
   life: number;
+  totalLife: number;
   color: THREE.Color;
 }
 export function closeUpRange(
@@ -83,10 +85,14 @@ export class Arena {
   lastX = 0;
   lastY = 0;
   shake = 0;
+  shakeAge = 1;
   eventFlash = 0;
   particles: Particle[] = [];
   particleGeometry = new THREE.BufferGeometry();
   particlePoints: THREE.Points;
+  sparkStreaks: THREE.LineSegments;
+  impactFlashes: THREE.Sprite[] = [];
+  impactHeight = .5;
   trails: THREE.Line[] = [];
   trailPositions: number[][] = [[], []];
   beam = mesh(
@@ -171,10 +177,21 @@ export class Arena {
       "color",
       new THREE.BufferAttribute(colors, 3),
     );
+    const pixels = new Uint8Array(32 * 32 * 4);
+    for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
+      const i = (y * 32 + x) * 4;
+      pixels[i] = pixels[i + 1] = pixels[i + 2] = 255;
+      pixels[i + 3] = Math.round(255 * Math.pow(Math.max(0, 1 - Math.hypot(x - 15.5, y - 15.5) / 15.5), 1.8));
+    }
+    const glow = new THREE.DataTexture(pixels, 32, 32);
+    glow.magFilter = glow.minFilter = THREE.LinearFilter;
+    glow.needsUpdate = true;
     this.particlePoints = new THREE.Points(
       this.particleGeometry,
       new THREE.PointsMaterial({
-        size: 0.075,
+        size: 0.105,
+        map: glow,
+        toneMapped: false,
         vertexColors: true,
         transparent: true,
         opacity: 0.9,
@@ -183,6 +200,19 @@ export class Arena {
       }),
     );
     this.scene.add(this.particlePoints);
+    const streakGeometry = new THREE.BufferGeometry();
+    streakGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(360 * 6), 3).setUsage(THREE.DynamicDrawUsage));
+    streakGeometry.setDrawRange(0, 0);
+    this.sparkStreaks = new THREE.LineSegments(streakGeometry, new THREE.LineBasicMaterial({ color: "#ff963d", transparent: true, opacity: .85, depthWrite: false, toneMapped: false }));
+    this.sparkStreaks.frustumCulled = false;
+    this.particlePoints.frustumCulled = false;
+    this.scene.add(this.sparkStreaks);
+    for (let i = 0; i < 4; i++) {
+      const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: "#ffb044", transparent: true, opacity: 0, depthWrite: false, toneMapped: false }));
+      flare.userData.life = 0;
+      this.impactFlashes.push(flare);
+      this.scene.add(flare);
+    }
     for (const c of ["#8bdfff", "#ff926b"]) {
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute(
@@ -269,6 +299,10 @@ export class Arena {
     this.renderer.domElement.style.height = h + "px";
   }
   setBeys(beys: Bey[]) {
+    this.impactHeight = Math.max(...beys.map(b => {
+      const spec = modelSpec(b);
+      return spec.bitHeight + spec.ratchetHeight + spec.bladeThickness + spec.profile.coreRise + .055;
+    }));
     this.exploded = false;
     this.pitch = 0.54;
     this.renderer.domElement.dataset.assembly = "assembled";
@@ -301,27 +335,41 @@ export class Arena {
       return g;
     });
     this.trailPositions = [[], []];
+    this.particles.length = 0;
+    this.shake = 0;
+    this.impactFlashes.forEach(f => { f.userData.life = 0; (f.material as THREE.SpriteMaterial).opacity = 0; });
     this.finished = null;
     this.beam.visible = false;
   }
   event(e: BattleEvent) {
     if (e.type === "hit" || e.type === "finish") {
-      this.shake = this.reduced ? 0 : Math.min(0.16, e.strength * 0.008);
-      const count = Math.min(
-        innerWidth < 700 ? 24 : 60,
-        Math.ceil(e.strength * 6),
-      );
+      const profile = impactProfile(e.strength);
+      if (!this.reduced && profile.shake > this.shake * Math.exp(-this.shakeAge * 20)) {
+        this.shake = profile.shake;
+        this.shakeAge = 0;
+      }
+      const height = this.impactHeight + (e.x * e.x + e.z * e.z) * .024;
+      if (!this.reduced && profile.tier > 0) {
+        const flare = this.impactFlashes.find(f => f.userData.life <= 0)
+          ?? this.impactFlashes.reduce((a, b) => a.userData.life < b.userData.life ? a : b);
+        flare.position.set(e.x, height, e.z);
+        flare.userData.life = flare.userData.totalLife = .065 + profile.tier * .025;
+        flare.userData.size = .3 + profile.gain * .55;
+      }
+      const count = Math.min(360 - this.particles.length, this.reduced ? 8 : innerWidth < 700 ? 24 : 48, profile.sparks);
       for (let i = 0; i < count; i++) {
-        const a = i * 2.39996;
+        const a = i * 2.39996 + e.time;
+        const life = this.reduced ? .08 : .12 + profile.tier * .055 + (i % 4) * .025;
+        const speed = this.reduced ? 0 : (.7 + profile.gain) * (1 + (i % 4) * .65);
         this.particles.push({
-          p: new THREE.Vector3(e.x, 0.5, e.z),
+          p: new THREE.Vector3(e.x, height, e.z),
           v: new THREE.Vector3(
-            Math.cos(a) * (1 + (i % 4)),
-            1.3 + (i % 5) * 0.5,
-            Math.sin(a) * (1 + (i % 4)),
+            Math.cos(a) * speed,
+            this.reduced ? 0 : .7 + (i % 5) * .35,
+            Math.sin(a) * speed,
           ),
-          life: 0.4 + (i % 4) * 0.12,
-          color: new THREE.Color(i % 3 ? "#ffcb7c" : "#edffb2"),
+          life, totalLife: life,
+          color: new THREE.Color(i % 3 ? "#ffbd60" : "#fff5d2"),
         });
       }
     }
@@ -401,13 +449,14 @@ export class Arena {
       look.y += entry.height * 0.25;
       base.y += entry.height * 0.18;
     }
-    base.x += Math.sin(this.time * 130) * this.shake;
-    base.z += Math.cos(this.time * 103) * this.shake;
-    const cameraBlend = damping(dt || 1 / 60, 8);
+    const cameraBlend = damping(dt, 8);
     this.camera.position.lerp(base, cameraBlend);
     this.cameraFocus.lerp(look, cameraBlend);
-    this.shake *= 1 - damping(dt, 12);
     this.camera.lookAt(this.cameraFocus);
+    this.shakeAge += dt;
+    const kick = impactShake(this.shakeAge, this.shake, this.reduced);
+    this.camera.rotateY(kick.x);
+    this.camera.rotateX(kick.y);
     this.models.forEach((g, i) => {
       const t = battle?.tops[i];
       if (t) {
@@ -501,24 +550,36 @@ export class Arena {
       }
     });
     if (!battle) this.trails.forEach((l) => (l.visible = false));
-    this.particles = this.particles.filter((p) => p.life > 0).slice(-360);
+    this.particles = this.particles.filter((p) => p.life > dt);
     const pos = this.particleGeometry.getAttribute(
         "position",
       ) as THREE.BufferAttribute,
       col = this.particleGeometry.getAttribute(
         "color",
       ) as THREE.BufferAttribute;
+    const streak = this.sparkStreaks.geometry.getAttribute("position") as THREE.BufferAttribute;
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i];
       p.life -= dt;
-      p.v.y -= dt * 6;
+      if (!this.reduced) p.v.y -= dt * 8;
       p.p.addScaledVector(p.v, dt);
       pos.setXYZ(i, p.p.x, p.p.y, p.p.z);
-      col.setXYZ(i, p.color.r * p.life, p.color.g * p.life, p.color.b * p.life);
+      const fade = p.life / p.totalLife;
+      col.setXYZ(i, p.color.r * fade, p.color.g * fade, p.color.b * fade);
+      streak.setXYZ(i * 2, p.p.x, p.p.y, p.p.z);
+      streak.setXYZ(i * 2 + 1, p.p.x - p.v.x * .045 * fade, p.p.y - p.v.y * .045 * fade, p.p.z - p.v.z * .045 * fade);
     }
     this.particleGeometry.setDrawRange(0, this.particles.length);
     pos.needsUpdate = true;
     col.needsUpdate = true;
+    streak.needsUpdate = true;
+    this.sparkStreaks.geometry.setDrawRange(0, this.reduced ? 0 : this.particles.length * 2);
+    this.impactFlashes.forEach(flare => {
+      flare.userData.life = Math.max(0, flare.userData.life - dt);
+      const fade = flare.userData.life / (flare.userData.totalLife || 1);
+      (flare.material as THREE.SpriteMaterial).opacity = this.reduced ? 0 : fade * .7;
+      flare.scale.setScalar(flare.userData.size * (1 + (1 - fade) * .5) || 0);
+    });
     this.eventFlash = Math.max(0, this.eventFlash - dt);
     this.renderer.render(this.scene, this.camera);
   }

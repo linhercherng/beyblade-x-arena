@@ -1,6 +1,7 @@
 import type { Battle, BattleEvent } from "./physics.ts";
 import tracks from "./music-tracks.json";
 import { musicVolume, type MusicMode } from "./music-state.ts";
+import { impactProfile, impactSamples, musicLevel } from "./impact.ts";
 
 type Playing = {
   mode: MusicMode;
@@ -18,6 +19,7 @@ export class Sound {
   muted = false;
   sfx: GainNode | null = null;
   music: GainNode | null = null;
+  musicDuck: GainNode | null = null;
   volume = 0.6;
   requested: MusicMode | null = null;
   playing: Playing | null = null;
@@ -26,6 +28,10 @@ export class Sound {
   private buffers = new Map<MusicMode, Promise<AudioBuffer>>();
   private failed = new Set<MusicMode>();
   private offsets = new Map<MusicMode, number>();
+  private strikes: AudioBuffer[] = [];
+  private impacts = new Set<AudioBufferSourceNode>();
+  private lastImpact = -Infinity;
+  private lastStrength = 0;
   constructor() {
     try {
       this.muted = localStorage.getItem("spinforge-muted") === "true";
@@ -51,8 +57,15 @@ export class Sound {
       this.sfx.gain.value = 0.27;
       this.sfx.connect(this.master);
       this.music = this.ctx.createGain();
-      this.music.gain.value = this.volume;
-      this.music.connect(this.master);
+      this.music.gain.value = musicLevel(this.volume, this.requested);
+      this.musicDuck = this.ctx.createGain();
+      this.music.connect(this.musicDuck).connect(this.master);
+      this.strikes = ([0, 1, 2] as const).map(tier => {
+        const samples = impactSamples(tier, this.ctx!.sampleRate);
+        const buffer = this.ctx!.createBuffer(1, samples.length, this.ctx!.sampleRate);
+        buffer.getChannelData(0).set(samples);
+        return buffer;
+      });
       for (const pan of [-0.6, 0.6]) {
         const osc = this.ctx.createOscillator(),
           gain = this.ctx.createGain(),
@@ -89,7 +102,7 @@ export class Sound {
     this.volume = musicVolume(value);
     try { localStorage.setItem("spinforge-music-volume", String(this.volume)); } catch { /* 暫存設定。 */ }
     if (this.ctx && this.music)
-      this.music.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.04);
+      this.music.gain.setTargetAtTime(musicLevel(this.volume, this.requested), this.ctx.currentTime, 0.04);
   }
   private buffer(mode: MusicMode) {
     if (!this.buffers.has(mode)) {
@@ -179,14 +192,25 @@ export class Sound {
   }
   event(e: BattleEvent) {
     if (e.type === "hit") {
-      this.tone(
-        180 + e.strength * 26,
-        0.08,
-        "triangle",
-        Math.min(0.8, e.strength * 0.08),
-        55,
-      );
-      this.tone(1400, 0.045, "square", 0.1, 300);
+      if (!this.ctx || !this.sfx || !this.musicDuck || this.muted) return;
+      const now = this.ctx.currentTime;
+      if (this.impacts.size >= 6 || (now - this.lastImpact < .035 && e.strength <= this.lastStrength)) return;
+      this.lastImpact = now;
+      this.lastStrength = e.strength;
+      const profile = impactProfile(e.strength);
+      const source = this.ctx.createBufferSource(), gain = this.ctx.createGain(), pan = this.ctx.createStereoPanner();
+      source.buffer = this.strikes[profile.tier];
+      source.playbackRate.value = 1 + Math.sin(e.time * 17 + e.x) * .04;
+      gain.gain.value = profile.gain;
+      pan.pan.value = Math.max(-.85, Math.min(.85, e.x / 5));
+      source.connect(gain).connect(pan).connect(this.sfx);
+      this.impacts.add(source);
+      source.onended = () => { source.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source); };
+      source.start();
+      const duck = this.musicDuck.gain;
+      duck.cancelAndHoldAtTime(now);
+      duck.linearRampToValueAtTime(Math.min(duck.value, profile.duck), now + .004);
+      duck.setTargetAtTime(1, now + .08, .085);
     }
     if (e.type === "dash") this.tone(240, 0.45, "sawtooth", 0.22, 1600);
     if (e.type === "shout") {
@@ -204,6 +228,8 @@ export class Sound {
     mode: MusicMode | null,
   ) {
     if (!this.ctx) return;
+    if (mode !== this.requested)
+      this.music?.gain.setTargetAtTime(musicLevel(this.volume, mode), this.ctx.currentTime, .06);
     this.rotors.forEach((r, i) => {
       r.osc.frequency.setTargetAtTime(
         45 + (battle?.tops[i].rpm ?? 0) * 135,
