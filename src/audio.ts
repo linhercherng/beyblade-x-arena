@@ -1,5 +1,5 @@
 import type { Battle, BattleEvent, Result } from "./physics.ts";
-import { cueSamples, type Cue } from "./finish.ts";
+import { cueSamples, FINISH_RECOVERY, type Cue } from "./finish.ts";
 import tracks from "./music-tracks.json";
 import { musicVolume, type MusicMode } from "./music-state.ts";
 import { impactProfile, impactSamples, musicLevel } from "./impact.ts";
@@ -32,6 +32,7 @@ export class Sound {
   private offsets = new Map<MusicMode, number>();
   private strikes: AudioBuffer[] = [];
   private impacts = new Map<AudioBufferSourceNode,GainNode>();
+  private impactTails = new Map<AudioBufferSourceNode,GainNode>();
   private lastImpact = -Infinity;
   private lastStrength = 0;
   private cueBuffers = new Map<Cue, AudioBuffer>();
@@ -78,6 +79,10 @@ export class Sound {
         const samples=dashSamples(this.ctx.sampleRate,grip);
         const buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
         buffer.getChannelData(0).set(samples);this.dashBuffers.set(grip,buffer);
+      }
+      for(const kind of ["burst","over","extreme","spin","draw"] as const) {
+        const samples=cueSamples(kind,this.ctx.sampleRate),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
+        buffer.getChannelData(0).set(samples);this.cueBuffers.set(kind,buffer);
       }
       for (const pan of [-0.6, 0.6]) {
         const osc = this.ctx.createOscillator(),
@@ -220,7 +225,7 @@ export class Sound {
       pan.pan.value = Math.max(-.85, Math.min(.85, e.x / 5));
       source.connect(gain).connect(pan).connect(this.sfx);
       this.impacts.set(source,gain);
-      source.onended = () => { source.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source); };
+      source.onended = () => { source.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source);this.impactTails.delete(source); };
       source.start();
       const duck = this.musicDuck.gain;
       duck.cancelAndHoldAtTime(now);
@@ -232,12 +237,17 @@ export class Sound {
       this.tone(330, 0.25, "triangle", 0.6, 990);
     }
   }
-  private stopImpacts() {
+  private stopImpacts(seconds=.015) {
     if(!this.ctx)return;
     const now=this.ctx.currentTime;
+    for(const [source,gain] of this.impactTails) {
+      gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);source.stop(now+.015);
+    }
+    this.impactTails.clear();
     for(const [source,gain] of this.impacts) {
-      gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);
-      source.stop(now+.015);
+      gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+seconds);
+      source.stop(now+seconds);
+      if(seconds>.015)this.impactTails.set(source,gain);
     }
     this.impacts.clear();
   }
@@ -281,9 +291,9 @@ export class Sound {
     });
     this.cues.clear();
   }
-  private playCue(kind: Cue) {
+  private playCue(kind: Cue, initialRate=1) {
     if (!this.ctx || !this.sfx || this.muted) return;
-    this.stopImpacts();
+    this.stopImpacts(initialRate<1?.065:.015);
     this.stopDashes();
     this.stopCues();
     if (!this.cueBuffers.has(kind)) {
@@ -294,19 +304,23 @@ export class Sound {
     }
     const source = this.ctx.createBufferSource(), gain = this.ctx.createGain();
     source.buffer = this.cueBuffers.get(kind)!;
-    gain.gain.value = 1.2;
+    const now=this.ctx.currentTime;
+    source.playbackRate.setValueAtTime(initialRate,now);
+    source.playbackRate.linearRampToValueAtTime(1,now+FINISH_RECOVERY);
+    gain.gain.setValueAtTime(initialRate<1?0:1.2,now);
+    if(initialRate<1)gain.gain.linearRampToValueAtTime(1.2,now+.035);
     source.connect(gain).connect(this.sfx);
     this.cues.set(source, gain);
     source.onended = () => { source.disconnect(); gain.disconnect(); this.cues.delete(source); };
     source.start();
     if (this.musicDuck) {
-      const now = this.ctx.currentTime, duck = this.musicDuck.gain;
+      const duck = this.musicDuck.gain;
       duck.cancelAndHoldAtTime(now);
-      duck.linearRampToValueAtTime(.25, now + .015);
-      duck.setTargetAtTime(1, now + .65, .12);
+      duck.linearRampToValueAtTime(Math.min(duck.value,.25), now + .015);
+      duck.setTargetAtTime(1, now + (initialRate<1?1.45:.65), .12);
     }
   }
-  finish(result: Result) { this.playCue(result.winner === null ? "draw" : result.finish); }
+  finish(result: Result, initialRate=1) { this.playCue(result.winner === null ? "draw" : result.finish,initialRate); }
   victory(won: boolean) { this.playCue(won ? "victory" : "defeat"); }
   update(
     battle: Battle | null,

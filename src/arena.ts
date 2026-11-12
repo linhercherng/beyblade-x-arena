@@ -3,7 +3,7 @@ import { createStadium } from "./stadium.ts";
 import { impactProfile, impactShake } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
-import { exitPose, burstPose, FINISH_COLORS } from "./finish.ts";
+import { exitPose, burstPose, finishPlayback, FINISH_COLORS } from "./finish.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
@@ -59,19 +59,19 @@ interface Particle {
   color: THREE.Color;
 }
 const RIBBON_POINT = [0,0,1,0,1,1], RIBBON_SIDE = [-1,1,-1,1,1,-1];
+export function viewRange(radius: number, camera: THREE.PerspectiveCamera) {
+  const halfFov=Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*Math.min(1,camera.aspect));
+  return radius/Math.sin(halfFov);
+}
 export function closeUpRange(
   distance: number,
   camera: THREE.PerspectiveCamera,
   openingHeight = 0,
 ) {
-  const halfFov = Math.atan(
-    Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
-      Math.min(1, camera.aspect),
-  );
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov / 2);
   return Math.max(
     3.7,
-    (distance / 2 + 0.75) / Math.sin(halfFov),
+    viewRange(distance/2+.75,camera),
     (0.75 + openingHeight * 0.75) / Math.sin(verticalHalfFov),
   );
 }
@@ -134,6 +134,11 @@ export class Arena {
   reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   time = 0;
   finishTime = 0;
+  finishRate = 1;
+  finishShock = 0;
+  finishZoom = 0;
+  finishCameraPosition = new THREE.Vector3();
+  finishCameraFocus = new THREE.Vector3();
   finished: Battle | null = null;
   good = true;
   constructor() {
@@ -335,6 +340,8 @@ export class Arena {
     this.renderer.domElement.style.height = h + "px";
   }
   setBeys(beys: Bey[]) {
+    this.finishRate=1;this.finishShock=this.finishZoom=0;
+    (this.hitRing.material as THREE.MeshBasicMaterial).color.set("#b8f6ff");
     this.hitPlayback.reset();this.hitRing.visible=false;
     this.impactHeight = Math.max(...beys.map(b => {
       const spec = modelSpec(b);
@@ -449,17 +456,26 @@ export class Arena {
     return dashHit;
   }
   finish(b: Battle) {
-    if (!b.result) return;
+    if (!b.result) return 1;
+    const chained=this.hitPlayback.handoff(b,this.time,this.reduced),hit=this.hitPlayback.sample(this.time,this.reduced);
+    this.finishRate=chained?Math.max(.35,Math.min(.6,hit.scale)):1;
+    this.finishShock=chained?hit.shock:0;this.finishZoom=chained?hit.zoom:0;
+    this.finishCameraPosition.copy(this.camera.position);this.finishCameraFocus.copy(this.cameraFocus);
     this.hitPlayback.reset();this.hitRing.visible=false;
     this.finished = b;
     this.dashStates=[null,null];this.dashRibbons.forEach(r=>r.visible=false);
     this.finishTime = this.time;
     const result = b.result, kind = result.winner === null ? "draw" : result.finish;
+    if(chained) {
+      this.particles.forEach((p,i)=>p.color.set(i%3?FINISH_COLORS[kind]:"#fff7da"));
+      this.impactFlashes.forEach(f=>(f.material as THREE.SpriteMaterial).color.set(FINISH_COLORS[kind]));
+      (this.hitRing.material as THREE.MeshBasicMaterial).color.set(FINISH_COLORS[kind]);
+    }
     this.exitTrail.visible = false;
     const losers = result.winner === null ? [0, 1] : [1 - result.winner];
     for (const index of losers) {
       const top = b.tops[index], start = this.particles.length;
-      this.event({type: "hit", x: top.x, z: top.z, strength: kind === "draw" ? 1 : kind === "burst" || kind === "extreme" ? 14 : 4, player:index, time:b.time});
+      if(!chained)this.event({type: "hit", x: top.x, z: top.z, strength: kind === "draw" ? 1 : kind === "burst" || kind === "extreme" ? 14 : 4, player:index, time:b.time});
       for (let i = start; i < this.particles.length; i++) this.particles[i].color.set(i % 3 ? FINISH_COLORS[kind] : "#fff7da");
       if ((result.finish === "over" || result.finish === "extreme") && result.winner !== null) {
         const positions = this.exitTrail.geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -470,10 +486,12 @@ export class Arena {
         }
         positions.needsUpdate = true;
         this.exitTrail.geometry.computeBoundingSphere();
+        this.exitTrail.geometry.setDrawRange(0,0);
         (this.exitTrail.material as THREE.LineBasicMaterial).color.set(FINISH_COLORS[kind]);
         this.exitTrail.visible = !this.reduced;
       }
     }
+    return this.finishRate;
   }
   draw(
     dt: number,
@@ -483,10 +501,12 @@ export class Arena {
     openingSeconds: number | null = null,
   ) {
     this.time += dt;
+    const finishAge=Math.max(0,this.time-this.finishTime),finishElapsed=finishPlayback(finishAge,this.finishRate);
     const hit=this.hitPlayback.sample(this.time,this.reduced);
-    this.hitRing.visible=!!battle&&!battle.result&&hit.shock>0;
-    this.hitRing.scale.setScalar(1+(1-hit.shock)*3.8);
-    (this.hitRing.material as THREE.MeshBasicMaterial).opacity=hit.shock*.65;
+    const shock=battle?.result?this.finishShock*(1-THREE.MathUtils.smoothstep(finishAge,0,.18)):hit.shock;
+    this.hitRing.visible=!!battle&&shock>0;
+    this.hitRing.scale.setScalar(1+(1-shock)*3.8);
+    (this.hitRing.material as THREE.MeshBasicMaterial).opacity=shock*.65;
     const poses = battle?.tops.map((t, i) =>
       interpolatePose(previous[i] ?? t, t, alpha),
     );
@@ -526,18 +546,22 @@ export class Arena {
     const exitFinish = !!battle?.result && ["over", "extreme"].includes(battle.result.finish);
     if (battle && (!this.closeUp || exitFinish))
       base.multiplyScalar(Math.max(1, 1.1 / this.camera.aspect));
+    // 接盤最外緣連同傾斜模型需要6.5的取景半徑。
+    if(exitFinish)base.multiplyScalar(Math.max(1,viewRange(6.5,this.camera)/base.length()));
     if (battle && this.closeUp && !exitFinish) {
       const [a, b] = poses!,
         distance = Math.hypot(a.x - b.x, a.z - b.z);
       look.set((a.x + b.x) / 2, 0.2, (a.z + b.z) / 2);
-      const range = closeUpRange(distance, this.camera, entry?.height ?? 0);
+      const spread=battle.result?.finish==="burst" ? 1-Math.pow(1-Math.min(1,finishElapsed/1.25),3) : 0;
+      const range = closeUpRange(distance+spread*1.64, this.camera, entry?.height ?? 0);
       base.set(
         look.x + Math.sin(az + 0.4) * range,
         3.4,
         look.z + Math.cos(az + 0.4) * range,
       );
-      if(!battle.result && hit.zoom>0) {
-        const factor=hitZoomFactor(base.distanceTo(look),range*1.03,hit.zoom);
+      const zoom=battle.result?this.finishZoom*(1-THREE.MathUtils.smoothstep(finishAge,0,.3)):hit.zoom;
+      if(zoom>0) {
+        const factor=hitZoomFactor(base.distanceTo(look),range*1.03,zoom);
         base.sub(look).multiplyScalar(factor).add(look);
       }
     }
@@ -546,8 +570,14 @@ export class Arena {
       base.y += entry.height * 0.18;
     }
     const cameraBlend = damping(dt, 8);
-    this.camera.position.lerp(base, cameraBlend);
-    this.cameraFocus.lerp(look, cameraBlend);
+    if(battle?.result && this.finishRate<1 && finishAge<.36) {
+      const blend=THREE.MathUtils.smoothstep(finishAge,0,.36);
+      this.camera.position.lerpVectors(this.finishCameraPosition,base,blend);
+      this.cameraFocus.lerpVectors(this.finishCameraFocus,look,blend);
+    } else {
+      this.camera.position.lerp(base, cameraBlend);
+      this.cameraFocus.lerp(look, cameraBlend);
+    }
     this.camera.lookAt(this.cameraFocus);
     this.shakeAge += dt;
     const kick = impactShake(this.shakeAge, this.shake, this.reduced);
@@ -591,7 +621,7 @@ export class Arena {
             opening.pulse * 0.45;
         }
         if (battle!.result) {
-          const result = battle!.result, elapsed = Math.max(0, this.time - this.finishTime);
+          const result = battle!.result, elapsed = finishElapsed;
           const loser = result.winner === null || result.winner !== i;
           if (loser && result.finish === "burst") {
             const upright = this.reduced ? 0 : 1-Math.min(1,elapsed/1.25);
@@ -714,7 +744,8 @@ export class Arena {
       flare.scale.setScalar(flare.userData.size * (1 + (1 - fade) * .5) || 0);
     });
     if (battle?.result) {
-      const age = this.time-this.finishTime;
+      const age = finishElapsed;
+      this.exitTrail.geometry.setDrawRange(0,Math.min(18,1+Math.floor(age/(battle.result.finish==="over"?.95:.55)*17)));
       this.exitTrail.visible = !this.reduced && ["over", "extreme"].includes(battle.result.finish) && age<1.2 && battle.result.winner!==null;
       (this.exitTrail.material as THREE.LineBasicMaterial).opacity = .7*Math.max(0,1-age/1.2);
     }

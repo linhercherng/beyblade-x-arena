@@ -10,6 +10,7 @@ test('真實對決自然觸發四種終結並接續各自3D演出',async({page})
     const m=await page.evaluate(()=>(window as any).combatMetrics());
     expect(m.result.finish).toBe(kind);expect(m.version).toBe(4);
     expect(m.result.time).toBeCloseTo(examples[kind].time,9);expect(m.result.winner).toBe(examples[kind].winner);
+    if(kind==='burst')expect(m.finishRate).toBeLessThan(1);
     const loser=1-m.result.winner;
     if(kind==='burst')expect(new Set(m.parts[loser].map((p:number[])=>p.join(','))).size).toBe(3);
     if(kind==='over')expect(Math.abs(m.positions[loser][0])).toBeGreaterThan(5.4);

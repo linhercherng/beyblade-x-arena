@@ -15,7 +15,7 @@ document.addEventListener('click',e=>{
  if(!meters)meters=[sound.sfx,sound.musicDuck,sound.master].map(bus=>{const a=sound.ctx.createAnalyser();a.fftSize=512;bus.connect(a);return a;});
  if(id==='pause'){paused=!paused;return;}if(id==='mute'){sound.toggle();return;}if(id==='bgm'){sound.setMusicVolume(1);return;}
  if(id==='whole'){arena.closeUp=false;reset();return;}
- if(id==='finish'){battle.result={winner:0,finish:'burst',points:2,time:battle.time};arena.finish(battle);sound.finish(battle.result);return;}
+ if(id==='finish'){battle.result={winner:0,finish:'burst',points:2,time:battle.time};const rate=arena.finish(battle);sound.finish(battle.result,rate);return;}
  reset();if(id==='play')sound.event({type:'hit',x:0,z:0,strength:14,player:0,time:battle.time});if(id!=='normal')hit();paused=id==='capture';
  if(id==='capture')for(let i=0;i<10;i++){move(1/120*arena.playbackScale);arena.draw(1/120,battle);}
  if(id==='rapid')stressUntil=arena.time+3;

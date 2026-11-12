@@ -148,14 +148,14 @@ async function playMatch(page: Page, local = false) {
     if (rounds === 1) {
       await expect(page.locator(".finish-card")).toBeVisible({ timeout: 45000 });
       await expect.poll(() => page.locator(".finish-score").evaluate(el => getComputedStyle(el).opacity)).toBe("1");
+      await action(page, "pause").first().click();
+      const times = await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime));
       await expect(page.locator(".finish-victor")).toContainText(/WIN|出場順序/);
       expect(await page.locator(".finish-card").evaluate(el => el.getBoundingClientRect().right <= innerWidth)).toBe(true);
       await page.screenshot({ path: local ? "artifacts/finish-live-mobile-v080.png" : "artifacts/finish-live-desktop-v080.png" });
-      const times = await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime));
-      await action(page, "pause").first().click();
       await page.waitForTimeout(100);
-      await action(page, "pause").first().click();
       expect(await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime))).toEqual(times);
+      await action(page, "pause").first().click();
     }
     await expect(
       page.locator('[data-action="next-round"], [data-action="rematch"]'),

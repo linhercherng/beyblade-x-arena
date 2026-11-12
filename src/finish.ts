@@ -1,6 +1,11 @@
 import type { Finish, Result } from "./physics.ts";
 export type Cue = Finish | "draw" | "victory" | "defeat";
 export const FINISH_COLORS = { spin: "#b6f55b", burst: "#ffbc56", over: "#68dbff", extreme: "#ff634c", draw: "#b9c9d7" };
+export const FINISH_RECOVERY = .22;
+export function finishPlayback(age: number, initialRate=1) {
+  const t=Math.max(0,age),ramp=Math.min(t,FINISH_RECOVERY);
+  return t-(1-initialRate)*(ramp-ramp*ramp/(2*FINISH_RECOVERY));
+}
 export function exitPose(kind: "over" | "extreme", age: number, origin: {x:number;y:number;z:number}, reduced=false) {
   const u = reduced ? 1 : Math.max(0, Math.min(1, age / (kind === "over" ? .95 : .55)));
   const x = kind === "over" ? (origin.x < 0 ? -5.65 : 5.65) : Math.max(-.65, Math.min(.65, origin.x));
@@ -26,7 +31,7 @@ export function scorePreview(result: Result, scores: readonly number[]) {
   return next;
 }
 export function cueSamples(kind: Cue, rate: number) {
-  const duration = kind === "victory" ? 1.45 : kind === "extreme" ? 1.25 : kind === "burst" ? 1.1 : .95;
+  const duration = kind === "burst" ? 1.5 : kind === "victory" ? 1.45 : kind === "over" ? 1.3 : kind === "extreme" ? 1.25 : .95;
   const samples = new Float32Array(Math.ceil(duration*rate));
   const notes = kind === "victory" ? [523.25,659.25,783.99,1046.5]
     : kind === "defeat" ? [392,349.23,261.63] : [329.63,311.13];
@@ -39,12 +44,13 @@ export function cueSamples(kind: Cue, rate: number) {
     if (kind === "burst") {
       for (let j=0;j<3;j++) { const s=t-j*.075; if(s>=0)
         value += (noise-low)*.5*Math.exp(-s/.035)+Math.sin(2*Math.PI*(1361+j*731)*s)*.23*Math.exp(-s/.14); }
+      for(let j=0;j<3;j++){const s=t-(1.17+j*.04);if(s>=0)value+=Math.sin(2*Math.PI*(1540+j*530)*s)*.18*Math.exp(-s/.035);}
     } else if (kind === "over") {
-      if(t<.5) value=(noise-low)*.4*Math.sin(Math.PI*t/.5)+Math.sin(2*Math.PI*(430*t-260*t*t))*.16;
-      const s=t-.52; if(s>=0) value+=Math.sin(2*Math.PI*102*s)*.6*Math.exp(-s/.075)+(noise-low)*.3*Math.exp(-s/.012);
+      if(t<.95) value=(noise-low)*.4*Math.sin(Math.PI*t/.95)+Math.sin(2*Math.PI*(430*t-130*t*t))*.16*Math.sin(Math.PI*t/.95);
+      const s=t-.95; if(s>=0) value+=Math.sin(2*Math.PI*102*s)*.6*Math.exp(-s/.075)+(noise-low)*.3*Math.exp(-s/.012);
     } else if (kind === "extreme") {
-      if(t<.43) value=(noise-low)*.45*(t/.43)+Math.sin(2*Math.PI*(120*t+1100*t*t))*.24;
-      const s=t-.43; if(s>=0) value+=Math.sin(2*Math.PI*62*s)*.7*Math.exp(-s/.17)+(noise-low)*.6*Math.exp(-s/.035);
+      if(t<.55) value=(noise-low)*.45*(t/.55)+Math.sin(2*Math.PI*(120*t+1100*t*t))*.24;
+      const s=t-.55; if(s>=0) value+=Math.sin(2*Math.PI*62*s)*.7*Math.exp(-s/.17)+(noise-low)*.6*Math.exp(-s/.035);
     } else if (kind === "spin") {
       value=Math.sin(2*Math.PI*(130*t-48*t*t))*.35*Math.exp(-t/.2);
       const s=t-.5; if(s>=0) value+=Math.sin(2*Math.PI*79*s)*.25*Math.exp(-s/.07);

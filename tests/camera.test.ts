@@ -1,7 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
-import { closeUpRange, renderPixelRatio } from "../src/arena.ts";
+import { closeUpRange, viewRange, renderPixelRatio } from "../src/arena.ts";
+
+test("終結全景涵蓋接盤外緣與完整傾斜模型",()=>{
+ for(const aspect of [.462,1.5,2.4])for(const az of [-1.2,0,.4]){
+  const camera=new THREE.PerspectiveCamera(39,aspect,.1,100),direction=new THREE.Vector3(Math.sin(az)*12.5,10.8,Math.cos(az)*12.5).normalize();
+  camera.position.copy(direction.multiplyScalar(viewRange(6.5,camera)));camera.lookAt(0,0,0);camera.updateMatrixWorld();
+  for(let i=0;i<72;i++)for(const y of [.1,.9]){const a=i/72*Math.PI*2,p=new THREE.Vector3(Math.cos(a)*6.2,y,Math.sin(a)*6.2).project(camera);assert.ok(Math.abs(p.x)<1&&Math.abs(p.y)<1,`${aspect}/${az}: ${p.toArray()}`);}
+ }
+});
 
 test("高畫素全場限制繪圖像素，圖鑑小畫布與手機保留原清晰度", () => {
   for (const [w, h] of [

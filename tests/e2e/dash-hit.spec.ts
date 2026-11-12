@@ -13,7 +13,7 @@ test('命中音效在最大配樂前景，暫停及靜音取消尾音，終結�
  await page.locator('#play').click();const priority=await metrics(page);expect(priority.impactRates.some((r:number)=>Math.abs(r-.8)<.001)).toBe(true);await expect.poll(async()=>(await metrics(page)).peakSfx).toBeGreaterThan(.02);const m=await metrics(page);expect(m.peakSfx).toBeGreaterThan(m.musicAtPeak*1.5);expect(m.peakMix).toBeLessThan(.95);
  await page.locator('#pause').click();expect((await metrics(page)).impacts).toBe(0);
  await page.locator('#play').click();await page.locator('#mute').click();expect((await metrics(page)).impacts).toBe(0);
- await page.locator('#play').click();await page.locator('#finish').click();const f=await metrics(page);expect(f.sample.scale).toBe(1);expect(f.ring.visible).toBe(false);
+ await page.locator('#play').click();await page.locator('#finish').click();const f=await metrics(page);expect(f.sample.scale).toBe(1);await expect.poll(async()=>(await metrics(page)).ring.visible).toBe(false);
  writeFileSync('artifacts/dash-hit-audio-v0130.json',JSON.stringify(m,null,2));
 });
 test('手機持續密集命中幀時間及資源有界，近鏡不裁切陀螺',async({page})=>{
