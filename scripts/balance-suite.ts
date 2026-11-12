@@ -155,3 +155,25 @@ export function runEdges() {
     failures,
   };
 }
+
+export function runAllPairs() {
+  let battles = 0, minSeconds = Infinity, maxSeconds = 0;
+  const failures: unknown[] = [];
+  for (const [i, a] of BEYS.entries()) for (const [j, b] of BEYS.entries())
+    for (let sample = 0; sample < 4; sample++) {
+      const seed = (20261113 + i * 104729 + j * 7919 + sample * 15485863) >>> 0;
+      const random = rng(seed);
+      const powers = [[.4, .4], [.65, 1], [1, 1], [.4 + random() * .6, .4 + random() * .6]][sample];
+      const inputs = powers.map((power, p) => ({ power, lane: (sample + p) % 3, angle: sample === 3 ? random() * 30 : p ? 30 : 0 }));
+      const s = createBattle(a, b, inputs, seed);
+      while (!s.result && s.time < 41) {
+        if (sample % 2 && s.tick === 720) shout(s, 0);
+        if (sample % 2 && s.tick === 840) shout(s, 1);
+        stepBattle(s);
+      }
+      battles++;
+      minSeconds = Math.min(minSeconds, s.time); maxSeconds = Math.max(maxSeconds, s.time);
+      if (!s.result || s.time < 15 || s.time > 40) failures.push({ beys: [a.id, b.id], seed, inputs, sample, time: s.time });
+    }
+  return { battles, minSeconds, maxSeconds, outsideTarget: failures.length, failures };
+}

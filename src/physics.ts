@@ -4,7 +4,9 @@ import {
   stepBattle as stepLegacyBattle,
 } from "./physics-v1.ts";
 import legacyStats from "./legacy-stats.json" with { type: "json" };
-export const ENGINE_VERSION = 2;
+import { createBattle as createVersion2Battle, stepBattle as stepVersion2Battle } from "./physics-v2.ts";
+export const ENGINE_VERSION = 3;
+export const PACING = { minSeconds: 15, fatigueFrom: 30, maxSeconds: 40, reserveRpm: 0.03, reserveBurst: 0.01 };
 export const TUNING = {
   friction: 0.034,
   staminaFriction: 0.0001,
@@ -63,7 +65,7 @@ export interface BattleEvent {
   time: number;
 }
 export interface Battle {
-  version?: 1 | 2;
+  version?: 1 | 2 | 3;
   tops: [Top, Top];
   time: number;
   tick: number;
@@ -85,8 +87,9 @@ export function createBattle(
   b: Bey,
   inputs: readonly Launch[],
   seed: number,
-  version: 1 | 2 = ENGINE_VERSION,
+  version: 1 | 2 | 3 = ENGINE_VERSION,
 ): Battle {
+  if (version === 2) return createVersion2Battle(a, b, inputs, seed, 2);
   if (version === 1) {
     const original = (b: Bey) => ({
       ...b,
@@ -181,6 +184,10 @@ export function stepBattle(s: Battle) {
     stepLegacyBattle(s);
     return;
   }
+  if (s.version === 2) {
+    stepVersion2Battle(s as Parameters<typeof stepVersion2Battle>[0]);
+    return;
+  }
   if (s.result) return;
   s.tick++;
   s.time = s.tick * DT;
@@ -224,9 +231,11 @@ export function stepBattle(s: Battle) {
     t.z += t.vz * DT;
     const endurance =
       TUNING.friction - t.bey.stats.sta * TUNING.staminaFriction;
+    // 末段對兩方施加相同耗轉；不補能量，總轉速必在40秒前耗盡。
+    const fatigue = s.time > PACING.fatigueFrom ? 1.1 / (PACING.maxSeconds - PACING.fatigueFrom) : 0;
     t.rpm = Math.max(
       0,
-      t.rpm - DT * (endurance + speed * 0.00005 + t.tilt * 0.0015),
+      t.rpm - DT * (endurance + fatigue + speed * 0.00005 + t.tilt * 0.0015),
     );
     t.rotation += spin * t.rpm * DT * 65;
     const newR = Math.hypot(t.x, t.z);
@@ -259,7 +268,7 @@ export function stepBattle(s: Battle) {
     }
     if (newR > RADIUS - TOP_RADIUS * 0.4) {
       const outwardSpeed = (t.vx * t.x + t.vz * t.z) / newR;
-      const canClearLip = outwardSpeed > TUNING.lip + TUNING.gyroLift * t.rpm;
+      const canClearLip = s.time >= PACING.minSeconds && outwardSpeed > TUNING.lip + TUNING.gyroLift * t.rpm;
       const sidePocket =
         Math.abs(t.z) < 0.6 && Math.abs(t.x) > 3.8 && canClearLip;
       const extremePocket = t.z > 3.8 && Math.abs(t.x) < 0.78 && canClearLip;
@@ -341,6 +350,21 @@ export function stepBattle(s: Battle) {
         player: 0,
         time: s.time,
       });
+    }
+  }
+  if (s.time < PACING.minSeconds) {
+    for (const t of s.tops) {
+      // 開場保護作用於物理狀態，避免停轉、解體或出盤後仍等待結算。
+      t.rpm = Math.max(t.rpm, PACING.reserveRpm);
+      t.burst = Math.max(t.burst, PACING.reserveBurst);
+      const r = Math.hypot(t.x, t.z), wall = RADIUS - TOP_RADIUS * 0.4;
+      if (r > wall) {
+        const nx = t.x / r, nz = t.z / r;
+        const outward = Math.max(0, t.vx * nx + t.vz * nz);
+        t.vx -= 1.65 * outward * nx;
+        t.vz -= 1.65 * outward * nz;
+        t.x = nx * wall; t.z = nz * wall;
+      }
     }
   }
   const fa = finishFor(a),

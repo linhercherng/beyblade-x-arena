@@ -43,6 +43,7 @@ test("新引擎仍能依物理狀態產生越界、極限及爆裂終結", () =>
   for (const finish of ["over", "extreme"] as const) {
     const s = createBattle(BEYS[0], BEYS[1], launches, 2),
       t = s.tops[0];
+    s.tick = 16 / DT; s.time = 16;
     Object.assign(s.tops[1], { x: -1, z: -1 });
     Object.assign(t, {
       x: finish === "over" ? 4.12 : 0,
@@ -57,6 +58,7 @@ test("新引擎仍能依物理狀態產生越界、極限及爆裂終結", () =>
     assert.equal(s.result?.winner, 1);
   }
   const s = createBattle(BEYS[0], BEYS[1], launches, 2);
+  s.tick = 16 / DT; s.time = 16;
   Object.assign(s.tops[0], {
     x: -0.3,
     z: 0,
@@ -111,6 +113,7 @@ test("四種終結與同時終結依狀態判定，非抽籤", () => {
   assert.equal(finishFor({ rpm: 1, burst: 40, x: 5, z: 0 }), "over");
   assert.equal(finishFor({ rpm: 1, burst: 40, x: 0, z: 5 }), "extreme");
   const s = createBattle(BEYS[0], BEYS[1], inputs, 1);
+  s.tick = 16 / DT; s.time = 16;
   s.tops.forEach((t) => (t.rpm = 0));
   stepBattle(s);
   assert.equal(s.result?.winner, null);

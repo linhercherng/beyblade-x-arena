@@ -1,5 +1,5 @@
 import { BEYS, type Bey, type BeyType } from "./catalog.ts";
-import { rng, type Launch, type Result, type Battle } from "./physics.ts";
+import { rng, ENGINE_VERSION, type Launch, type Result, type Battle } from "./physics.ts";
 export type Difficulty = "easy" | "normal" | "hard";
 export type Mode = "cpu" | "local";
 export const DIFFICULTY = { easy: "初級", normal: "中級", hard: "高級" };
@@ -11,7 +11,7 @@ export interface TopReport {
   rpm: number;
 }
 export interface Round {
-  engineVersion?: 1 | 2;
+  engineVersion?: 1 | 2 | 3;
   index: number;
   slot: number;
   seed: number;
@@ -72,7 +72,7 @@ export function applyRound(
   if (m.winner !== null) throw new Error("此局已結束");
   const beys = [m.teams[0][m.slot], m.teams[1][m.slot]] as [string, string];
   m.rounds.push({
-    engineVersion: battle?.version ?? 2,
+    engineVersion: battle?.version ?? ENGINE_VERSION,
     index: m.rounds.length + 1,
     slot: m.slot,
     seed: roundSeed(m),

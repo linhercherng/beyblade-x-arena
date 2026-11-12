@@ -1511,6 +1511,11 @@ main {
   font: 500 21px var(--mono);
   color: #91a2b5;
 }
+.battle-clock small {
+  display: block;
+  margin-top: 3px;
+  font: 10px "Noto Sans TC", sans-serif;
+}
 .pause-overlay {
   position: absolute;
   inset: 0;
