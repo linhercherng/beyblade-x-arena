@@ -3233,3 +3233,53 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
   .top-actions .local-badge { display: none; }
   .music-controls { font-size: 11px; }
 }
+/* Finisher feedback keeps the first action frames clear, then reveals winner and score. */
+.battle-message.finish-overlay { inset: auto 0 7%; display: flex; justify-content: center; text-shadow: none; }
+.finish-card { width: min(680px, 92%); padding: 20px 26px 16px; border: 1px solid #405160; border-top: 3px solid var(--finish-color); background: #101c29f2; box-shadow: 0 18px 48px #0005; animation: result-enter .2s cubic-bezier(.23,1,.32,1) .3s both; }
+.finish-overlay .eyebrow, .finish-overlay .finish-text { color: var(--finish-color); }
+.finish-overlay .finish-text { font-size: clamp(28px, 5vw, 56px); margin-top: 8px; }
+.finish-overlay .finish-subtitle { margin: 8px 0 12px; font-size: 13px; }
+.finish-victor { display: flex; justify-content: center; align-items: center; gap: 18px; border-top: 1px solid #344452; padding-top: 12px; animation: result-enter .2s cubic-bezier(.23,1,.32,1) .55s both; }
+.finish-victor b { font: 700 28px var(--mono); color: #fff; }
+.finish-victor span { margin: 0; font-size: 14px; }
+.finish-victor em { font: 700 32px var(--mono); color: var(--finish-color); }
+.finish-overlay .finish-score { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 12px 0 0; color: #a9baca; font-size: 13px; animation: result-enter .2s cubic-bezier(.23,1,.32,1) .85s both; }
+.finish-overlay .finish-score span { margin: 0; font-size: 11px; }
+.finish-overlay .finish-score strong { display: inline; font: 700 26px var(--mono); color: var(--finish-color); }
+.finish-score b { font: 500 23px var(--mono); }
+.finish-score i { font-style: normal; }
+.round-result { border-top: 3px solid var(--finish-color, var(--accent)); animation: result-enter .25s cubic-bezier(.23,1,.32,1) both; }
+.round-result h1 { color: var(--finish-color, var(--accent)); }
+.round-victor { margin: 22px auto 10px; display: flex; justify-content: center; align-items: center; gap: 18px; }
+.round-victor span { color: var(--finish-color, var(--accent)); font: 700 24px var(--mono); }
+.round-victor h2 { font-size: 17px; margin: 5px 0; }
+.round-victor b { font: 700 48px var(--mono); color: var(--finish-color, var(--accent)); }
+.round-score { animation: result-enter .2s cubic-bezier(.23,1,.32,1) .1s both; }
+.victory-podium { text-align: center; padding: 22px 20px 26px; margin-bottom: 24px; border: 1px solid #344452; border-top: 3px solid var(--win-color); background: #111d29; }
+.victory-podium .eyebrow { color: var(--win-color); }
+.victory-podium h2 { font-size: 27px; margin: 8px 0 20px; }
+.victory-emblem { width: 58px; height: 58px; margin: 0 auto 12px; color: var(--win-color); animation: trophy-enter .25s cubic-bezier(.23,1,.32,1) both; }
+.victory-emblem svg { width: 100%; height: 100%; }
+.winning-team { display: flex; justify-content: center; align-items: end; gap: 40px; }
+.winning-team > div { min-width: 0; max-width: 190px; animation: result-enter .25s cubic-bezier(.23,1,.32,1) .1s both; }
+.winning-team > div:nth-child(2) { animation-delay: .16s; }
+.winning-team > div:nth-child(3) { animation-delay: .22s; }
+.winning-team > div > span:last-child { display: block; margin-top: 12px; font-size: 13px; color: #d6e1e9; overflow-wrap: anywhere; }
+.result-hero .result-score { animation: result-enter .25s cubic-bezier(.23,1,.32,1) .1s both; }
+@keyframes result-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes trophy-enter { from { opacity: 0; transform: scale(.92) rotate(-8deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+@media (max-width: 600px) {
+  .battle-message.finish-overlay { bottom: 6%; }
+  .finish-card { padding: 15px 12px 12px; }
+  .finish-victor { gap: 10px; flex-wrap: wrap; }
+  .finish-victor b { font-size: 24px; }
+  .finish-victor span { font-size: 12px; }
+  .finish-victor em { font-size: 28px; }
+  .winning-team { gap: 13px; }
+  .winning-team .product-photo { width: 80px; height: 80px; }
+  .winning-team > div > span:last-child { font-size: 11px; }
+  .round-victor { gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .finish-card, .finish-victor, .finish-overlay .finish-score, .round-result, .round-score, .victory-emblem, .winning-team > div, .result-hero .result-score { animation: none; }
+}

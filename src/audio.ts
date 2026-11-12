@@ -1,4 +1,5 @@
-import type { Battle, BattleEvent } from "./physics.ts";
+import type { Battle, BattleEvent, Result } from "./physics.ts";
+import { cueSamples, type Cue } from "./finish.ts";
 import tracks from "./music-tracks.json";
 import { musicVolume, type MusicMode } from "./music-state.ts";
 import { impactProfile, impactSamples, musicLevel } from "./impact.ts";
@@ -32,6 +33,8 @@ export class Sound {
   private impacts = new Set<AudioBufferSourceNode>();
   private lastImpact = -Infinity;
   private lastStrength = 0;
+  private cueBuffers = new Map<Cue, AudioBuffer>();
+  private cues = new Map<AudioBufferSourceNode, GainNode>();
   constructor() {
     try {
       this.muted = localStorage.getItem("spinforge-muted") === "true";
@@ -86,6 +89,7 @@ export class Sound {
   }
   toggle() {
     this.muted = !this.muted;
+    if (this.muted) this.stopCues();
     try {
       localStorage.setItem("spinforge-muted", String(this.muted));
     } catch {
@@ -216,18 +220,49 @@ export class Sound {
     if (e.type === "shout") {
       this.tone(330, 0.25, "triangle", 0.6, 990);
     }
-    if (e.type === "finish") {
-      this.tone(90, 0.5, "sine", 1, 30);
-      this.tone(523, 0.18, "triangle", 0.6);
-      setTimeout(() => this.tone(784, 0.4, "triangle", 0.5), 160);
+  }
+  private stopCues() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.cues.forEach((gain, source) => {
+      gain.gain.cancelAndHoldAtTime(now);
+      gain.gain.linearRampToValueAtTime(0, now + .015);
+      source.stop(now + .015);
+    });
+    this.cues.clear();
+  }
+  private playCue(kind: Cue) {
+    if (!this.ctx || !this.sfx || this.muted) return;
+    this.stopCues();
+    if (!this.cueBuffers.has(kind)) {
+      const samples = cueSamples(kind, this.ctx.sampleRate);
+      const buffer = this.ctx.createBuffer(1, samples.length, this.ctx.sampleRate);
+      buffer.getChannelData(0).set(samples);
+      this.cueBuffers.set(kind, buffer);
+    }
+    const source = this.ctx.createBufferSource(), gain = this.ctx.createGain();
+    source.buffer = this.cueBuffers.get(kind)!;
+    gain.gain.value = 1.2;
+    source.connect(gain).connect(this.sfx);
+    this.cues.set(source, gain);
+    source.onended = () => { source.disconnect(); gain.disconnect(); this.cues.delete(source); };
+    source.start();
+    if (this.musicDuck) {
+      const now = this.ctx.currentTime, duck = this.musicDuck.gain;
+      duck.cancelAndHoldAtTime(now);
+      duck.linearRampToValueAtTime(.25, now + .015);
+      duck.setTargetAtTime(1, now + .65, .12);
     }
   }
+  finish(result: Result) { this.playCue(result.winner === null ? "draw" : result.finish); }
+  victory(won: boolean) { this.playCue(won ? "victory" : "defeat"); }
   update(
     battle: Battle | null,
     active: boolean,
     mode: MusicMode | null,
   ) {
     if (!this.ctx) return;
+    if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)
       this.music?.gain.setTargetAtTime(musicLevel(this.volume, mode), this.ctx.currentTime, .06);
     this.rotors.forEach((r, i) => {

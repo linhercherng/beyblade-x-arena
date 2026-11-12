@@ -145,10 +145,26 @@ async function playMatch(page: Page, local = false) {
     // 展示時長可切換 4 倍，但模擬仍採同一固定步長。
     while ((await action(page, "speed").textContent()) !== "4×")
       await action(page, "speed").click();
+    if (rounds === 1) {
+      await expect(page.locator(".finish-card")).toBeVisible({ timeout: 45000 });
+      await expect.poll(() => page.locator(".finish-score").evaluate(el => getComputedStyle(el).opacity)).toBe("1");
+      await expect(page.locator(".finish-victor")).toContainText(/WIN|出場順序/);
+      expect(await page.locator(".finish-card").evaluate(el => el.getBoundingClientRect().right <= innerWidth)).toBe(true);
+      await page.screenshot({ path: local ? "artifacts/finish-live-mobile-v080.png" : "artifacts/finish-live-desktop-v080.png" });
+      const times = await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime));
+      await action(page, "pause").first().click();
+      await page.waitForTimeout(100);
+      await action(page, "pause").first().click();
+      expect(await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime))).toEqual(times);
+    }
     await expect(
       page.locator('[data-action="next-round"], [data-action="rematch"]'),
     ).toBeVisible({ timeout: 45000 });
-    if (await action(page, "rematch").isVisible()) return;
+    if (await action(page, "rematch").isVisible()) {
+      await expect(page.locator(".victory-podium")).toBeVisible();
+      await expect(page.locator(".winning-team .product-photo")).toHaveCount(3);
+      return;
+    }
     await action(page, "next-round").click();
   }
   throw new Error("超過14場仍未結算");
@@ -233,6 +249,7 @@ test("手機：響應式配置與2P遮蔽、鍵盤分鍵、完整一局", async 
   await buildTeam(page);
   await playMatch(page, true);
   await expect(page.locator("h1")).toContainText(/漂亮的一戰|2P，拿下勝利/);
+  await page.screenshot({ path: "artifacts/results-mobile-v080.png", fullPage: true });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

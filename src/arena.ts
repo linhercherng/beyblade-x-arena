@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
 import { impactProfile, impactShake } from "./impact.ts";
+import { exitPose, burstPose, FINISH_COLORS } from "./finish.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
@@ -12,7 +13,26 @@ import {
   damping,
   type TopPose,
 } from "./motion.ts";
-import { type Battle, type BattleEvent } from "./physics.ts";
+import { type Battle, type BattleEvent, RADIUS } from "./physics.ts";
+
+export function keepAboveFloor(group: THREE.Object3D, floor: number, bounds = new THREE.Box3()) {
+  group.updateMatrixWorld(true);
+  bounds.setFromObject(group, true);
+  group.position.y += Math.max(0, floor - bounds.min.y);
+}
+export function settleBurstParts(group: THREE.Group, bounds = new THREE.Box3(), lift = new THREE.Vector3(), inverse = new THREE.Quaternion()) {
+  group.updateMatrixWorld(true);
+  const parts = group.userData.parts as THREE.Group[], links = group.userData.partLinks as number[];
+  inverse.copy(group.quaternion).invert();
+  for (const link of new Set(links)) {
+    bounds.makeEmpty();
+    parts.forEach((part, i) => { if (links[i] === link) bounds.expandByObject(part, true); });
+    const r2 = Math.max(bounds.min.x**2, bounds.max.x**2) + Math.max(bounds.min.z**2, bounds.max.z**2);
+    const amount = Math.max(0, Math.min(r2,RADIUS*RADIUS)*.024-.03+.012-bounds.min.y);
+    lift.set(0, amount, 0).applyQuaternion(inverse);
+    parts.forEach((part, i) => { if (links[i] === link) { part.position.add(lift); part.updateMatrixWorld(true); } });
+  }
+}
 
 function mesh(g: THREE.BufferGeometry, m: THREE.Material, x = 0, y = 0, z = 0) {
   const o = new THREE.Mesh(g, m);
@@ -93,18 +113,14 @@ export class Arena {
   sparkStreaks: THREE.LineSegments;
   impactFlashes: THREE.Sprite[] = [];
   impactHeight = .5;
+  finishBounds = new THREE.Box3();
+  finishLift = new THREE.Vector3();
+  finishInverse = new THREE.Quaternion();
   trails: THREE.Line[] = [];
   trailPositions: number[][] = [[], []];
-  beam = mesh(
-    new THREE.CylinderGeometry(0.7, 1.1, 6, 24, 1, true),
-    new THREE.MeshBasicMaterial({
-      color: "#ff8561",
-      transparent: true,
-      opacity: 0.14,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    }),
+  exitTrail = new THREE.Line(
+    new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(new Float32Array(18 * 3), 3)),
+    new THREE.LineBasicMaterial({ color: "#68dbff", transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
   );
   reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   time = 0;
@@ -153,8 +169,8 @@ export class Arena {
     blue.position.set(4, 4, -3);
     this.scene.add(blue);
     this.scene.add(this.stadium);
-    this.beam.visible = false;
-    this.scene.add(this.beam);
+    this.exitTrail.visible = false;
+    this.scene.add(this.exitTrail);
     for (const color of ["#a9e8ff", "#ffc7aa"]) {
       const pulse = ring(0.53, 0.009, color);
       const material = pulse.material as THREE.MeshBasicMaterial;
@@ -331,6 +347,11 @@ export class Arena {
     this.models = beys.map((b) => {
       const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src);
       const g = beyModel(b, texture);
+      const parts = g.userData.parts as THREE.Group[], links = g.userData.partLinks as number[];
+      g.userData.partFloors = [0, 1, 2].map(link => {
+        const floors = parts.flatMap((part, i) => links[i] === link ? [new THREE.Box3().setFromObject(part).min.y] : []);
+        return floors.length ? Math.min(...floors) : 0;
+      });
       this.scene.add(g);
       return g;
     });
@@ -339,10 +360,10 @@ export class Arena {
     this.shake = 0;
     this.impactFlashes.forEach(f => { f.userData.life = 0; (f.material as THREE.SpriteMaterial).opacity = 0; });
     this.finished = null;
-    this.beam.visible = false;
+    this.exitTrail.visible = false;
   }
   event(e: BattleEvent) {
-    if (e.type === "hit" || e.type === "finish") {
+    if (e.type === "hit") {
       const profile = impactProfile(e.strength);
       if (!this.reduced && profile.shake > this.shake * Math.exp(-this.shakeAge * 20)) {
         this.shake = profile.shake;
@@ -376,12 +397,28 @@ export class Arena {
     if (e.type === "dash") this.eventFlash = 0.7;
   }
   finish(b: Battle) {
+    if (!b.result) return;
     this.finished = b;
     this.finishTime = this.time;
-    if (b.result && ["over", "extreme"].includes(b.result.finish)) {
-      const t = b.tops[b.result.winner === 0 ? 1 : 0];
-      this.beam.position.set(t.x, 2.3, t.z);
-      this.beam.visible = true;
+    const result = b.result, kind = result.winner === null ? "draw" : result.finish;
+    this.exitTrail.visible = false;
+    const losers = result.winner === null ? [0, 1] : [1 - result.winner];
+    for (const index of losers) {
+      const top = b.tops[index], start = this.particles.length;
+      this.event({type: "hit", x: top.x, z: top.z, strength: kind === "draw" ? 1 : kind === "burst" || kind === "extreme" ? 14 : 4, player:index, time:b.time});
+      for (let i = start; i < this.particles.length; i++) this.particles[i].color.set(i % 3 ? FINISH_COLORS[kind] : "#fff7da");
+      if ((result.finish === "over" || result.finish === "extreme") && result.winner !== null) {
+        const positions = this.exitTrail.geometry.getAttribute("position") as THREE.BufferAttribute;
+        const origin = {x:top.x, y:.035 + (top.x*top.x+top.z*top.z)*.024, z:top.z};
+        for (let i=0; i<18; i++) {
+          const pose = exitPose(result.finish, i/17*(result.finish === "over" ? .95 : .55), origin);
+          positions.setXYZ(i, pose.x, pose.y+.16, pose.z);
+        }
+        positions.needsUpdate = true;
+        this.exitTrail.geometry.computeBoundingSphere();
+        (this.exitTrail.material as THREE.LineBasicMaterial).color.set(FINISH_COLORS[kind]);
+        this.exitTrail.visible = !this.reduced;
+      }
     }
   }
   draw(
@@ -425,16 +462,13 @@ export class Arena {
       if (battle.tops.some((t) => t.dashUntil > battle.time)) {
         base.y *= 0.87;
       }
-      if (battle.result) {
-        const f = Math.min(1, (this.time - this.finishTime) / 2);
-        base.multiplyScalar(1 - f * 0.14);
-        base.x += f * 1.8;
-      }
+
     }
     const look = this.cameraTarget.set(0, inspecting ? 0.25 : 0, 0);
-    if (battle && !this.closeUp)
+    const exitFinish = !!battle?.result && ["over", "extreme"].includes(battle.result.finish);
+    if (battle && (!this.closeUp || exitFinish))
       base.multiplyScalar(Math.max(1, 1.1 / this.camera.aspect));
-    if (battle && this.closeUp) {
+    if (battle && this.closeUp && !exitFinish) {
       const [a, b] = poses!,
         distance = Math.hypot(a.x - b.x, a.z - b.z);
       look.set((a.x + b.x) / 2, 0.2, (a.z + b.z) / 2);
@@ -491,25 +525,42 @@ export class Arena {
             opening.pulse * 0.45;
         }
         if (battle!.result) {
-          const elapsed = this.time - this.finishTime;
-          const loser =
-            battle!.result.winner === null || battle!.result.winner !== i;
-          if (loser && battle!.result.finish === "burst")
-            (g.userData.parts as THREE.Group[]).forEach((p, j) => {
-              const linked = (g.userData.partLinks as number[])[j];
-              p.position.set(
-                Math.sin(linked * 2.1) * elapsed * 0.7,
-                elapsed * (2 - linked) * 0.6,
-                Math.cos(linked * 2.1) * elapsed * 0.7,
-              );
-              p.rotation.z = elapsed * linked;
+          const result = battle!.result, elapsed = Math.max(0, this.time - this.finishTime);
+          const loser = result.winner === null || result.winner !== i;
+          if (loser && result.finish === "burst") {
+            const upright = this.reduced ? 0 : 1-Math.min(1,elapsed/1.25);
+            g.rotation.set(currentLean.x*upright,0,currentLean.z*upright);
+            g.rotateY(pose.rotation);
+            (g.userData.parts as THREE.Group[]).forEach((part, j) => {
+              const link = (g.userData.partLinks as number[])[j];
+              const offset = burstPose(elapsed, link, g.userData.partFloors[link], this.reduced);
+              const ax = offset.x*Math.cos(pose.rotation)+offset.z*Math.sin(pose.rotation);
+              const az = offset.z*Math.cos(pose.rotation)-offset.x*Math.sin(pose.rotation);
+              const travel = this.reduced ? 1 : 1-Math.pow(1-Math.min(1,elapsed/1.25),3);
+              const surface = Math.min((pose.x+ax)**2+(pose.z+az)**2,RADIUS*RADIUS)*.024-.03;
+              const slope = (surface-ground)*travel;
+              part.position.set(offset.x, offset.y+slope, offset.z);
+              part.rotation.set(0, this.reduced ? 0 : Math.min(elapsed,1.25)*(link+1)*3, offset.tilt);
             });
-          else if (loser && battle!.result.finish === "spin")
-            g.rotation.z = Math.min(Math.PI / 2, elapsed);
-          else if (loser) {
-            g.position.y += elapsed * 1.2;
-            g.position.z += elapsed * 0.8;
-            g.rotation.z = elapsed * 2;
+            settleBurstParts(g, this.finishBounds, this.finishLift, this.finishInverse);
+          } else if (loser && result.finish === "spin") {
+            g.rotation.z = Math.PI/2 * Math.min(1, this.reduced ? 1 : elapsed/1.1);
+          } else if (loser) {
+            const flight = exitPose(result.finish as "over" | "extreme", elapsed, {x:pose.x,y:ground,z:pose.z}, this.reduced);
+            g.position.set(flight.x, flight.y, flight.z);
+            g.rotation.z = flight.tilt;
+            g.rotateY(this.reduced ? 0 : Math.min(elapsed,.95)*13);
+            keepAboveFloor(g, .105, this.finishBounds);
+          } else if (!this.reduced) {
+            g.rotateY((t.bey.spin === "L" ? -1 : 1)*20*(1-Math.exp(-elapsed*1.4))/1.4);
+          }
+          if (result.winner !== null) {
+            const pulse = this.landingRings[i], mat = pulse.material as THREE.MeshBasicMaterial;
+            pulse.visible = true;
+            mat.color.set(loser ? FINISH_COLORS[result.finish] : i ? "#ff9a71" : "#b6f55b");
+            mat.opacity = loser ? Math.max(0,.55-elapsed*.3) : .5;
+            pulse.position.set(g.position.x, loser && result.finish !== "burst" ? .115 : ground+.012, g.position.z);
+            pulse.scale.setScalar(loser ? 1+Math.min(1,elapsed)*1.2 : 1.18);
           }
         }
         const path = this.trailPositions[i];
@@ -580,6 +631,11 @@ export class Arena {
       (flare.material as THREE.SpriteMaterial).opacity = this.reduced ? 0 : fade * .7;
       flare.scale.setScalar(flare.userData.size * (1 + (1 - fade) * .5) || 0);
     });
+    if (battle?.result) {
+      const age = this.time-this.finishTime;
+      this.exitTrail.visible = !this.reduced && ["over", "extreme"].includes(battle.result.finish) && age<1.2 && battle.result.winner!==null;
+      (this.exitTrail.material as THREE.LineBasicMaterial).opacity = .7*Math.max(0,1-age/1.2);
+    }
     this.eventFlash = Math.max(0, this.eventFlash - dt);
     this.renderer.render(this.scene, this.camera);
   }

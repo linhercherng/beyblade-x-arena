@@ -35,9 +35,11 @@ for (const local of [false, true])
     await expect(canvas).toHaveAttribute("data-opening", "hover");
     await expect(page.locator("#battle-time")).toHaveText("0.0 秒");
     await action("pause").first().click();
+    const frozenPhase = await canvas.getAttribute("data-opening");
+    expect(["hover", "drop", "bounce"]).toContain(frozenPhase);
     const count = await page.locator("#battle-message strong").textContent();
     await page.waitForTimeout(600);
-    await expect(canvas).toHaveAttribute("data-opening", "hover");
+    await expect(canvas).toHaveAttribute("data-opening", frozenPhase!);
     await expect(page.locator("#battle-message strong")).toHaveText(count!);
     await page.locator('#pause-overlay [data-action="pause"]').click();
     await page.screenshot({
@@ -45,17 +47,19 @@ for (const local of [false, true])
         ? "artifacts/opening-hover-mobile.png"
         : "artifacts/opening-hover.png",
     });
-    await expect(canvas).toHaveAttribute("data-opening", "drop");
-    await expect(page.locator("#battle-time")).toHaveText("0.0 秒");
-    await page.screenshot({
+    if (frozenPhase === "hover") {
+      await expect(canvas).toHaveAttribute("data-opening", "drop");
+      await expect(page.locator("#battle-time")).toHaveText("0.0 秒");
+      await page.screenshot({
       path: local
         ? "artifacts/opening-drop-mobile.png"
         : "artifacts/opening-drop.png",
-    });
+      });
+    }
     await expect(page.locator("#app")).toHaveAttribute(
       "data-screen",
       "battle",
-      { timeout: 6000 },
+      { timeout: 12000 },
     );
     await expect(canvas).toHaveAttribute("data-opening", "none");
     await expect

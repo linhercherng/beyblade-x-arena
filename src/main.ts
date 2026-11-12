@@ -15,6 +15,7 @@ import { Arena } from "./arena.ts";
 import { capturePoses, type TopPose } from "./motion.ts";
 import { Sound } from "./audio.ts";
 import { musicFor } from "./music-state.ts";
+import { FINISH_COLORS, scorePreview } from "./finish.ts";
 import {
   createBattle,
   stepBattle,
@@ -50,6 +51,7 @@ import {
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const sound = new Sound();
+let pausedFinishAnimations: Animation[] = [];
 let arena: Arena | null = null;
 try {
   arena = new Arena();
@@ -176,7 +178,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.7.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.8.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -402,8 +404,10 @@ function roundEnded() {
   screen = "round";
   const r = match.rounds.at(-1)!,
     f = FINISH[r.result.finish];
+  const winner = r.result.winner;
+  const winnerLabel = winner === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P";
   shell(
-    `<section class="round-result panel"><span class="eyebrow">ROUND ${r.index} COMPLETE</span><h1>${r.result.winner === null ? "雙方平手" : f.label}</h1><div class="round-score">${match.scores[0]} <small>:</small> ${match.scores[1]}</div><p>${r.result.winner === null ? "雙方同時終結，保持本場出場順序重打。" : `${r.result.winner === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P"} 取得 ${r.result.points} 分 · ${r.result.time.toFixed(1)} 秒`}</p><div class="next-pair">下一場：${beyName(getBey(match.teams[0][match.slot]))}<span>VS</span>${beyName(getBey(match.teams[1][match.slot]))}</div>${btn(r.result.winner === null ? "重新發射 →" : "下一場對決 →", "next-round", "primary")}</section>`,
+    `<section class="round-result panel" data-finish="${winner === null ? "draw" : r.result.finish}" style="--finish-color:${FINISH_COLORS[winner === null ? "draw" : r.result.finish]}"><span class="eyebrow">ROUND ${r.index} COMPLETE</span>${winner === null ? '<div class="round-victor">DRAW · 本場重打</div>' : `<div class="round-victor">${art(getBey(r.beys[winner]), 70)}<div><span>${winnerLabel} WIN</span><h2>${safe(getBey(r.beys[winner]).zhName)}</h2></div><b>+${r.result.points}</b></div>`}<h1>${r.result.winner === null ? "雙方平手" : f.label}</h1><div class="round-score">${match.scores[0]} <small>:</small> ${match.scores[1]}</div><p>${r.result.winner === null ? "雙方同時終結，保持本場出場順序重打。" : `${r.result.winner === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P"} 取得 ${r.result.points} 分 · ${r.result.time.toFixed(1)} 秒`}</p><div class="next-pair">下一場：${beyName(getBey(match.teams[0][match.slot]))}<span>VS</span>${beyName(getBey(match.teams[1][match.slot]))}</div>${btn(r.result.winner === null ? "重新發射 →" : "下一場對決 →", "next-round", "primary")}</section>`,
   );
 }
 function roundTable(m: Match, playable = false) {
@@ -411,6 +415,7 @@ function roundTable(m: Match, playable = false) {
 }
 function results(m: Match) {
   screen = "results";
+  sound.victory(m.mode === "local" || m.winner === 0);
   match = m;
   battle = null;
   const points: Record<string, number> = {};
@@ -421,7 +426,7 @@ function results(m: Match) {
     }
   const mvp = Object.entries(points).sort((a, b) => b[1] - a[1])[0];
   shell(
-    `<section class="result-hero"><div><div class="eyebrow">MATCH COMPLETE / ${m.mode === "cpu" ? DIFFICULTY[m.difficulty] : "LOCAL VERSUS"}</div><h1>${m.winner === 0 ? "漂亮的一戰。" : m.mode === "local" ? "2P，拿下勝利。" : "再挑戰，突破極限。"}</h1><p>${m.winner === 0 ? "1P 獲勝" : m.mode === "cpu" ? "CPU 獲勝" : "2P 獲勝"} · ${m.rounds.length} 場對決 · ${m.rounds.reduce((n, r) => n + r.result.time, 0).toFixed(1)} 秒</p></div><div class="result-score">${m.scores[0]}<span>:</span>${m.scores[1]}</div></section><div class="result-summary"><div class="panel"><small>1P 本局分數</small><strong>${scoreMatch(m, 0).toLocaleString()}</strong>${m.mode === "local" ? `<small>2P：${scoreMatch(m, 1).toLocaleString()}</small>` : `<small>難度倍率 × ${m.difficulty === "hard" ? 2 : m.difficulty === "normal" ? 1.5 : 1}</small>`}</div><div class="panel mvp">${mvp ? art(getBey(mvp[0]), 85) : ""}<div><span class="eyebrow">MATCH MVP</span><h2>${mvp ? beyName(getBey(mvp[0])) : "—"}</h2><p>取得 ${mvp?.[1] ?? 0} 分</p></div></div><div class="result-buttons">${btn("同隊再戰 ↗", "rematch", "primary")}${btn("重新組隊", "play", "secondary")}${btn("回主選單", "home", "text-button")}</div></div><section class="panel report-panel"><div class="section-index">ROUND BY ROUND <span>逐場明細</span></div>${roundTable(m, true)}</section><section class="panel report-panel"><h2>陀螺表現</h2><div class="table-scroll"><table><thead><tr><th>陀螺</th><th>出戰 / 勝場</th><th>總衝量</th><th>最大衝量</th><th>極限衝刺</th><th>平均剩餘轉速</th></tr></thead><tbody>${[
+    `<section class="result-hero" data-winner="${m.winner}"><div><div class="eyebrow">MATCH COMPLETE / ${m.mode === "cpu" ? DIFFICULTY[m.difficulty] : "LOCAL VERSUS"}</div><h1>${m.winner === 0 ? "漂亮的一戰。" : m.mode === "local" ? "2P，拿下勝利。" : "再挑戰，突破極限。"}</h1><p>${m.winner === 0 ? "1P 獲勝" : m.mode === "cpu" ? "CPU 獲勝" : "2P 獲勝"} · ${m.rounds.length} 場對決 · ${m.rounds.reduce((n, r) => n + r.result.time, 0).toFixed(1)} 秒</p></div><div class="result-score">${m.scores[0]}<span>:</span>${m.scores[1]}</div></section><section class="victory-podium" style="--win-color:${m.winner === 0 ? "#b6f55b" : "#ff9672"}"><div class="victory-emblem" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 10h24v15c0 9-5 15-12 15s-12-6-12-15V10Zm0 5H9v7c0 8 5 12 15 12m20-19h11v7c0 8-5 12-15 12M32 40v12m-12 3h24M25 22l5 5 9-10"/></svg></div><div class="eyebrow">MATCH CHAMPION</div><h2>${m.winner === 0 ? "1P" : m.mode === "cpu" ? "CPU" : "2P"} 獲勝</h2><div class="winning-team">${m.teams[m.winner ?? 0].map(id => `<div>${art(getBey(id), 100)}<span>${safe(getBey(id).zhName)}</span></div>`).join("")}</div></section><div class="result-summary"><div class="panel"><small>1P 本局分數</small><strong>${scoreMatch(m, 0).toLocaleString()}</strong>${m.mode === "local" ? `<small>2P：${scoreMatch(m, 1).toLocaleString()}</small>` : `<small>難度倍率 × ${m.difficulty === "hard" ? 2 : m.difficulty === "normal" ? 1.5 : 1}</small>`}</div><div class="panel mvp">${mvp ? art(getBey(mvp[0]), 85) : ""}<div><span class="eyebrow">MATCH MVP</span><h2>${mvp ? beyName(getBey(mvp[0])) : "—"}</h2><p>取得 ${mvp?.[1] ?? 0} 分</p></div></div><div class="result-buttons">${btn("同隊再戰 ↗", "rematch", "primary")}${btn("重新組隊", "play", "secondary")}${btn("回主選單", "home", "text-button")}</div></div><section class="panel report-panel"><div class="section-index">ROUND BY ROUND <span>逐場明細</span></div>${roundTable(m, true)}</section><section class="panel report-panel"><h2>陀螺表現</h2><div class="table-scroll"><table><thead><tr><th>陀螺</th><th>出戰 / 勝場</th><th>總衝量</th><th>最大衝量</th><th>極限衝刺</th><th>平均剩餘轉速</th></tr></thead><tbody>${[
       ...new Set(m.teams.flat()),
     ]
       .map((id) => {
@@ -562,6 +567,13 @@ function setPaused(value: boolean) {
     if (screen === "countdown") countdownStart += elapsed;
     if (finishStart) finishStart += elapsed;
     lastFrame = performance.now();
+  }
+  if (value && !paused) {
+    pausedFinishAnimations = byId("battle-message")?.getAnimations({subtree:true}).filter(a => a.playState === "running") ?? [];
+    pausedFinishAnimations.forEach(a => a.pause());
+  } else if (!value && paused) {
+    pausedFinishAnimations.forEach(a => { if (a.playState === "paused") a.play(); });
+    pausedFinishAnimations = [];
   }
   paused = value;
   const overlay = byId("pause-overlay");
@@ -1003,10 +1015,16 @@ function frame(time: number) {
       processed = true;
       finishStart = time;
       arena?.finish(battle);
-      const r = battle.result,
-        f = FINISH[r.finish];
-      byId("battle-message")!.innerHTML =
-        `<span class="eyebrow">${r.winner === null ? "DRAW" : r.winner === 0 ? "PLAYER 01" : match?.mode === "cpu" ? "CPU" : "PLAYER 02"}</span><strong class="finish-text">${r.winner === null ? "雙方平手" : f.en}</strong><span>${r.winner === null ? "本場重打" : f.label + " ＋" + r.points}</span>`;
+      const r = battle.result, f = FINISH[r.finish];
+      sound.finish(r);
+      const winnerLabel = r.winner === 0 ? "1P" : match?.mode === "cpu" ? "CPU" : "2P";
+      const kind = r.winner === null ? "draw" : r.finish;
+      const before = match?.scores ?? [0, 0], after = scorePreview(r, before);
+      const message = byId("battle-message")!;
+      message.classList.add("finish-overlay");
+      message.dataset.finish = kind;
+      message.style.setProperty("--finish-color", FINISH_COLORS[kind]);
+      message.innerHTML = `<div class="finish-card"><span class="eyebrow">${r.winner === null ? "DOUBLE FINISH / DRAW" : "ROUND DECIDED"}</span><strong class="finish-text">${r.winner === null ? "DRAW" : f.en}</strong><span class="finish-subtitle">${r.winner === null ? "雙方同時終結・本場重打" : f.label}</span><div class="finish-victor">${r.winner === null ? "保持原出場順序" : `<b>${winnerLabel} WIN</b><span>${safe(battle.tops[r.winner].bey.zhName)}</span><em>+${r.points}</em>`}</div>${replay ? '<p class="finish-score">對戰重播・不計入戰績</p>' : `<div class="finish-score"><span>比分</span><b>${before[0]} : ${before[1]}</b><i>→</i><strong>${after[0]} : ${after[1]}</strong></div>`}</div>`;
     }
     if (battle.result && processed && time - finishStart > 2300) {
       if (replay) {

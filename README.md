@@ -1,6 +1,6 @@
 # 極限陀螺競技場 · SPINFORGE X
 
-依 `docs/企劃書.md` 建立的繁體中文 3D 陀螺對戰遊戲，目前版本 **v0.7.0**。83 顆使用實際產品參考圖與各自的輪廓近似模型，搭配原創立體競技盤、特效及四首背景／交戰配樂。本專案為非官方粉絲作品。
+依 `docs/企劃書.md` 建立的繁體中文 3D 陀螺對戰遊戲，目前版本 **v0.8.0**。83 顆使用實際產品參考圖與各自的輪廓近似模型，搭配原創立體競技盤、特效及四首背景／交戰配樂。本專案為非官方粉絲作品。
 
 ## 開始遊玩
 
@@ -31,7 +31,8 @@ npm run dev
 - Web Audio 保留衝刺／發射／終結聲與轉速連動左右聲道，配樂與音效分流並經總混音限制器。
 - 暫停與切換視窗自動暫停；1×、2×、4×速度。對戰隱藏側欄與頁尾、使用全寬加高畫面，預設雙陀螺近鏡，可切回全場或全螢幕；中文型號名牌搭配原廠照片。
 - 繪圖在120Hz物理步長間插值，保留連續圈數與左右旋；鏡頭位置／注視點與傾斜皆用依時間計算的阻尼。物理快照及軌跡緩衝重用；HUD以100ms間隔更新，進度條改transform，減少每幀配置與版面重算。大畫布依240萬繪圖像素預算調整3D解析度；圖鑑小畫布與DOM文字保持清晰。物理及戰績結果不變。
-- 本局逐場、衝量、最大衝量、衝刺與剩餘轉速統計、MVP、同隊再戰。
+- 終結演出：爆裂三段散開後落穩、一體式保持連接；越界拋向側盤、極限快速衝入前盤，搭配各自音效、軌跡與色彩。旋轉終結及平手也有獨立音效；2.3秒演出內依序揭曉終結、勝者、加分與比分預覽，再正式計分。
+- 整局結算加入獎盃、勝隊三顆陀螺與勝負短曲，保留逐場、衝量、最大衝量、衝刺、剩餘轉速、MVP及同隊再戰。暫停會凍結終結動畫，靜音／暫停會取消演出短音效；減少動態時直接展示穩定終點。
 - IndexedDB 保存單人與雙人分開戰績、連勝、每顆紀錄、類型對戰表、終結分布、最高 10 分及最近 20 局。
 - 匯出／匯入 JSON（上限 2 MB，先驗證再寫入，錯誤不覆蓋原戰績）。最近賽事可按場重播；保留種子、發射與呼喊的固定 tick。
 
@@ -86,7 +87,7 @@ npm run catalog      # 從保存的企劃書重新匯入83筆原始組合
 | `src/model-references.json`、`src/model-profiles.json`、`src/part-shapes.json` | 原廠照片、逐顆外形、估色與軸心外形 |
 | `src/chinese-names.json` | 83筆中文名、來源與官方／譯名狀態 |
 | `src/appearance.ts`、`src/product-images.json` | 先前實物圖片的追溯與近似備援 |
-| `src/audio.ts`、`src/impact.ts`、`src/music-state.ts`、`src/music-tracks.json` | Web Audio混音、配樂場景與素材資料 |
+| `src/audio.ts`、`src/impact.ts`、`src/finish.ts`、`src/music-state.ts`、`src/music-tracks.json` | Web Audio混音、配樂場景與素材資料 |
 | `public/audio/`、`scripts/render-soundtrack.mjs` | 四首原創配樂與可重製作曲／合成程式 |
 | `src/main.ts`、`src/style.css` | 遊戲流程與響應式介面 |
 | `src/storage.ts` | IndexedDB、備份驗證及戰績彙總 |
@@ -98,3 +99,5 @@ npm run catalog      # 從保存的企劃書重新匯入83筆原始組合
 盤體與配樂細節見 [盤體設計](docs/stadium-design.md)、[原創配樂](docs/soundtrack.md) 與 [v0.6.0驗收](docs/experience-qa-v060.md)。
 
 碰撞回饋與混音驗證見 [v0.7.0驗收](docs/impact-qa-v070.md)。
+
+終結與結算驗證見 [v0.8.0驗收](docs/finish-qa-v080.md)。
