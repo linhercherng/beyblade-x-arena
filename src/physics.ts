@@ -1,24 +1,35 @@
-import type { Bey } from "./catalog.ts";
+import type { Bey, BeyType } from "./catalog.ts";
 import {
   createBattle as createLegacyBattle,
   stepBattle as stepLegacyBattle,
 } from "./physics-v1.ts";
 import legacyStats from "./legacy-stats.json" with { type: "json" };
 import { createBattle as createVersion2Battle, stepBattle as stepVersion2Battle } from "./physics-v2.ts";
-export const ENGINE_VERSION = 3;
-export const PACING = { minSeconds: 15, fatigueFrom: 30, maxSeconds: 40, reserveRpm: 0.03, reserveBurst: 0.01 };
+import { createBattle as createVersion3Battle, stepBattle as stepVersion3Battle } from "./physics-v3.ts";
+export const ENGINE_VERSION = 4;
+export const COMBAT_STYLE: Record<BeyType, { label: string; description: string; force: number; brace: number; drain: number }> = {
+  attack: { label: "外圈追擊", description: "高速繞行與齒軌追擊，以強衝量逼出盤外，但反作用力與耗轉較高。", force: 1.12, brace: 1.05, drain: 1.03 },
+  defense: { label: "中心反擊", description: "穩守中心減少擊退，受擊後以反作用力回擊，爭取爆裂或越界。", force: 1, brace: .8, drain: 1 },
+  stamina: { label: "穩定巡航", description: "低速小圈維持轉速，靠穩定與傳能拖入持久戰，但較容易被撞飛。", force: .9, brace: 1.1, drain: .95 },
+  balance: { label: "攻守切換", description: "週期切換中心防守與外圈進攻，兼顧耗轉與衝撞機會。", force: 1.02, brace: .95, drain: 1 },
+};
+export const PACING = { minSeconds: 15, fatigueFrom: 30, maxSeconds: 40, reserveRpm: 0.03, reserveBurstFraction: .4 };
 export const TUNING = {
   friction: 0.034,
   staminaFriction: 0.0001,
   impactSpin: 0.0004,
-  burstLoss: 18,
-  lip: 2,
-  gyroLift: 60,
+  burstLoss: 14,
+  burstExponent: 3,
+  knockback: 2.1,
+  hitRecovery: 1.1,
+  lip: .8,
+  gyroLift: 1.5,
   attackSpeed: 4.5,
 };
 export const DT = 1 / 120;
 export const RADIUS = 4.25;
 export const TOP_RADIUS = 0.39;
+export const GATE_HALF_ANGLES = { over: .24, extreme: .29 };
 export const FINISH = {
   spin: { label: "旋轉終結", en: "SPIN FINISH", points: 1 },
   over: { label: "越界終結", en: "OVER FINISH", points: 2 },
@@ -49,6 +60,7 @@ export interface Top {
   maxImpulse: number;
   dashes: number;
   rotation: number;
+  exiting?: "over" | "extreme";
 }
 export interface Result {
   winner: 0 | 1 | null;
@@ -65,7 +77,7 @@ export interface BattleEvent {
   time: number;
 }
 export interface Battle {
-  version?: 1 | 2 | 3;
+  version?: 1 | 2 | 3 | 4;
   tops: [Top, Top];
   time: number;
   tick: number;
@@ -87,8 +99,9 @@ export function createBattle(
   b: Bey,
   inputs: readonly Launch[],
   seed: number,
-  version: 1 | 2 | 3 = ENGINE_VERSION,
+  version: 1 | 2 | 3 | 4 = ENGINE_VERSION,
 ): Battle {
+  if (version === 3) return createVersion3Battle(a, b, inputs, seed, 3);
   if (version === 2) return createVersion2Battle(a, b, inputs, seed, 2);
   if (version === 1) {
     const original = (b: Bey) => ({
@@ -155,10 +168,10 @@ export function createBattle(
   };
 }
 export function finishFor(
-  t: Pick<Top, "rpm" | "burst" | "x" | "z">,
+  t: Pick<Top, "rpm" | "burst" | "x" | "z" | "exiting">,
 ): Finish | null {
   if (Math.hypot(t.x, t.z) > RADIUS + 0.18)
-    return t.z > 3.8 && Math.abs(t.x) < 1.3 ? "extreme" : "over";
+    return t.exiting ?? (t.z > 3.8 && Math.abs(t.x) < 1.3 ? "extreme" : "over");
   if (t.burst <= 0) return "burst";
   if (t.rpm <= 0) return "spin";
   return null;
@@ -180,6 +193,10 @@ export function shout(s: Battle, player: 0 | 1) {
   return true;
 }
 export function stepBattle(s: Battle) {
+  if (s.version === 3) {
+    stepVersion3Battle(s as Parameters<typeof stepVersion3Battle>[0]);
+    return;
+  }
   if (s.version === 1) {
     stepLegacyBattle(s);
     return;
@@ -193,15 +210,18 @@ export function stepBattle(s: Battle) {
   s.time = s.tick * DT;
   s.events = [];
   for (const [i, t] of s.tops.entries()) {
+    const style = COMBAT_STYLE[t.bey.type];
     const r = Math.max(0.01, Math.hypot(t.x, t.z));
+    // 出口尚未完全離盤時被撞回，立即恢復盤內操舵與護牆。
+    if (t.exiting && (r <= RADIUS - TOP_RADIUS * .4 || t.x * t.vx + t.z * t.vz <= 0)) t.exiting = undefined;
     const spin = t.bey.spin === "L" ? -1 : 1;
     t.tilt = Math.max(t.tilt - DT * 0.18, 0, (0.3 - t.rpm) / 0.3);
     const moving =
-      t.bey.type === "attack" || (t.bey.type === "balance" && t.tilt > 0.15);
+      t.bey.type === "attack" || (t.bey.type === "balance" && Math.sin(s.time * .7 + i * 1.9) > 0);
     const target = moving
       ? 0.2 + 3.85 * (0.5 + 0.5 * Math.sin(s.time * 1.7 + i * 1.9))
       : t.bey.type === "stamina"
-        ? 0.45
+        ? 0.65
         : 0.25;
     const rv = (t.vx * t.x + t.vz * t.z) / r;
     const tv = (-t.vx * t.z + t.vz * t.x) / r;
@@ -215,7 +235,7 @@ export function stepBattle(s: Battle) {
         tv) *
       1.8;
     const wobble = Math.sin(s.time * 19 + i * 2) * t.tilt * 0.8;
-    const steering = s.time < t.hitUntil || s.time < t.dashUntil ? 0.07 : 1;
+    const steering = t.exiting ? 0 : s.time < t.hitUntil || s.time < t.dashUntil ? 0.07 : 1;
     t.vx += ((radial * t.x) / r - (tangent * t.z) / r + wobble) * DT * steering;
     t.vz += ((radial * t.z) / r + (tangent * t.x) / r - wobble) * DT * steering;
     const drag = Math.exp(-(s.time < t.dashUntil ? 0.08 : 0.6) * DT);
@@ -230,7 +250,7 @@ export function stepBattle(s: Battle) {
     t.x += t.vx * DT;
     t.z += t.vz * DT;
     const endurance =
-      TUNING.friction - t.bey.stats.sta * TUNING.staminaFriction;
+      (TUNING.friction - t.bey.stats.sta * TUNING.staminaFriction) * style.drain;
     // 末段對兩方施加相同耗轉；不補能量，總轉速必在40秒前耗盡。
     const fatigue = s.time > PACING.fatigueFrom ? 1.1 / (PACING.maxSeconds - PACING.fatigueFrom) : 0;
     t.rpm = Math.max(
@@ -239,7 +259,7 @@ export function stepBattle(s: Battle) {
     );
     t.rotation += spin * t.rpm * DT * 65;
     const newR = Math.hypot(t.x, t.z);
-    if (newR > 3.48 && s.time > t.railCooldown && t.rpm > 0.24 && speed > 1.7) {
+    if (!t.exiting && newR > 3.48 && s.time > t.railCooldown && t.rpm > 0.24 && speed > 1.7) {
       // 齒軌接觸門檻由衝刺值與兩秒氣勢降低，不以亂數決定勝負。
       const tangential = Math.abs((-t.z * t.vx + t.x * t.vz) / newR);
       if (
@@ -266,12 +286,14 @@ export function stepBattle(s: Battle) {
         });
       }
     }
-    if (newR > RADIUS - TOP_RADIUS * 0.4) {
+    if (!t.exiting && newR > RADIUS - TOP_RADIUS * 0.4) {
       const outwardSpeed = (t.vx * t.x + t.vz * t.z) / newR;
       const canClearLip = s.time >= PACING.minSeconds && outwardSpeed > TUNING.lip + TUNING.gyroLift * t.rpm;
       const sidePocket =
-        Math.abs(t.z) < 0.6 && Math.abs(t.x) > 3.8 && canClearLip;
-      const extremePocket = t.z > 3.8 && Math.abs(t.x) < 0.78 && canClearLip;
+        Math.abs(t.z) < Math.abs(t.x) * Math.tan(GATE_HALF_ANGLES.over) && Math.abs(t.x) > 3.8 && canClearLip;
+      const extremePocket = t.z > 3.8 && Math.abs(t.x) < t.z * Math.tan(GATE_HALF_ANGLES.extreme) && canClearLip;
+      // 通過出口門檻後以動量滑出，不能在下一tick被同一道護牆拉回。
+      if (sidePocket || extremePocket) t.exiting = extremePocket ? "extreme" : "over";
       if (!sidePocket && !extremePocket) {
         const nx = t.x / newR,
           nz = t.z / newR,
@@ -304,9 +326,9 @@ export function stepBattle(s: Battle) {
     if (rel > 0 && s.time > s.contactCooldown) {
       s.contactCooldown = s.time + 0.06;
       const j = rel * ((2 * ma * mb) / (ma + mb));
-      for (const [attacker, defender, sign, mass] of [
-        [a, b, 1, mb],
-        [b, a, -1, ma],
+      for (const [attacker, defender, sign, mass, counter] of [
+        [a, b, 1, mb, a.bey.type === "defense" && s.time < a.hitUntil ? 1.2 : 1],
+        [b, a, -1, ma, b.bey.type === "defense" && s.time < b.hitUntil ? 1.2 : 1],
       ] as const) {
         const upper =
           attacker.bey.height <= 60 && defender.bey.height >= 80 ? 1.15 : 1;
@@ -316,10 +338,11 @@ export function stepBattle(s: Battle) {
             0.3,
             1 + (attacker.bey.stats.atk - defender.bey.stats.def) / 100,
           ) *
-          upper;
-        defender.vx += (sign * hit * nx) / mass;
-        defender.vz += (sign * hit * nz) / mass;
-        defender.hitUntil = s.time + 0.65;
+          upper * COMBAT_STYLE[attacker.bey.type].force * COMBAT_STYLE[defender.bey.type].brace *
+          counter;
+        defender.vx += (sign * hit * nx * TUNING.knockback) / mass;
+        defender.vz += (sign * hit * nz * TUNING.knockback) / mass;
+        defender.hitUntil = s.time + TUNING.hitRecovery;
         defender.tilt = Math.min(1, defender.tilt + hit / 35);
         defender.rpm = Math.max(0, defender.rpm - hit * TUNING.impactSpin);
         const impact = hit / (1 + defender.bey.stats.def / 100);
@@ -327,7 +350,7 @@ export function stepBattle(s: Battle) {
           defender.burst -=
             (impact - 2.5) *
             TUNING.burstLoss *
-            Math.pow(1 - defender.rpm, 8) *
+            Math.pow(1 - defender.rpm, TUNING.burstExponent) *
             (s.time < attacker.dashUntil ? 2 : 1);
         attacker.impulse += hit;
         attacker.maxImpulse = Math.max(attacker.maxImpulse, hit);
@@ -356,7 +379,7 @@ export function stepBattle(s: Battle) {
     for (const t of s.tops) {
       // 開場保護作用於物理狀態，避免停轉、解體或出盤後仍等待結算。
       t.rpm = Math.max(t.rpm, PACING.reserveRpm);
-      t.burst = Math.max(t.burst, PACING.reserveBurst);
+      t.burst = Math.max(t.burst, t.bey.stats.burst * PACING.reserveBurstFraction);
       const r = Math.hypot(t.x, t.z), wall = RADIUS - TOP_RADIUS * 0.4;
       if (r > wall) {
         const nx = t.x / r, nz = t.z / r;

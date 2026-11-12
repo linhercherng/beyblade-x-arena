@@ -11,7 +11,7 @@ export interface TopReport {
   rpm: number;
 }
 export interface Round {
-  engineVersion?: 1 | 2 | 3;
+  engineVersion?: 1 | 2 | 3 | 4;
   index: number;
   slot: number;
   seed: number;

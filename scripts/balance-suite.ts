@@ -4,7 +4,7 @@ export const TYPES: BeyType[] = ["attack", "defense", "stamina", "balance"];
 export function runSuite(samples = 32, firstSeed = 1) {
   const pools = TYPES.map((t) => BEYS.filter((b) => b.type === t));
   const totals = Object.fromEntries(
-    TYPES.map((t) => [t, { played: 0, wins: 0, draws: 0, points: 0 }]),
+    TYPES.map((t) => [t, { played: 0, wins: 0, draws: 0, points: 0, dashes: 0, winFinishes: { spin: 0, burst: 0, over: 0, extreme: 0 } }]),
   );
   const pairs: Record<
     string,
@@ -16,6 +16,7 @@ export function runSuite(samples = 32, firstSeed = 1) {
     over: 0,
     extreme: 0,
   };
+  const examples: Record<string, { beys: string[]; seed: number; launches: unknown; shouts: number[][]; time: number; winner: number | null }> = {};
   const times: number[] = [];
   const outsideCases: { beys: string[]; seed: number; launches: unknown; time: number }[] = [];
   let dashes = 0;
@@ -46,12 +47,14 @@ export function runSuite(samples = 32, firstSeed = 1) {
           if (s.time < 15 || s.time > 40)
             outsideCases.push({ beys: beys.map(b => b.id), seed, launches, time: s.time });
           finishes[s.result.finish]++;
+          examples[s.result.finish] ??= { beys: beys.map(b => b.id), seed, launches, shouts: s.shouts, time: s.time, winner: s.result.winner };
           dashes += s.tops[0].dashes + s.tops[1].dashes;
           for (const p of [0, 1]) {
             const type = beys[p].type,
               opponent = beys[1 - p].type;
             const t = totals[type];
             t.played++;
+            t.dashes += s.tops[p].dashes;
             const pair = (pairs[`${type}:${opponent}`] ??= {
               played: 0,
               wins: 0,
@@ -62,6 +65,7 @@ export function runSuite(samples = 32, firstSeed = 1) {
             pair.seconds += s.time;
             if (s.result.winner === p) {
               t.wins++;
+              t.winFinishes[s.result.finish]++;
               t.points++;
               pair.wins++;
             }
@@ -87,6 +91,7 @@ export function runSuite(samples = 32, firstSeed = 1) {
     outsideTarget: times.filter((t) => t < 15 || t > 40).length,
     outsideCases,
     finishes,
+    examples,
     dashes,
     types: Object.fromEntries(
       TYPES.map((type) => [

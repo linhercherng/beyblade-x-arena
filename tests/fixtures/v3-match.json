@@ -1,0 +1,183 @@
+{
+  "id": "v3-tyranno-regression",
+  "date": "2026-11-12T09:19:15.000Z",
+  "mode": "cpu",
+  "difficulty": "normal",
+  "teams": [
+    [
+      "ux-15-tyranno-roar",
+      "bx-01-dran-sword",
+      "ux-03-wizard-rod"
+    ],
+    [
+      "bx-31-tyranno-beat",
+      "bx-02-hells-scythe",
+      "bx-03-wizard-arrow"
+    ]
+  ],
+  "scores": [
+    0,
+    4
+  ],
+  "slot": 2,
+  "rounds": [
+    {
+      "engineVersion": 3,
+      "index": 1,
+      "slot": 0,
+      "seed": 72101967,
+      "beys": [
+        "ux-15-tyranno-roar",
+        "bx-31-tyranno-beat"
+      ],
+      "inputs": [
+        {
+          "power": 0.6767411596607417,
+          "lane": 1,
+          "angle": 15
+        },
+        {
+          "power": 0.9601050117402338,
+          "lane": 0,
+          "angle": 8
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          840
+        ]
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "burst",
+        "points": 2,
+        "time": 18.8
+      },
+      "reports": [
+        {
+          "id": "ux-15-tyranno-roar",
+          "impulse": 123.99056670365188,
+          "maxImpulse": 21.83483806860774,
+          "dashes": 4,
+          "rpm": 0.09331852417087365
+        },
+        {
+          "id": "bx-31-tyranno-beat",
+          "impulse": 129.9421139054272,
+          "maxImpulse": 22.882910295900913,
+          "dashes": 5,
+          "rpm": 0.3848479799469954
+        }
+      ]
+    },
+    {
+      "engineVersion": 3,
+      "index": 2,
+      "slot": 1,
+      "seed": 72109886,
+      "beys": [
+        "bx-01-dran-sword",
+        "bx-02-hells-scythe"
+      ],
+      "inputs": [
+        {
+          "power": 0.6767411596607417,
+          "lane": 1,
+          "angle": 15
+        },
+        {
+          "power": 0.9601050117402338,
+          "lane": 0,
+          "angle": 8
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          840
+        ]
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "spin",
+        "points": 1,
+        "time": 24.858333333333334
+      },
+      "reports": [
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 47.41835724483812,
+          "maxImpulse": 11.441895162762151,
+          "dashes": 4,
+          "rpm": 0
+        },
+        {
+          "id": "bx-02-hells-scythe",
+          "impulse": 43.43362134191055,
+          "maxImpulse": 10.480391367572055,
+          "dashes": 0,
+          "rpm": 0.2799025730579512
+        }
+      ]
+    },
+    {
+      "engineVersion": 3,
+      "index": 3,
+      "slot": 2,
+      "seed": 72117805,
+      "beys": [
+        "ux-03-wizard-rod",
+        "bx-03-wizard-arrow"
+      ],
+      "inputs": [
+        {
+          "power": 0.6767411596607417,
+          "lane": 1,
+          "angle": 15
+        },
+        {
+          "power": 0.9601050117402338,
+          "lane": 0,
+          "angle": 8
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          840
+        ]
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "spin",
+        "points": 1,
+        "time": 26.03333333333333
+      },
+      "reports": [
+        {
+          "id": "ux-03-wizard-rod",
+          "impulse": 3.5947997454600307,
+          "maxImpulse": 0.577608981382812,
+          "dashes": 0,
+          "rpm": 0
+        },
+        {
+          "id": "bx-03-wizard-arrow",
+          "impulse": 3.6689193278406496,
+          "maxImpulse": 0.5895184449164782,
+          "dashes": 0,
+          "rpm": 0.30743896025001843
+        }
+      ]
+    }
+  ],
+  "winner": 1,
+  "seed": 72094048
+}

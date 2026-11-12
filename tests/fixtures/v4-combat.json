@@ -1,0 +1,118 @@
+{
+  "extreme": {
+    "beys": [
+      "bx-37-bear-scratch",
+      "ux-01-dran-buster"
+    ],
+    "seed": 1,
+    "launches": [
+      {
+        "power": 0.8264847113052383,
+        "lane": 2,
+        "angle": 2
+      },
+      {
+        "power": 0.7793314240057952,
+        "lane": 2,
+        "angle": 17
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 16.5,
+    "winner": 1
+  },
+  "burst": {
+    "beys": [
+      "ux-15-hells-brave-jaggy",
+      "cx-06-fox-brush-jaggy"
+    ],
+    "seed": 104730,
+    "launches": [
+      {
+        "power": 0.7609135666512884,
+        "lane": 1,
+        "angle": 12
+      },
+      {
+        "power": 0.783321106992662,
+        "lane": 2,
+        "angle": 10
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 16.258333333333333,
+    "winner": 0
+  },
+  "over": {
+    "beys": [
+      "ux-20-glory-valkyrie",
+      "bx-53-aero-pegasus"
+    ],
+    "seed": 418917,
+    "launches": [
+      {
+        "power": 0.9142001326894388,
+        "lane": 1,
+        "angle": 13
+      },
+      {
+        "power": 0.795290155953262,
+        "lane": 0,
+        "angle": 21
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 20.675,
+    "winner": 1
+  },
+  "spin": {
+    "beys": [
+      "cx-06-fox-brush-jaggy",
+      "bx-34-cobalt-dragoon"
+    ],
+    "seed": 2932413,
+    "launches": [
+      {
+        "power": 0.7404926609946415,
+        "lane": 2,
+        "angle": 21
+      },
+      {
+        "power": 0.8910425476380623,
+        "lane": 2,
+        "angle": 15
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 27.099999999999998,
+    "winner": 1
+  }
+}

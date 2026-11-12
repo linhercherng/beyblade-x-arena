@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
-import { RADIUS } from "./physics.ts";
+import { RADIUS, GATE_HALF_ANGLES } from "./physics.ts";
 
 type Placement = {
   x: number;
@@ -11,9 +11,9 @@ type Placement = {
 };
 const surface = (r: number) => r * r * 0.024 - 0.03;
 const gates = [
-  { angle: 0, half: 0.24 },
-  { angle: Math.PI / 2, half: 0.29 },
-  { angle: Math.PI, half: 0.24 },
+  { angle: 0, half: GATE_HALF_ANGLES.over },
+  { angle: Math.PI / 2, half: GATE_HALF_ANGLES.extreme },
+  { angle: Math.PI, half: GATE_HALF_ANGLES.over },
 ];
 function gate(angle: number) {
   return gates.some(

@@ -23,6 +23,7 @@ import {
   shout,
   DT,
   FINISH,
+  COMBAT_STYLE,
   type Battle,
   type Launch,
 } from "./physics.ts";
@@ -179,7 +180,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.9.1</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.10.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -528,7 +529,7 @@ function showDetail(id: string) {
       )
       .join(
         "",
-      )}<small>0–100，均為遊戲平衡值，非官方性能或實測重量。</small></div><div class="detail-record"><span class="eyebrow">MATCHUP</span><p>優勢：${TYPE[b.type].strong}<br>留意：${TYPE[b.type].weak}</p><span class="eyebrow">YOUR RECORD</span><p>${br?.played ?? 0} 場出戰 · ${pct(br?.wins ?? 0, br?.played ?? 0)}% 勝率</p><a href="${b.source}" target="_blank" rel="noopener">官方產品資料 ↗</a></div></div></section></div>`;
+      )}<small>0–100，均為遊戲平衡值，非官方性能或實測重量。</small></div><div class="detail-record"><span class="eyebrow">COMBAT STYLE</span><p><b>${COMBAT_STYLE[b.type].label}</b><br>${COMBAT_STYLE[b.type].description}</p><span class="eyebrow">MATCHUP</span><p>優勢：${TYPE[b.type].strong}<br>留意：${TYPE[b.type].weak}</p><span class="eyebrow">YOUR RECORD</span><p>${br?.played ?? 0} 場出戰 · ${pct(br?.wins ?? 0, br?.played ?? 0)}% 勝率</p><a href="${b.source}" target="_blank" rel="noopener">官方產品資料 ↗</a></div></div></section></div>`;
   arena?.setBeys([b]);
   arena?.attach(byId("detail-stage")!, "inspect");
   document.body.classList.add("modal-open");
@@ -543,7 +544,7 @@ function closeModal() {
 }
 function help() {
   byId("modal-root")!.innerHTML =
-    `<div class="modal-backdrop"><section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">${btn("×", "close-modal", "close-button", 'aria-label="關閉規則"')}<div class="eyebrow">HOW TO PLAY</div><h2 id="help-title">三顆王牌，先搶四分。</h2><ol><li>各選三顆不同戰刃，排定先鋒、中堅、大將。</li><li>設定落點與傾角，在黃綠最佳區鎖定蓄力。1P 用 A / S / D 與空白鍵；2P 用方向鍵與 Enter。</li><li>發射後自動碰撞。每場可呼喊一次，兩秒內提高齒軌衝刺能力。呼喊不補充轉速。</li><li>單場以 1× 模擬時間計算，維持 15–40 秒。前 15 秒有最低轉速、鎖扣與盤緣保護，碰撞仍會削弱狀態；30 秒後增加雙方耗轉，由場上狀態決勝。舊重播沿用原規則。</li><li>旋轉終結 1 分、越界與爆裂 2 分、極限終結 3 分。雙方同時終結重打。</li><li>三場後依原順序循環，先得 4 分獲勝。戰績可備份並重播。</li></ol><p>數值是遊戲平衡設定；相性由模擬表現產生。Beyblade 與型號名稱屬原權利人；本作為非官方粉絲作品，產品圖片來自 BeyGear 與 Takara Tomy，3D 側面為近似模型，聲音為原創合成。</p>${btn("準備好了 →", "close-modal", "primary")}</section></div>`;
+    `<div class="modal-backdrop"><section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">${btn("×", "close-modal", "close-button", 'aria-label="關閉規則"')}<div class="eyebrow">HOW TO PLAY</div><h2 id="help-title">三顆王牌，先搶四分。</h2><ol><li>各選三顆不同戰刃，排定先鋒、中堅、大將。</li><li>設定落點與傾角，在黃綠最佳區鎖定蓄力。1P 用 A / S / D 與空白鍵；2P 用方向鍵與 Enter。</li><li>發射後自動碰撞。每場可呼喊一次，兩秒內提高齒軌衝刺能力。呼喊不補充轉速。</li><li>單場以 1× 模擬時間計算，維持 15–40 秒。前 15 秒保留最低 3% 轉速、40% 鎖扣與盤緣保護，碰撞仍會削弱狀態；30 秒後增加雙方耗轉，由場上狀態決勝。舊重播沿用原規則。</li><li>攻擊型擅長外圈追擊；防禦型守中反擊；持久型低速巡航與傳能；平衡型週期切換攻守。出口與畫面護牆開口一致，重擊與齒軌衝刺能將對手送出盤外。</li><li>旋轉終結 1 分、越界與爆裂 2 分、極限終結 3 分。雙方同時終結重打。</li><li>三場後依原順序循環，先得 4 分獲勝。戰績可備份並重播。</li></ol><p>數值是遊戲平衡設定；相性由模擬表現產生。Beyblade 與型號名稱屬原權利人；本作為非官方粉絲作品，產品圖片來自 BeyGear 與 Takara Tomy，3D 側面為近似模型，聲音為原創合成。</p>${btn("準備好了 →", "close-modal", "primary")}</section></div>`;
   document.body.classList.add("modal-open");
   byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
 }
@@ -948,7 +949,7 @@ function updateHud() {
   const timer = byId("battle-time");
   if (timer) timer.textContent = battle.time.toFixed(1) + " 秒";
   const phase = byId("battle-phase");
-  if (phase) phase.textContent = battle.version !== 3 ? "舊版規則重播" : battle.time < 15 ? "開場穩定期 · 15 秒解除" : battle.time <= 30 ? "自由交戰" : "末段耗轉";
+  if (phase) phase.textContent = (battle.version ?? 1) < 3 ? "舊版規則重播" : battle.time < 15 ? "開場穩定期 · 15 秒解除" : battle.time <= 30 ? "自由交戰" : "末段耗轉";
 }
 function frame(time: number) {
   const realDt = Math.max(0, Math.min(0.25, (time - lastFrame) / 1000 || 0));

@@ -59,7 +59,7 @@ test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
   await page.screenshot({ path: "artifacts/catalog-real-products-mobile.png" });
   expect(errors).toEqual([]);
 });
-for (const version of [1, 2]) test(`已發布v${version}戰績匯入後仍使用舊引擎正確重播`, async ({ page }) => {
+for (const version of [1, 2, 3]) test(`已發布v${version}戰績匯入後仍使用舊引擎正確重播`, async ({ page }) => {
   const m = JSON.parse(readFileSync(`tests/fixtures/v${version}-match.json`, "utf8"));
   const count = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
   const profile = {

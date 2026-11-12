@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import oldMatch from "./fixtures/v1-match.json" with { type: "json" };
 import version2Match from "./fixtures/v2-match.json" with { type: "json" };
+import version3Match from "./fixtures/v3-match.json" with { type: "json" };
 import { BEYS } from "../src/catalog.ts";
 import { createBattle, stepBattle, shout } from "../src/physics.ts";
 import { createMatch, applyRound, roundSeed } from "../src/match.ts";
@@ -13,8 +14,8 @@ import {
   exportProfile,
   validateMatch,
 } from "../src/storage.ts";
-test("v2備份通過驗證、逐場保留原報告與14.43秒結果，未知引擎拒絕匯入", () => {
-  const m = validateMatch(version2Match);
+for (const fixture of [version2Match, version3Match]) test(`v${fixture.rounds[0].engineVersion}備份通過驗證並保留原報告與結果，未知引擎拒絕匯入`, () => {
+  const m = validateMatch(fixture);
   for (const r of m.rounds) {
     const s = createBattle(BEYS.find(b => b.id === r.beys[0])!, BEYS.find(b => b.id === r.beys[1])!, r.inputs, r.seed, r.engineVersion);
     while (!s.result) {
@@ -24,8 +25,8 @@ test("v2備份通過驗證、逐場保留原報告與14.43秒結果，未知引�
     assert.deepEqual(s.result, r.result);
     assert.deepEqual(s.tops.map(t => ({ id: t.bey.id, impulse: t.impulse, maxImpulse: t.maxImpulse, dashes: t.dashes, rpm: t.rpm })), r.reports);
   }
-  const bad = structuredClone(version2Match);
-  bad.rounds[0].engineVersion = 4;
+  const bad = structuredClone(fixture);
+  bad.rounds[0].engineVersion = 99;
   assert.throws(() => validateMatch(bad));
 });
 test("更新平衡後舊版備份仍可讀取，無版本的舊場次使用凍結引擎與原數值重播", () => {
