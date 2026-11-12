@@ -72,11 +72,11 @@ const bitGroups: [BeyType, string][] = [
   ],
   [
     "stamina",
-    "B:Ball O:Orb LO:Low_Orb GB:Gear_Ball DB:Disk_Ball FB:Free_Ball G:Glide WB:Wall_Ball Nr:Needle_Roller",
+    "B:Ball O:Orb LO:Low_Orb GB:Gear_Ball DB:Disk_Ball FB:Free_Ball G:Glide WB:Wall_Ball Nr:Narrow",
   ],
   [
     "balance",
-    "T:Taper HT:High_Taper P:Point GP:Gear_Point U:Unite E:Elevate H:Hexa TP:Trans_Point M:Merge Z:Zap J:Jolt K:Kick TK:Trans_Kick Op:Operate Y:Yielding GU:Gear_Unite LP:Level_Point MT:Metal_Taper",
+    "T:Taper HT:High_Taper P:Point GP:Gear_Point U:Unite E:Elevate H:Hexa TP:Trans_Point M:Merge Z:Zap J:Jolt K:Kick TK:Trans_Kick Op:Operate Y:Yielding GU:Gear_Unite LP:Low_Point MT:Metal_Taper",
   ],
 ];
 const known = new Set(

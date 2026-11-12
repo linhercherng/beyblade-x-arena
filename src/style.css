@@ -3175,3 +3175,12 @@ tbody tr:last-child td {
     scroll-behavior: auto !important;
   }
 }
+.model-tools {position:absolute;top:4px;left:0;right:0;display:flex;justify-content:center;gap:6px;z-index:2}
+.model-tools button {font-size:10px;padding:7px 10px}
+button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
+.model-references {display:flex;align-items:center;gap:10px;margin:15px 0;flex-wrap:wrap}
+.model-references a {display:flex;align-items:center;gap:6px;color:#b8cadb;font-size:10px}
+.model-references img {width:58px;height:68px;object-fit:contain;background:#f9f9f9;border-radius:4px}
+.model-references p {flex:1 1 180px;font-size:10px;color:var(--muted);line-height:1.8;margin:0}
+.model-references .reference-photo {position:static;padding:0;border:0;background:none}
+.model-references .reference-photo .bey-art {--art-size:58px !important}

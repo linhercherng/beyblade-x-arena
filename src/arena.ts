@@ -1,7 +1,8 @@
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
-import { PRODUCT_IMAGES } from "./appearance.ts";
+import { beyModel, modelSpec } from "./bey-model.ts";
 import { type Battle, type BattleEvent, RADIUS } from "./physics.ts";
 
 function metal(color: THREE.ColorRepresentation, roughness = 0.28) {
@@ -22,125 +23,21 @@ function ring(radius: number, tube: number, color: THREE.ColorRepresentation) {
   o.rotation.x = Math.PI / 2;
   return o;
 }
-export function beyModel(b: Bey) {
-  const group = new THREE.Group();
-  const blade = new THREE.Group(),
-    ratchet = new THREE.Group(),
-    bit = new THREE.Group();
-  const reference = PRODUCT_IMAGES[b.id];
-  const primary = reference.primaryColor,
-    secondary = reference.secondaryColor;
-  const shape = new THREE.Shape();
-  const contour = reference.shape.map((radius, i) => {
-    const angle = (i / reference.shape.length) * Math.PI * 2;
-    return new THREE.Vector2(
-      Math.cos(angle) * radius * 0.52,
-      -Math.sin(angle) * radius * 0.52,
-    );
-  });
-  for (const [i, p] of contour.entries()) {
-    if (i === 0) shape.moveTo(p.x, p.y);
-    else shape.lineTo(p.x, p.y);
-  }
-  const edge = mesh(
-    new THREE.ExtrudeGeometry(shape, {
-      depth: 0.11,
-      bevelEnabled: true,
-      bevelSize: 0.009,
-      bevelThickness: 0.009,
-      bevelSegments: 2,
-      steps: 1,
-    }),
-    metal("#c1cbd2"),
-  );
-  edge.rotation.x = -Math.PI / 2;
-  edge.position.y = 0.26;
-  blade.add(edge);
-  const base = mesh(
-    new THREE.CylinderGeometry(0.38, 0.32, 0.12, 24),
-    metal(primary),
-    0,
-    0.27,
-  );
-  blade.add(base);
-  // 頂面使用原始產品圖；外緣厚度與側面是依俯視輪廓建立的近似模型。
-  const texture = new THREE.TextureLoader().load(reference.src);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
-  const vertices: number[] = [],
-    uvs: number[] = [];
-  const [bx, by, bw, bh] = reference.imageBounds;
-  const radiusPixels =
-    Math.max(bw * reference.width, bh * reference.height) / 2;
-  const vertex = (x: number, z: number) => {
-    vertices.push(x, 0.385, z);
-    uvs.push(
-      bx + bw / 2 + ((x / 0.52) * radiusPixels) / reference.width,
-      1 - by - bh / 2 - ((z / 0.52) * radiusPixels) / reference.height,
-    );
-  };
-  for (let i = 0; i < contour.length; i++) {
-    const p = contour[i],
-      q = contour[(i + 1) % contour.length];
-    vertex(0, 0);
-    vertex(q.x, -q.y);
-    vertex(p.x, -p.y);
-  }
-  const surface = new THREE.BufferGeometry();
-  surface.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute(vertices, 3),
-  );
-  surface.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  surface.computeVertexNormals();
-  blade.add(
-    mesh(
-      surface,
-      new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        alphaTest: 0.08,
-        side: THREE.DoubleSide,
-      }),
-    ),
-  );
-  ratchet.add(
-    mesh(
-      new THREE.CylinderGeometry(
-        0.3,
-        0.25,
-        0.12,
-        Math.max(3, Math.min(12, Number(b.ratchet.split("-")[0]) || 6)),
-      ),
-      metal(secondary),
-      0,
-      0.19,
-    ),
-  );
-  bit.add(
-    mesh(
-      new THREE.CylinderGeometry(
-        0.16,
-        b.type === "attack" ? 0.095 : 0.045,
-        0.17 + (b.height - 60) * 0.0015,
-        12,
-      ),
-      metal(primary),
-      0,
-      0.055,
-    ),
-  );
-  group.add(blade, ratchet, bit);
-  group.userData.parts = [blade, ratchet, bit];
-  group.userData.productImage = reference.src;
-  return group;
-}
-
 interface Particle {
   p: THREE.Vector3;
   v: THREE.Vector3;
   life: number;
   color: THREE.Color;
+}
+export function closeUpRange(
+  distance: number,
+  camera: THREE.PerspectiveCamera,
+) {
+  const halfFov = Math.atan(
+    Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
+      Math.min(1, camera.aspect),
+  );
+  return Math.max(3.7, (distance / 2 + 0.75) / Math.sin(halfFov));
 }
 export class Arena {
   renderer: THREE.WebGLRenderer;
@@ -152,8 +49,12 @@ export class Arena {
   mode: "home" | "battle" | "inspect" = "home";
   observer: ResizeObserver;
   angle = 0;
+  pitch = 0.54;
+  exploded = false;
+  closeUp = false;
   dragging = false;
   lastX = 0;
+  lastY = 0;
   shake = 0;
   eventFlash = 0;
   particles: Particle[] = [];
@@ -192,13 +93,18 @@ export class Arena {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.45;
+    const room = new RoomEnvironment(),
+      pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(room, 0.06).texture;
+    room.dispose();
+    pmrem.dispose();
     this.renderer.shadowMap.enabled = innerWidth > 700;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.domElement.setAttribute(
       "aria-label",
       "原創立體陀螺競技場，可拖曳旋轉視角",
     );
-    this.renderer.domElement.setAttribute('role','img');
+    this.renderer.domElement.setAttribute("role", "img");
     this.scene.add(new THREE.HemisphereLight("#dcecff", "#1a2636", 3));
     const key = new THREE.DirectionalLight("#d8f3ff", 4);
     key.position.set(3, 9, 5);
@@ -258,12 +164,19 @@ export class Arena {
     this.renderer.domElement.addEventListener("pointerdown", (e) => {
       this.dragging = true;
       this.lastX = e.clientX;
+      this.lastY = e.clientY;
       this.renderer.domElement.setPointerCapture(e.pointerId);
     });
     this.renderer.domElement.addEventListener("pointermove", (e) => {
       if (this.dragging) {
         this.angle += (e.clientX - this.lastX) * 0.008;
+        if (this.mode === "inspect")
+          this.pitch = Math.max(
+            -0.65,
+            Math.min(1.2, this.pitch + (e.clientY - this.lastY) * 0.007),
+          );
         this.lastX = e.clientX;
+        this.lastY = e.clientY;
       }
     });
     this.renderer.domElement.addEventListener(
@@ -390,6 +303,8 @@ export class Arena {
       );
     }
     this.mode = mode;
+    this.renderer.domElement.style.touchAction =
+      mode === "inspect" ? "none" : "pan-y";
     host.append(this.renderer.domElement);
     this.observer.observe(host);
     this.resize();
@@ -405,6 +320,9 @@ export class Arena {
     this.renderer.setSize(w, h);
   }
   setBeys(beys: Bey[]) {
+    this.exploded = false;
+    this.pitch = 0.54;
+    this.renderer.domElement.dataset.assembly = "assembled";
     this.renderer.domElement.setAttribute(
       "aria-label",
       beys.map((b) => b.name).join(" 對 ") +
@@ -414,17 +332,22 @@ export class Arena {
       this.scene.remove(g);
       g.traverse((o) => {
         if (o instanceof THREE.Mesh) {
+          if (o instanceof THREE.InstancedMesh) o.dispose();
           o.geometry.dispose();
           const ms = Array.isArray(o.material) ? o.material : [o.material];
           ms.forEach((m) => {
-            if (m instanceof THREE.MeshBasicMaterial) m.map?.dispose();
+            const material = m as THREE.MeshStandardMaterial;
+            material.map?.dispose();
+            if (material.emissiveMap !== material.map)
+              material.emissiveMap?.dispose();
             m.dispose();
           });
         }
       });
     });
     this.models = beys.map((b) => {
-      const g = beyModel(b);
+      const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src);
+      const g = beyModel(b, texture);
       this.scene.add(g);
       return g;
     });
@@ -468,8 +391,13 @@ export class Arena {
     this.time += dt;
     const inspecting = this.mode === "inspect";
     const az = inspecting ? this.angle : this.angle * 0.3;
+    const previewDistance = this.exploded ? 2.4 : 1.9;
     const base = inspecting
-      ? new THREE.Vector3(Math.sin(az) * 2.5, 1.75, Math.cos(az) * 2.5)
+      ? new THREE.Vector3(
+          Math.sin(az) * Math.cos(this.pitch) * previewDistance,
+          0.25 + Math.sin(this.pitch) * previewDistance,
+          Math.cos(az) * Math.cos(this.pitch) * previewDistance,
+        )
       : new THREE.Vector3(Math.sin(az) * 12.5, 10.8, Math.cos(az) * 12.5);
     if (this.mode === "home") {
       base.set(9 + Math.sin(this.time * 0.07) * 1.5, 10, 12.5);
@@ -489,11 +417,23 @@ export class Arena {
         base.x += f * 1.8;
       }
     }
+    const look = new THREE.Vector3(0, inspecting ? 0.25 : 0, 0);
+    if (battle && this.closeUp) {
+      const [a, b] = battle.tops,
+        distance = Math.hypot(a.x - b.x, a.z - b.z);
+      look.set((a.x + b.x) / 2, 0.2, (a.z + b.z) / 2);
+      const range = closeUpRange(distance, this.camera);
+      base.set(
+        look.x + Math.sin(az + 0.4) * range,
+        3.4,
+        look.z + Math.cos(az + 0.4) * range,
+      );
+    }
     this.camera.position.lerp(base, 0.07);
     this.camera.position.x += Math.sin(this.time * 130) * this.shake;
     this.camera.position.z += Math.cos(this.time * 103) * this.shake;
     this.shake *= 0.86;
-    this.camera.lookAt(0, inspecting ? 0.25 : 0, 0);
+    this.camera.lookAt(look);
     this.models.forEach((g, i) => {
       const t = battle?.tops[i];
       if (t) {
@@ -507,12 +447,13 @@ export class Arena {
             battle!.result.winner === null || battle!.result.winner !== i;
           if (loser && battle!.result.finish === "burst")
             (g.userData.parts as THREE.Group[]).forEach((p, j) => {
+              const linked = (g.userData.partLinks as number[])[j];
               p.position.set(
-                Math.sin(j * 2.1) * elapsed * 0.7,
-                elapsed * (2 - j) * 0.6,
-                Math.cos(j * 2.1) * elapsed * 0.7,
+                Math.sin(linked * 2.1) * elapsed * 0.7,
+                elapsed * (2 - linked) * 0.6,
+                Math.cos(linked * 2.1) * elapsed * 0.7,
               );
-              p.rotation.z = elapsed * j;
+              p.rotation.z = elapsed * linked;
             });
           else if (loser && battle!.result.finish === "spin")
             g.rotation.z = Math.min(Math.PI / 2, elapsed);
@@ -543,11 +484,17 @@ export class Arena {
           inspecting ? 0.04 : 0.2 + r * r * 0.024,
           Math.sin(a) * r,
         );
-        g.rotation.y =
-          this.time * (inspecting ? 0.4 : 16) * (i ? -1 : 1) + this.angle;
-        g.rotation.z = inspecting ? 0.12 : 0;
-        (g.userData.parts as THREE.Group[]).forEach((p) => {
-          p.position.set(0, 0, 0);
+        g.rotation.y = inspecting
+          ? 0
+          : this.time * 16 * (i ? -1 : 1) + this.angle;
+        g.rotation.z = 0;
+        (g.userData.parts as THREE.Group[]).forEach((p, j) => {
+          const linked = (g.userData.partLinks as number[])[j];
+          p.position.set(
+            0,
+            inspecting && this.exploded ? [0.29, 0, -0.23][linked] : 0,
+            0,
+          );
           p.rotation.z = 0;
         });
       }

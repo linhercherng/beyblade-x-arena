@@ -1,5 +1,5 @@
 import "./style.css";
-import { PRODUCT_IMAGES } from "./appearance.ts";
+import { modelSpec } from "./bey-model.ts";
 import {
   BEYS,
   TYPE,
@@ -125,7 +125,7 @@ const btn = (label: string, action: string, cls = "", extra = "") =>
 const tag = (b: Bey) =>
   `<span class="type-tag" style="--type:${b.color}">${TYPE[b.type].icon} ${TYPE[b.type].label}</span>`;
 function art(b: Bey, size = 100) {
-  const image = PRODUCT_IMAGES[b.id];
+  const image = modelSpec(b).photo;
   const [x, y, w, h] = image.imageBounds;
   const scale = 1 / Math.max(w * image.width, h * image.height);
   const width = image.width * scale * 100,
@@ -165,7 +165,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.2.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.3.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -323,7 +323,7 @@ function launchControls(player: 0 | 1) {
 function renderArena() {
   const launching = screen === "launch";
   shell(
-    `<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : `第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗時會自動暫停</p></div></div><div id="battle-controls">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">CPU READY</span><h3>電腦已就緒</h3><p>${DIFFICULTY[match!.difficulty]} · 等待你的完美發射</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? '<div class="replay-note">相同種子、發射輸入與呼喊時機，以固定步長重播。重播不寫入戰績。</div>' : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span id="battle-time">00.0 秒</span></div>`}</div>`,
+    `<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : `第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn("近鏡", "close-up", "secondary", `aria-pressed="${arena?.closeUp ?? false}"`)}${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗時會自動暫停</p></div></div><div id="battle-controls">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">CPU READY</span><h3>電腦已就緒</h3><p>${DIFFICULTY[match!.difficulty]} · 等待你的完美發射</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? '<div class="replay-note">相同種子、發射輸入與呼喊時機，以固定步長重播。重播不寫入戰績。</div>' : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span id="battle-time">00.0 秒</span></div>`}</div>`,
   );
   if (screen === "countdown")
     byId("battle-message")!.innerHTML =
@@ -482,11 +482,25 @@ function stats() {
 }
 function showDetail(id: string) {
   const b = getBey(id);
+  const reference = modelSpec(b).reference;
+  const referencePhotos = [
+    ["斜視", reference?.side],
+    ["棘輪", reference?.ratchetPhoto],
+    ["軸心", reference?.bitPhoto],
+  ] as const;
   detailId = id;
   modalReturnBeys = screen === "home" ? [BEYS[0], BEYS[11]] : [];
   const br = profile.beys[id];
   byId("modal-root")!.innerHTML =
-    `<div class="modal-backdrop"><section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><div class="detail-top"><span class="eyebrow">${b.code} / ${b.line} LINE</span>${btn("×", "close-modal", "close-button", 'aria-label="關閉卡牌"')}</div><div class="detail-layout"><div class="detail-visual"><div id="detail-stage"></div><a class="reference-photo" href="${PRODUCT_IMAGES[b.id].source}" target="_blank" rel="noopener">${art(b, 65)}<small>實際產品參考圖 ↗</small></a><span>依實物俯視圖建立輪廓近似，可拖曳旋轉 ↔</span></div><div><div>${tag(b)} <span class="spin-label">${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><h2 id="detail-title">${b.name}</h2><p class="detail-feature">${b.feature}</p><div class="part-list"><div><small>戰刃</small><b>${b.name}</b></div><div><small>棘輪</small><b>${b.integrated ? (b.integrated === "blade" ? "與戰刃一體" : "與軸心一體") : b.ratchet}</b></div><div><small>軸心</small><b>${b.bit} · ${bits[b.bit].name}</b></div>${b.line === "CX" ? `<div><small>CX 結構</small><b>${b.cxParts.join(" / ")}</b></div>` : ""}<div><small>發售日</small><b>${b.released ?? "未確認"}${b.released && b.released > new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" }) ? "（預定）" : ""}</b></div></div></div></div><div class="detail-bottom">${radar(b)}<div class="stat-numbers">${Object.entries(
+    `<div class="modal-backdrop"><section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title"><div class="detail-top"><span class="eyebrow">${b.code} / ${b.line} LINE</span>${btn("×", "close-modal", "close-button", 'aria-label="關閉卡牌"')}</div><div class="detail-layout"><div class="detail-visual"><div id="detail-stage"></div><div class="model-tools">${btn("側面", "model-side", "secondary")}${btn("底部", "model-bottom", "secondary")}${btn("三段拆解", "model-explode", "secondary", 'aria-pressed="false"')}</div><span>左右旋轉・上下拖曳看厚度</span></div><div><div>${tag(b)} <span class="spin-label">${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><h2 id="detail-title">${b.name}</h2><p class="detail-feature">${b.feature}</p><div class="part-list"><div><small>戰刃</small><b>${b.name}</b></div><div><small>棘輪</small><b>${b.integrated ? (b.integrated === "blade" ? "與戰刃一體" : "與軸心一體") : b.ratchet}</b></div><div><small>軸心</small><b>${b.bit} · ${bits[b.bit].name}</b></div>${b.line === "CX" ? `<div><small>CX 結構</small><b>${b.cxParts.join(" / ")}</b></div>` : ""}<div><small>發售日</small><b>${b.released ?? "未確認"}${b.released && b.released > new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Taipei" }) ? "（預定）" : ""}</b></div></div></div></div><div class="model-references"><a class="reference-photo" href="${reference?.source ?? b.source}" target="_blank" rel="noopener">${art(b, 65)}<small>實際產品參考圖 ↗</small></a>${referencePhotos
+      .filter(([, photo]) => photo)
+      .map(
+        ([label, photo]) =>
+          `<a href="${photo!.imageSource}" target="_blank" rel="noopener"><img src="${photo!.src}" alt="${b.name} ${label}原廠參考" loading="lazy"/><span>${label} ↗</span></a>`,
+      )
+      .join(
+        "",
+      )}<p>${reference?.confidence === "official-combo" ? `依原廠組合配色${reference.colors.ratchet === null || reference.colors.bit === null ? "（部分下段配色近似）" : ""}` : "配色與外形參考近似"} · 比例依照片近似，非精密零件模型。${b.integrated ? "一體式零件在拆解時保持連接。" : ""}</p></div><div class="detail-bottom">${radar(b)}<div class="stat-numbers">${Object.entries(
       b.stats,
     )
       .map(
@@ -620,6 +634,26 @@ app.addEventListener("click", (e) => {
       break;
     case "detail":
       showDetail(target.dataset.id!);
+      break;
+    case "model-side":
+    case "model-bottom":
+      if (arena) arena.pitch = a === "model-side" ? 0.1 : -0.5;
+      break;
+    case "model-explode":
+      if (arena) {
+        arena.exploded = !arena.exploded;
+        target.setAttribute("aria-pressed", String(arena.exploded));
+        target.textContent = arena.exploded ? "組合視圖" : "三段拆解";
+        arena.renderer.domElement.dataset.assembly = arena.exploded
+          ? "exploded"
+          : "assembled";
+      }
+      break;
+    case "close-up":
+      if (arena) {
+        arena.closeUp = !arena.closeUp;
+        target.setAttribute("aria-pressed", String(arena.closeUp));
+      }
       break;
     case "close-modal":
       closeModal();

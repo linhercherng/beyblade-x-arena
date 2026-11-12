@@ -73,13 +73,11 @@ test("已發布v1戰績匯入後仍使用舊引擎正確重播", async ({ page }
   };
   await page.goto("/");
   await action(page, "stats").click();
-  await page
-    .locator("#backup-file")
-    .setInputFiles({
-      name: "v1.json",
-      mimeType: "application/json",
-      buffer: Buffer.from(JSON.stringify(profile)),
-    });
+  await page.locator("#backup-file").setInputFiles({
+    name: "v1.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(profile)),
+  });
   await expect(page.locator("#toast")).toContainText("已匯入");
   await page.locator(".history-row summary").click();
   await action(page, "replay").first().click();
@@ -121,6 +119,20 @@ async function playMatch(page: Page, local = false) {
       "battle",
       { timeout: 12000 },
     );
+    await action(page, "close-up").click();
+    await expect(action(page, "close-up")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    if (rounds === 1) {
+      await page.waitForTimeout(1000);
+      await page.screenshot({
+        path: local
+          ? "artifacts/battle-close-local.png"
+          : "artifacts/battle-close-desktop.png",
+      });
+    }
+    await action(page, "close-up").click();
     await page.keyboard.press("Space");
     await expect(action(page, "shout").first()).toBeDisabled();
     if (local) {
