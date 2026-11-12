@@ -45,5 +45,5 @@ test("低速旋轉實際渲染連續、暫停精確且軌跡不重建幾何", as
   expect(errors).toEqual([]);
   const video = page.video();
   await page.close();
-  await video!.saveAs("artifacts/slow-spin-v040.webm");
+  await video!.saveAs("artifacts/slow-spin-v050.webm");
 });

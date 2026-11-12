@@ -1240,7 +1240,8 @@ main {
 .hud-bar i {
   display: block;
   height: 100%;
-  transition: width 0.1s;
+  transform-origin:left;
+  transition: transform 0.1s linear;
 }
 .hud-bar.burst {
   height: 3px;

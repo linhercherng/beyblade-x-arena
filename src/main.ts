@@ -95,6 +95,7 @@ let paused = false,
 let detailId: string | null = null,
   modalReturnBeys: Bey[] = [];
 let previousPoses: TopPose[] = [];
+let lastHudTime = 0;
 let replay: Round | null = null,
   replayMatch: Match | null = null,
   historyId: string | null = null,
@@ -174,7 +175,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.4.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.5.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -350,9 +351,17 @@ function lock(player: 0 | 1) {
   if (host) host.outerHTML = launchControls(player);
   sound.tone(660, 0.08);
   if (locked.every(Boolean)) {
+    battle = createBattle(
+      getBey(match!.teams[0][match!.slot]),
+      getBey(match!.teams[1][match!.slot]),
+      inputs,
+      roundSeed(match!),
+    );
+    previousPoses = capturePoses(battle, previousPoses);
     screen = "countdown";
     countdownStart = now;
     renderArena();
+    updateHud();
   }
 }
 function chargePhase(p: number) {
@@ -366,16 +375,9 @@ function chargePower(p: number) {
 }
 function startBattle() {
   screen = "battle";
-  battle = createBattle(
-    getBey(match!.teams[0][match!.slot]),
-    getBey(match!.teams[1][match!.slot]),
-    inputs,
-    roundSeed(match!),
-  );
   processed = false;
   accumulator = 0;
   finishStart = 0;
-  previousPoses = capturePoses(battle);
   renderArena();
   const msg = byId("battle-message")!;
   msg.innerHTML = '<strong class="shoot">GO SHOOT!</strong>';
@@ -558,6 +560,7 @@ function setPaused(value: boolean) {
     const elapsed = performance.now() - pauseStarted;
     if (screen === "countdown") countdownStart += elapsed;
     if (finishStart) finishStart += elapsed;
+    lastFrame = performance.now();
   }
   paused = value;
   const overlay = byId("pause-overlay");
@@ -913,15 +916,15 @@ function updateHud() {
       bb = byId(`burst-bar-${p}`);
     if (rpm) rpm.textContent = Math.round(t.rpm * 100) + "%";
     if (burst) burst.textContent = Math.max(0, Math.round(t.burst)).toString();
-    if (bar) bar.style.width = t.rpm * 100 + "%";
+    if (bar) bar.style.transform = `scaleX(${Math.max(0, Math.min(1, t.rpm))})`;
     if (bb)
-      bb.style.width = Math.max(0, (t.burst / t.bey.stats.burst) * 100) + "%";
+      bb.style.transform = `scaleX(${Math.max(0, Math.min(1, t.burst / t.bey.stats.burst))})`;
   });
   const timer = byId("battle-time");
   if (timer) timer.textContent = battle.time.toFixed(1) + " 秒";
 }
 function frame(time: number) {
-  const realDt = Math.min(0.25, (time - lastFrame) / 1000 || 0);
+  const realDt = Math.max(0, Math.min(0.25, (time - lastFrame) / 1000 || 0));
   lastFrame = time;
   now = time;
   const active = (screen === "battle" || screen === "replay") && !paused;
@@ -961,7 +964,7 @@ function frame(time: number) {
           Math.hypot(battle.tops[1].x, battle.tops[1].z) > 2.5
         )
           shout(battle, 1);
-        previousPoses = capturePoses(battle);
+        capturePoses(battle, previousPoses);
         stepBattle(battle);
         for (const event of battle.events) {
           arena?.event(event);
@@ -979,7 +982,10 @@ function frame(time: number) {
         }
         accumulator -= DT;
       }
-      updateHud();
+      if (battle.result || time - lastHudTime >= 100) {
+        updateHud();
+        lastHudTime = time;
+      }
     }
     if (battle.result && !processed) {
       processed = true;
@@ -1008,9 +1014,16 @@ function frame(time: number) {
   if ((arena && byId("stage")?.isConnected) || detailId)
     arena?.draw(
       paused ? 0 : realDt,
-      detailId ? null : ["battle", "replay"].includes(screen) ? battle : null,
+      detailId
+        ? null
+        : ["countdown", "battle", "replay"].includes(screen)
+          ? battle
+          : null,
       previousPoses,
       battle?.result ? 1 : accumulator / DT,
+      screen === "countdown"
+        ? ((paused ? pauseStarted : time) - countdownStart) / 1000
+        : null,
     );
   sound.update(
     battle,

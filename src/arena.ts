@@ -3,7 +3,13 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
 import { beyModel, modelSpec } from "./bey-model.ts";
-import { interpolatePose, spinLean, type TopPose } from "./motion.ts";
+import {
+  interpolatePose,
+  spinLean,
+  entryPose,
+  damping,
+  type TopPose,
+} from "./motion.ts";
 import { type Battle, type BattleEvent, RADIUS } from "./physics.ts";
 
 function metal(color: THREE.ColorRepresentation, roughness = 0.28) {
@@ -33,17 +39,39 @@ interface Particle {
 export function closeUpRange(
   distance: number,
   camera: THREE.PerspectiveCamera,
+  openingHeight = 0,
 ) {
   const halfFov = Math.atan(
     Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) *
       Math.min(1, camera.aspect),
   );
-  return Math.max(3.7, (distance / 2 + 0.75) / Math.sin(halfFov));
+  const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+  return Math.max(
+    3.7,
+    (distance / 2 + 0.75) / Math.sin(halfFov),
+    (0.75 + openingHeight * 0.75) / Math.sin(verticalHalfFov),
+  );
+}
+export function renderPixelRatio(
+  width: number,
+  height: number,
+  deviceRatio: number,
+  maxRatio = 1.75,
+) {
+  return Math.min(
+    deviceRatio,
+    maxRatio,
+    Math.sqrt(2400000 / Math.max(1, width * height)),
+  );
 }
 export class Arena {
   renderer: THREE.WebGLRenderer;
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(39, 1, 0.1, 100);
+  cameraFocus = new THREE.Vector3();
+  cameraBase = new THREE.Vector3();
+  cameraTarget = new THREE.Vector3();
+  landingRings: THREE.Mesh[] = [];
   stadium = new THREE.Group();
   models: THREE.Group[] = [];
   host: HTMLElement | null = null;
@@ -87,9 +115,6 @@ export class Arena {
       alpha: true,
       powerPreference: "high-performance",
     });
-    this.renderer.setPixelRatio(
-      Math.min(devicePixelRatio, innerWidth < 700 ? 1.35 : 1.75),
-    );
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -126,6 +151,18 @@ export class Arena {
     this.scene.add(this.stadium);
     this.beam.visible = false;
     this.scene.add(this.beam);
+    for (const color of ["#a9e8ff", "#ffc7aa"]) {
+      const pulse = ring(0.53, 0.009, color);
+      const material = pulse.material as THREE.MeshBasicMaterial;
+      material.transparent = true;
+      material.depthWrite = false;
+      material.toneMapped = false;
+      pulse.visible = false;
+      pulse.castShadow = false;
+      pulse.receiveShadow = false;
+      this.scene.add(pulse);
+      this.landingRings.push(pulse);
+    }
     const positions = new Float32Array(360 * 3),
       colors = new Float32Array(360 * 3);
     this.particleGeometry.setAttribute(
@@ -304,6 +341,7 @@ export class Arena {
     if (this.host) this.observer.unobserve(this.host);
     this.host = host;
     if (this.mode !== mode) {
+      this.cameraFocus.set(0, mode === "inspect" ? 0.25 : 0, 0);
       this.camera.position.set(
         ...((mode === "inspect" ? [0, 1.75, 2.5] : [9, 10, 12.5]) as [
           number,
@@ -325,9 +363,17 @@ export class Arena {
     const w = this.host.clientWidth,
       h = this.host.clientHeight;
     if (!w || !h) return;
+    const ratio = renderPixelRatio(
+      w,
+      h,
+      devicePixelRatio,
+      innerWidth < 700 ? 1.35 : 1.75,
+    );
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w, h);
+    this.renderer.setDrawingBufferSize(w, h, ratio);
+    this.renderer.domElement.style.width = w + "px";
+    this.renderer.domElement.style.height = h + "px";
   }
   setBeys(beys: Bey[]) {
     this.exploded = false;
@@ -402,21 +448,30 @@ export class Arena {
     battle: Battle | null = null,
     previous: readonly TopPose[] = [],
     alpha = 1,
+    openingSeconds: number | null = null,
   ) {
     this.time += dt;
     const poses = battle?.tops.map((t, i) =>
       interpolatePose(previous[i] ?? t, t, alpha),
     );
     const inspecting = this.mode === "inspect";
+    const entry =
+      openingSeconds === null
+        ? null
+        : entryPose(openingSeconds, 0, this.reduced);
+    const openingPhase = entry?.phase ?? "none";
+    if (this.renderer.domElement.dataset.opening !== openingPhase)
+      this.renderer.domElement.dataset.opening = openingPhase;
+    this.landingRings.forEach((r) => (r.visible = false));
     const az = inspecting ? this.angle : this.angle * 0.3;
     const previewDistance = this.exploded ? 2.4 : 1.9;
     const base = inspecting
-      ? new THREE.Vector3(
+      ? this.cameraBase.set(
           Math.sin(az) * Math.cos(this.pitch) * previewDistance,
           0.25 + Math.sin(this.pitch) * previewDistance,
           Math.cos(az) * Math.cos(this.pitch) * previewDistance,
         )
-      : new THREE.Vector3(Math.sin(az) * 12.5, 10.8, Math.cos(az) * 12.5);
+      : this.cameraBase.set(Math.sin(az) * 12.5, 10.8, Math.cos(az) * 12.5);
     if (this.mode === "home") {
       base.set(9 + Math.sin(this.time * 0.07) * 1.5, 10, 12.5);
     }
@@ -435,37 +490,64 @@ export class Arena {
         base.x += f * 1.8;
       }
     }
-    const look = new THREE.Vector3(0, inspecting ? 0.25 : 0, 0);
+    const look = this.cameraTarget.set(0, inspecting ? 0.25 : 0, 0);
     if (battle && !this.closeUp)
       base.multiplyScalar(Math.max(1, 0.95 / this.camera.aspect));
     if (battle && this.closeUp) {
       const [a, b] = poses!,
         distance = Math.hypot(a.x - b.x, a.z - b.z);
       look.set((a.x + b.x) / 2, 0.2, (a.z + b.z) / 2);
-      const range = closeUpRange(distance, this.camera);
+      const range = closeUpRange(distance, this.camera, entry?.height ?? 0);
       base.set(
         look.x + Math.sin(az + 0.4) * range,
         3.4,
         look.z + Math.cos(az + 0.4) * range,
       );
     }
-    this.camera.position.lerp(base, 0.07);
-    this.camera.position.x += Math.sin(this.time * 130) * this.shake;
-    this.camera.position.z += Math.cos(this.time * 103) * this.shake;
-    this.shake *= 0.86;
-    this.camera.lookAt(look);
+    if (entry) {
+      look.y += entry.height * 0.25;
+      base.y += entry.height * 0.18;
+    }
+    base.x += Math.sin(this.time * 130) * this.shake;
+    base.z += Math.cos(this.time * 103) * this.shake;
+    const cameraBlend = damping(dt || 1 / 60, 8);
+    this.camera.position.lerp(base, cameraBlend);
+    this.cameraFocus.lerp(look, cameraBlend);
+    this.shake *= 1 - damping(dt, 12);
+    this.camera.lookAt(this.cameraFocus);
     this.models.forEach((g, i) => {
       const t = battle?.tops[i];
       if (t) {
         const pose = poses![i],
           lean = spinLean(pose.tilt, pose.rotation, i);
-        g.position.set(
-          pose.x,
-          0.035 + (pose.x * pose.x + pose.z * pose.z) * 0.024,
-          pose.z,
+        const opening =
+          openingSeconds === null
+            ? null
+            : entryPose(
+                openingSeconds,
+                (t.bey.spin === "L" ? -1 : 1) * t.rpm * 65,
+                this.reduced,
+              );
+        const currentLean = (g.userData.lean ??= { x: 0, z: 0 });
+        const leanBlend = damping(dt, 12);
+        currentLean.x += (lean.x - currentLean.x) * leanBlend;
+        currentLean.z += (lean.z - currentLean.z) * leanBlend;
+        const ground = 0.035 + (pose.x * pose.x + pose.z * pose.z) * 0.024;
+        g.position.set(pose.x, ground + (opening?.height ?? 0), pose.z);
+        g.rotation.set(
+          currentLean.x,
+          0,
+          currentLean.z + (opening?.height ?? 0) * 0.025 * (i ? -1 : 1),
         );
-        g.rotation.set(lean.x, 0, lean.z);
-        g.rotateY(pose.rotation);
+        g.rotateY(pose.rotation + (opening?.rotation ?? 0));
+        if (opening && opening.pulse > 0) {
+          const pulse = this.landingRings[i];
+          pulse.visible = true;
+          pulse.position.set(pose.x, ground + 0.01, pose.z);
+          pulse.scale.setScalar(1 + (1 - opening.pulse) * 0.9);
+          (pulse.material as THREE.MeshBasicMaterial).opacity =
+            opening.pulse * 0.45;
+        }
         if (battle!.result) {
           const elapsed = this.time - this.finishTime;
           const loser =
@@ -489,7 +571,8 @@ export class Arena {
           }
         }
         const path = this.trailPositions[i];
-        if (dt > 0) path.push(g.position.x, g.position.y + 0.22, g.position.z);
+        if (dt > 0 && !opening)
+          path.push(g.position.x, g.position.y + 0.22, g.position.z);
         if (path.length > 90) path.splice(0, 3);
         const line = this.trails[i];
         const positions = line.geometry.getAttribute(
@@ -498,7 +581,7 @@ export class Arena {
         (positions.array as Float32Array).set(path);
         positions.needsUpdate = true;
         line.geometry.setDrawRange(0, path.length / 3);
-        line.visible = t.rpm > 0.3;
+        line.visible = !opening && t.rpm > 0.3;
         (line.material as THREE.LineBasicMaterial).opacity =
           t.dashUntil > battle!.time ? 0.95 : 0.28;
       } else {
