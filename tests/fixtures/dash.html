@@ -1,0 +1,29 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>齒軌咬合與極限衝刺驗收</title>
+<style>body{margin:0;background:#101927;color:#dfecf5;font:14px sans-serif}header{position:absolute;top:12px;left:16px;z-index:3;max-width:95vw}button{padding:9px;margin:3px}#stage{height:100vh}small{display:block;color:#a6b9c8}</style>
+<header>齒軌咬合 → 加速釋放 → 速度拖尾<br><button id="dash">衝刺</button><button id="both">雙方衝刺</button><button id="gap">出口側衝刺</button><button id="rapid">密集衝刺與碰撞</button><button id="capture">定格下一次拖尾</button><button id="latch">定格咬合</button><button id="pause">暫停</button><button id="mute">靜音</button><button id="bgm">交戰配樂</button><small>隔離聲光驗證，不寫入戰績；實際遊戲仍由物理引擎決定衝刺與勝負</small></header><div id="stage"></div>
+<script type="module">
+import{Arena}from'/src/arena.ts';import{Sound}from'/src/audio.ts';import{BEYS}from'/src/catalog.ts';import{createBattle}from'/src/physics.ts';
+const arena=new Arena(),sound=new Sound();arena.setBeys([BEYS[0],BEYS[11]]);arena.attach(document.querySelector('#stage'),'battle');arena.closeUp=false;
+const battle=createBattle(BEYS[0],BEYS[11],[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],1);
+let paused=false,capture=0,last=0,mode='battle',meters,peakSfx=0,musicAtPeak=0,peakMix=0;const frames=[];
+const ids=[...arena.dashRibbons,...arena.trails].map(o=>o.geometry.uuid);
+function rms(a){const d=new Float32Array(a.fftSize);a.getFloatTimeDomainData(d);return{rms:Math.sqrt(d.reduce((s,v)=>s+v*v,0)/d.length),peak:d.reduce((s,v)=>Math.max(s,Math.abs(v)),0)};}
+function move(dt){battle.time+=dt;for(const [i,t]of battle.tops.entries()){t.rotation+=(i?-1:1)*50*dt;if(t.dashUntil>battle.time){t.x+=t.vx*dt;t.z+=t.vz*dt;}}}
+document.addEventListener('click',e=>{
+if(e.target.tagName!=='BUTTON')return;const id=e.target.id;sound.unlock();
+if(!meters)meters=[sound.sfx,sound.musicDuck,sound.master].map(bus=>{const a=sound.ctx.createAnalyser();a.fftSize=512;bus.connect(a);return a;});
+if(id==='pause'){paused=!paused;return;}if(id==='mute'){sound.toggle();return;}if(id==='bgm'){mode='battle';sound.setMusicVolume(1);return;}
+if(id==='capture'){capture=.20;return;}if(id==='latch'){capture=.025;}
+peakSfx=musicAtPeak=peakMix=0;paused=false;
+for(let i=0;i<(id==='rapid'?30:id==='both'?2:1);i++){
+ const p=i%2,t=battle.tops[p],a=(p?Math.PI:0)+(id==='gap'?0:.55);Object.assign(t,{x:Math.cos(a)*3.55,z:Math.sin(a)*3.55,vx:-Math.cos(a)*9,vz:-Math.sin(a)*9,dashUntil:battle.time+.65});
+ const event={type:'dash',x:t.x,z:t.z,player:p,strength:1,time:battle.time};arena.event(event);sound.event(event);
+ if(id==='rapid'){const hit={...event,type:'hit',x:0,z:0,strength:14};arena.event(hit);sound.event(hit);}
+}
+if(capture){let t=0;while(t<capture){const dt=Math.min(1/120,capture-t);move(dt);arena.draw(dt,battle);t+=dt;}paused=true;capture=0;}
+});
+function frame(t){const dt=Math.min(.05,(t-last)/1000||0);if(last&&frames.length<600)frames.push(t-last);last=t;if(!paused)move(dt);arena.draw(paused?0:dt,battle);sound.update(battle,!paused,paused?null:mode);
+if(meters){const s=rms(meters[0]),m=rms(meters[1]);if(s.rms>peakSfx){peakSfx=s.rms;musicAtPeak=m.rms;}peakMix=Math.max(peakMix,rms(meters[2]).peak);}requestAnimationFrame(frame);}
+window.drawDoesNotMutate=()=>{const before=JSON.stringify(battle);arena.draw(0,battle);return JSON.stringify(battle)===before;};
+window.dashMetrics=()=>({time:arena.time,particles:arena.particles.length,flashes:arena.impactFlashes.filter(f=>f.material.opacity>0).length,ribbons:arena.dashRibbons.map(r=>({visible:r.visible,count:r.geometry.drawRange.count,points:Array.from(r.geometry.attributes.position.array).slice(0,r.geometry.drawRange.count*3)})),geometryStable:ids.join() ===[...arena.dashRibbons,...arena.trails].map(o=>o.geometry.uuid).join(),model:arena.models.map(g=>g.position.toArray()),quaternion:arena.camera.quaternion.toArray(),voices:sound.dashVoices.size,duck:sound.musicDuck?.gain.value??1,playing:sound.playing?.mode,rms:meters?rms(meters[2]).rms:0,peakSfx,musicAtPeak,peakMix,calls:arena.renderer.info.render.calls,frames});requestAnimationFrame(frame);
+</script></html>

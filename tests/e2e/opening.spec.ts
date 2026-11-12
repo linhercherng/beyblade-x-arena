@@ -41,12 +41,12 @@ for (const local of [false, true])
     await page.waitForTimeout(600);
     await expect(canvas).toHaveAttribute("data-opening", frozenPhase!);
     await expect(page.locator("#battle-message strong")).toHaveText(count!);
-    await page.locator('#pause-overlay [data-action="pause"]').click();
     await page.screenshot({
       path: local
         ? "artifacts/opening-hover-mobile.png"
         : "artifacts/opening-hover.png",
     });
+    await page.locator('#pause-overlay [data-action="pause"]').click();
     if (frozenPhase === "hover") {
       await expect(canvas).toHaveAttribute("data-opening", "drop");
       await expect(page.locator("#battle-time")).toHaveText("0.0 秒");

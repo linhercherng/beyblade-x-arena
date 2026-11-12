@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
 import { impactProfile, impactShake } from "./impact.ts";
+import { dashVisual, hasRail } from "./dash.ts";
 import { exitPose, burstPose, FINISH_COLORS } from "./finish.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
@@ -56,6 +57,7 @@ interface Particle {
   totalLife: number;
   color: THREE.Color;
 }
+const RIBBON_POINT = [0,0,1,0,1,1], RIBBON_SIDE = [-1,1,-1,1,1,-1];
 export function closeUpRange(
   distance: number,
   camera: THREE.PerspectiveCamera,
@@ -118,6 +120,9 @@ export class Arena {
   finishInverse = new THREE.Quaternion();
   trails: THREE.Line[] = [];
   trailPositions: number[][] = [[], []];
+  trailTimes: number[][] = [[], []];
+  dashStates: ({at:number;x:number;z:number;grip:boolean}|null)[] = [null,null];
+  dashRibbons: THREE.Mesh[] = [];
   exitTrail = new THREE.Line(
     new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(new Float32Array(18 * 3), 3)),
     new THREE.LineBasicMaterial({ color: "#68dbff", transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
@@ -250,6 +255,13 @@ export class Arena {
       line.frustumCulled = false;
       this.scene.add(line);
       this.trails.push(line);
+      const ribbonGeometry=new THREE.BufferGeometry();
+      ribbonGeometry.setAttribute("position",new THREE.BufferAttribute(new Float32Array(30*18),3).setUsage(THREE.DynamicDrawUsage));
+      ribbonGeometry.setAttribute("color",new THREE.BufferAttribute(new Float32Array(30*24),4).setUsage(THREE.DynamicDrawUsage));
+      ribbonGeometry.setDrawRange(0,0);
+      const ribbon=new THREE.Mesh(ribbonGeometry,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.85,depthWrite:false,side:THREE.DoubleSide,toneMapped:false}));
+      ribbon.userData.tint=new THREE.Color(this.dashRibbons.length?"#ff743d":"#078bd6");ribbon.frustumCulled=false;ribbon.visible=false;
+      this.scene.add(ribbon);this.dashRibbons.push(ribbon);
     }
     this.observer = new ResizeObserver(() => this.resize());
     this.renderer.domElement.addEventListener("pointerdown", (e) => {
@@ -356,6 +368,9 @@ export class Arena {
       return g;
     });
     this.trailPositions = [[], []];
+    this.trailTimes = [[], []];
+    this.dashStates = [null,null];
+    this.dashRibbons.forEach(r=>r.visible=false);
     this.particles.length = 0;
     this.shake = 0;
     this.impactFlashes.forEach(f => { f.userData.life = 0; (f.material as THREE.SpriteMaterial).opacity = 0; });
@@ -394,11 +409,31 @@ export class Arena {
         });
       }
     }
-    if (e.type === "dash") this.eventFlash = 0.7;
+    if (e.type === "dash" && (e.player===0||e.player===1)) {
+      const old=this.dashStates[e.player];
+      if(old&&this.time-old.at<.12)return;
+      const r=Math.max(.01,Math.hypot(e.x,e.z)),nx=e.x/r,nz=e.z/r;
+      const grip=hasRail(e.x,e.z);
+      // shortcut: 貼軌位置依現有齒軌與模型外緣近似，盤體尺寸改動時需同步校準。
+      this.dashStates[e.player]={at:this.time,x:nx*3.84,z:nz*3.84,grip};
+      this.trailPositions[e.player]=[];this.trailTimes[e.player]=[];
+      if(!grip)return;
+      const x=nx*4.13,z=nz*4.13;
+      if(!this.reduced) {
+        const flare=this.impactFlashes.find(f=>f.userData.life<=0)??this.impactFlashes[0];
+        flare.position.set(x,.51,z);flare.userData.life=flare.userData.totalLife=.10;flare.userData.size=.65;
+      }
+      const count=Math.min(360-this.particles.length,this.reduced?4:innerWidth<700?12:24);
+      for(let i=0;i<count;i++){
+        const tangent=((i%7)-3)*.8,life=this.reduced?.08:.15+(i%4)*.025;
+        this.particles.push({p:new THREE.Vector3(x,.51,z),v:this.reduced?new THREE.Vector3():new THREE.Vector3(-nx*(1+i%3)-nz*tangent,.8+(i%4)*.45,-nz*(1+i%3)+nx*tangent),life,totalLife:life,color:new THREE.Color(i%3?"#8eefff":"#fff6d9")});
+      }
+    }
   }
   finish(b: Battle) {
     if (!b.result) return;
     this.finished = b;
+    this.dashStates=[null,null];this.dashRibbons.forEach(r=>r.visible=false);
     this.finishTime = this.time;
     const result = b.result, kind = result.winner === null ? "draw" : result.finish;
     this.exitTrail.visible = false;
@@ -496,6 +531,10 @@ export class Arena {
       if (t) {
         const pose = poses![i],
           lean = spinLean(pose.tilt, pose.rotation, i);
+        const state=this.dashStates[i],dash=dashVisual(state?this.time-state.at:Infinity,this.reduced);
+        const latch=state?.grip?dash.latch:0;
+        const speed=Math.max(.01,Math.hypot(t.vx,t.vz));
+        const x=pose.x+(state?state.x-pose.x:0)*latch,z=pose.z+(state?state.z-pose.z:0)*latch;
         const opening =
           openingSeconds === null
             ? null
@@ -508,12 +547,12 @@ export class Arena {
         const leanBlend = damping(dt, 12);
         currentLean.x += (lean.x - currentLean.x) * leanBlend;
         currentLean.z += (lean.z - currentLean.z) * leanBlend;
-        const ground = 0.035 + (pose.x * pose.x + pose.z * pose.z) * 0.024;
-        g.position.set(pose.x, ground + (opening?.height ?? 0), pose.z);
+        const ground = 0.035 + (x * x + z * z) * 0.024;
+        g.position.set(x, ground + (opening?.height ?? 0), z);
         g.rotation.set(
-          currentLean.x,
+          currentLean.x+t.vz/speed*dash.lean,
           0,
-          currentLean.z + (opening?.height ?? 0) * 0.025 * (i ? -1 : 1),
+          currentLean.z-t.vx/speed*dash.lean + (opening?.height ?? 0) * 0.025 * (i ? -1 : 1),
         );
         g.rotateY(pose.rotation + (opening?.rotation ?? 0));
         if (opening && opening.pulse > 0) {
@@ -564,9 +603,12 @@ export class Arena {
           }
         }
         const path = this.trailPositions[i];
-        if (dt > 0 && !opening)
+        const times=this.trailTimes[i];
+        if (dt > 0 && !opening && !battle!.result && (this.time-(times.at(-1)??-Infinity)>=1/90)) {
           path.push(g.position.x, g.position.y + 0.22, g.position.z);
-        if (path.length > 90) path.splice(0, 3);
+          times.push(this.time);
+        }
+        while(path.length>90 || (times.length>1&&this.time-times[0]>.38)) {path.splice(0,3);times.shift();}
         const line = this.trails[i];
         const positions = line.geometry.getAttribute(
           "position",
@@ -574,9 +616,22 @@ export class Arena {
         (positions.array as Float32Array).set(path);
         positions.needsUpdate = true;
         line.geometry.setDrawRange(0, path.length / 3);
-        line.visible = !opening && t.rpm > 0.3;
+        line.visible = !this.reduced && !opening && !battle!.result && t.rpm > 0.3;
         (line.material as THREE.LineBasicMaterial).opacity =
           t.dashUntil > battle!.time ? 0.95 : 0.28;
+        const ribbon=this.dashRibbons[i],rp=ribbon.geometry.getAttribute("position") as THREE.BufferAttribute,rc=ribbon.geometry.getAttribute("color") as THREE.BufferAttribute,tint=ribbon.userData.tint as THREE.Color;
+        ribbon.visible=!opening&&!battle!.result&&dash.intensity>.01&&path.length>=6;
+        let vertex=0;
+        if(ribbon.visible)for(let segment=0;segment<path.length/3-1;segment++){
+          const dx=path[(segment+1)*3]-path[segment*3],dz=path[(segment+1)*3+2]-path[segment*3+2],len=Math.max(.001,Math.hypot(dx,dz));
+          for(let v=0;v<6;v++){
+            const point=segment+RIBBON_POINT[v],sign=RIBBON_SIDE[v],fade=(point/(path.length/3-1))**2;
+            const width=(.012+fade*.14)*dash.intensity;
+            rp.setXYZ(vertex,path[point*3]-dz/len*width*sign,path[point*3+1],path[point*3+2]+dx/len*width*sign);
+            rc.setXYZW(vertex,tint.r,tint.g,tint.b,fade*dash.intensity);vertex++;
+          }
+        }
+        ribbon.geometry.setDrawRange(0,vertex);rp.needsUpdate=rc.needsUpdate=true;
       } else {
         const a = this.time * (i ? -0.7 : 0.55) + i * Math.PI;
         const r = inspecting ? 0 : 2.3;
@@ -600,7 +655,7 @@ export class Arena {
         });
       }
     });
-    if (!battle) this.trails.forEach((l) => (l.visible = false));
+    if (!battle) {this.trails.forEach((l) => (l.visible = false));this.dashRibbons.forEach(r=>r.visible=false);}
     this.particles = this.particles.filter((p) => p.life > dt);
     const pos = this.particleGeometry.getAttribute(
         "position",

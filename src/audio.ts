@@ -3,6 +3,7 @@ import { cueSamples, type Cue } from "./finish.ts";
 import tracks from "./music-tracks.json";
 import { musicVolume, type MusicMode } from "./music-state.ts";
 import { impactProfile, impactSamples, musicLevel } from "./impact.ts";
+import { dashSamples, hasRail } from "./dash.ts";
 
 type Playing = {
   mode: MusicMode;
@@ -35,6 +36,9 @@ export class Sound {
   private lastStrength = 0;
   private cueBuffers = new Map<Cue, AudioBuffer>();
   private cues = new Map<AudioBufferSourceNode, GainNode>();
+  private dashBuffers = new Map<boolean,AudioBuffer>();
+  private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
+  private lastDash = [-Infinity,-Infinity];
   constructor() {
     try {
       this.muted = localStorage.getItem("spinforge-muted") === "true";
@@ -69,6 +73,12 @@ export class Sound {
         buffer.getChannelData(0).set(samples);
         return buffer;
       });
+      // 在使用者啟用音訊時預熱，避免第一次衝刺在交戰迴圈內合成波形。
+      for(const grip of [false,true]) {
+        const samples=dashSamples(this.ctx.sampleRate,grip);
+        const buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
+        buffer.getChannelData(0).set(samples);this.dashBuffers.set(grip,buffer);
+      }
       for (const pan of [-0.6, 0.6]) {
         const osc = this.ctx.createOscillator(),
           gain = this.ctx.createGain(),
@@ -89,7 +99,7 @@ export class Sound {
   }
   toggle() {
     this.muted = !this.muted;
-    if (this.muted) this.stopCues();
+    if (this.muted) { this.stopCues(); this.stopDashes(); }
     try {
       localStorage.setItem("spinforge-muted", String(this.muted));
     } catch {
@@ -216,9 +226,39 @@ export class Sound {
       duck.linearRampToValueAtTime(Math.min(duck.value, profile.duck), now + .004);
       duck.setTargetAtTime(1, now + .08, .085);
     }
-    if (e.type === "dash") this.tone(240, 0.45, "sawtooth", 0.22, 1600);
+    if (e.type === "dash") this.playDash(e);
     if (e.type === "shout") {
       this.tone(330, 0.25, "triangle", 0.6, 990);
+    }
+  }
+  private stopDashes() {
+    if(!this.ctx)return;
+    const now=this.ctx.currentTime;
+    for(const {source,gain} of this.dashVoices.values()) {
+      gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);
+      source.stop(now+.015);
+    }
+    this.dashVoices.clear();
+  }
+  private playDash(e:BattleEvent) {
+    if(!this.ctx||!this.sfx||this.muted||(e.player!==0&&e.player!==1))return;
+    const now=this.ctx.currentTime;
+    if(now-this.lastDash[e.player]<.12)return;
+    this.lastDash[e.player]=now;
+    const grip=hasRail(e.x,e.z);
+    const old=this.dashVoices.get(e.player);
+    if(old) { old.gain.gain.cancelAndHoldAtTime(now);old.gain.gain.linearRampToValueAtTime(0,now+.015);old.source.stop(now+.015); }
+    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),pan=this.ctx.createStereoPanner();
+    source.buffer=this.dashBuffers.get(grip)!;gain.gain.value=.95;
+    pan.pan.value=Math.max(-.8,Math.min(.8,e.x/5));
+    source.connect(gain).connect(pan).connect(this.sfx);
+    this.dashVoices.set(e.player,{source,gain});
+    source.onended=()=>{source.disconnect();gain.disconnect();pan.disconnect();if(this.dashVoices.get(e.player)?.source===source)this.dashVoices.delete(e.player);};
+    source.start(now+.008);
+    if(this.musicDuck) {
+      const duck=this.musicDuck.gain;duck.cancelAndHoldAtTime(now);
+      duck.linearRampToValueAtTime(Math.min(duck.value,.18),now+.004);
+      duck.setTargetAtTime(1,now+.22,.12);
     }
   }
   private stopCues() {
@@ -233,6 +273,7 @@ export class Sound {
   }
   private playCue(kind: Cue) {
     if (!this.ctx || !this.sfx || this.muted) return;
+    this.stopDashes();
     this.stopCues();
     if (!this.cueBuffers.has(kind)) {
       const samples = cueSamples(kind, this.ctx.sampleRate);
@@ -262,12 +303,13 @@ export class Sound {
     mode: MusicMode | null,
   ) {
     if (!this.ctx) return;
+    if(mode===null||mode==="menu")this.stopDashes();
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)
       this.music?.gain.setTargetAtTime(musicLevel(this.volume, mode), this.ctx.currentTime, .06);
     this.rotors.forEach((r, i) => {
       r.osc.frequency.setTargetAtTime(
-        45 + (battle?.tops[i].rpm ?? 0) * 135,
+        45 + (battle?.tops[i].rpm ?? 0) * 135 + (active && battle && battle.tops[i].dashUntil>battle.time ? 120 : 0),
         this.ctx!.currentTime,
         0.08,
       );
