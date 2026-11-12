@@ -2,6 +2,7 @@ import "./style.css";
 import { modelSpec } from "./bey-model.ts";
 import {
   BEYS,
+  NEW_BEY_IDS,
   CHINESE_NAMES,
   TYPE,
   STAT_LABEL,
@@ -171,14 +172,14 @@ function shell(content: string) {
   ]
     .map(([id, icon, label]) =>
       btn(
-        `<span class="nav-icon">${icon}</span><span>${label}</span>${id === "catalog" ? "<small>83</small>" : ""}`,
+        `<span class="nav-icon">${icon}</span><span>${label}</span>${id === "catalog" ? `<small>${BEYS.length}</small>` : ""}`,
         id,
         `nav-item ${active === id ? "active" : ""}`,
       ),
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.8.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.9.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -215,11 +216,11 @@ function home() {
       )
       .join(
         "",
-      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>83 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 實物參考與合成音效</small></div>`,
+      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>${BEYS.length} 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 實物參考與合成音效</small></div>`,
   );
 }
 function filters() {
-  return `<div class="filter-bar"><label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="搜尋名稱、型號或零件…" value="${safe(filter.query)}" aria-label="搜尋陀螺"/></label><div class="line-tabs">${["all", "BX", "UX", "CX"].map((l) => btn(l === "all" ? "全部" : l, "line", filter.line === l ? "selected" : "", `data-value="${l}"`)).join("")}</div><select id="type-filter" aria-label="類型篩選"><option value="all">所有類型</option>${Object.entries(
+  return `<div class="filter-bar"><label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="搜尋名稱、型號或零件…" value="${safe(filter.query)}" aria-label="搜尋陀螺"/></label><div class="line-tabs">${["all", "new", "BX", "UX", "CX"].map((l) => btn(l === "all" ? "全部" : l === "new" ? `新增 ${NEW_BEY_IDS.size}` : l, "line", filter.line === l ? "selected" : "", `data-value="${l}"`)).join("")}</div><select id="type-filter" aria-label="類型篩選"><option value="all">所有類型</option>${Object.entries(
     TYPE,
   )
     .map(
@@ -236,7 +237,7 @@ function cards() {
     .map((b) => {
       const index = teams[teamPlayer].findIndex((v) => v.id === b.id),
         selected = screen === "team" && index >= 0;
-      return `<article class="bey-card ${selected ? "chosen" : ""}" style="--type:${b.color}"><div class="card-meta"><span>${b.code} <em>${b.line}</em></span>${tag(b)}</div><button class="art-button" data-action="detail" data-id="${b.id}" aria-label="查看 ${safe(b.zhName)}（${b.name}）資訊">${art(b, 130)}<span class="art-detail">查看卡牌 ↗</span></button><div class="card-content"><h2>${beyName(b)}</h2><div class="combo">${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet} / ${b.bit} <span>${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><p>${safe(b.feature)}</p><div class="mini-stats"><span>攻 <b>${b.stats.atk}</b></span><span>防 <b>${b.stats.def}</b></span><span>持 <b>${b.stats.sta}</b></span></div>${screen === "team" ? btn(selected ? `已選 ${["先鋒", "中堅", "大將"][index]} ✓` : "加入隊伍 ＋", "select", selected ? "select-bey selected" : "select-bey", `data-id="${b.id}" ${!selected && teams[teamPlayer].length === 3 ? "disabled" : ""}`) : btn("卡牌詳細資料 ↗", "detail", "detail-link", `data-id="${b.id}"`)}</div></article>`;
+      return `<article class="bey-card ${selected ? "chosen" : ""}" style="--type:${b.color}"><div class="card-meta"><span>${b.code} <em>${b.line}</em>${NEW_BEY_IDS.has(b.id) ? ' <b class="new-bey-label">NEW</b>' : ""}</span>${tag(b)}</div><button class="art-button" data-action="detail" data-id="${b.id}" aria-label="查看 ${safe(b.zhName)}（${b.name}）資訊">${art(b, 130)}<span class="art-detail">查看卡牌 ↗</span></button><div class="card-content"><h2>${beyName(b)}</h2><div class="combo">${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet} / ${b.bit} <span>${b.spin === "L" ? "↶ 左旋" : "↷ 右旋"}</span></div><p>${safe(b.feature)}</p><div class="mini-stats"><span>攻 <b>${b.stats.atk}</b></span><span>防 <b>${b.stats.def}</b></span><span>持 <b>${b.stats.sta}</b></span></div>${screen === "team" ? btn(selected ? `已選 ${["先鋒", "中堅", "大將"][index]} ✓` : "加入隊伍 ＋", "select", selected ? "select-bey selected" : "select-bey", `data-id="${b.id}" ${!selected && teams[teamPlayer].length === 3 ? "disabled" : ""}`) : btn("卡牌詳細資料 ↗", "detail", "detail-link", `data-id="${b.id}"`)}</div></article>`;
     })
     .join(
       "",
@@ -245,7 +246,7 @@ function cards() {
 function catalog() {
   screen = "catalog";
   shell(
-    `${title("BEY ARCHIVE", "找到你的致勝搭檔。", "83 顆原廠組合。點開卡牌，探索零件與獨特性能。", btn("開始組隊 →", "play", "primary"))}${filters()}<div id="catalog-list">${cards()}</div><p class="source-note">類型與日本發售日已依 Takara Tomy 官方資料核對；未來商品標示為預定。實物圖引自 BeyGear 與官方商品頁；3D 輪廓為近似，數值為遊戲設定。</p>`,
+    `${title("BEY ARCHIVE", "找到你的致勝搭檔。", `${BEYS.length} 顆原廠組合，本次新增 ${NEW_BEY_IDS.size} 款。點開卡牌探索零件與性能。`, btn("開始組隊 →", "play", "primary"))}${filters()}<div id="catalog-list">${cards()}</div><p class="source-note">類型與日本發售日已依 Takara Tomy 官方資料核對；未來商品標示為預定。實物圖引自 BeyGear 與官方商品頁；3D 輪廓為近似，數值為遊戲設定。</p>`,
   );
 }
 function startTeam() {
@@ -518,7 +519,7 @@ function showDetail(id: string) {
       )
       .join(
         "",
-      )}<p>${reference?.confidence === "official-combo" ? `依原廠組合配色${reference.colors.ratchet === null || reference.colors.bit === null ? "（部分下段配色近似）" : ""}` : "配色與外形參考近似"} · 比例依照片近似，非精密零件模型。${b.integrated ? "一體式零件在拆解時保持連接。" : ""}</p></div><div class="detail-bottom">${radar(b)}<div class="stat-numbers">${Object.entries(
+      )}<p>${reference?.confidence === "official-combo" ? `依原廠組合配色${reference.colors.ratchet === null || reference.colors.bit === null ? "（部分下段配色近似）" : ""}` : "配色與外形參考近似"} · 比例依照片近似，非精密零件模型。${b.integrated ? "一體式零件在拆解時保持連接。" : ""}${safe(b.spinNote)}</p></div><div class="detail-bottom">${radar(b)}<div class="stat-numbers">${Object.entries(
       b.stats,
     )
       .map(

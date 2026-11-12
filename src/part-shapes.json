@@ -700,5 +700,18 @@
     "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_UX14.png",
     "note": "大型齒輪與平底中央突點；接地形狀近 Point，非全平盤。",
     "confidence": "official-image"
+  },
+  "RA": {
+    "name": "Rubber Accel",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-sp.html",
+    "family": "flat",
+    "height": "normal",
+    "gearTeeth": null,
+    "metalTip": false,
+    "freeRing": false,
+    "offsetTip": false,
+    "integrated": false,
+    "note": "官方詳解為橡膠平底軸先，藍塑膠本體下方露紅色實心圓形接觸面；齒數未由官方文字確認。",
+    "confidence": "official-image"
   }
 }

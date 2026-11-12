@@ -67,7 +67,7 @@ test("軸心平底封閉，開孔盤與固定盤均有接合表面", () => {
     );
   }
 });
-test("83個模型維持三段爆裂契約，足尖接地、幾何有效、零件可辨", () => {
+test("全部模型維持三段爆裂契約，足尖接地、幾何有效、零件可辨", () => {
   for (const b of BEYS) {
     const model = beyModel(b, new THREE.Texture());
     assert.deepEqual(

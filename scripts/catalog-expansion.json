@@ -1,0 +1,347 @@
+{
+  "checkedAt": "2026-11-12",
+  "bits": {
+    "RA": {
+      "name": "Rubber Accel",
+      "originalName": "ラバーアクセル",
+      "type": "attack",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-sp.html",
+      "detailSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG47.png",
+      "family": "flat",
+      "height": "normal",
+      "gearTeeth": null,
+      "metalTip": false,
+      "freeRing": false,
+      "offsetTip": false,
+      "integrated": false,
+      "rubberTip": true,
+      "note": "官方詳解為橡膠平底軸先，藍塑膠本體下方露紅色實心圓形接觸面；齒數未由官方文字確認。",
+      "confidence": "official-image"
+    }
+  },
+  "products": [
+    {
+      "id": "cx-00-valkyrie-volt-slash",
+      "code": "CX-00",
+      "line": "CX",
+      "name": "Valkyrie Volt Slash",
+      "combo": "Valkyrie Volt Slash 4-70V",
+      "blade": "valkyrie-volt-slash",
+      "ratchet": "4-70",
+      "bit": "V",
+      "spin": "R",
+      "typeNote": "攻擊",
+      "feature": "金屬鎖定晶片與下壓攻擊輪廓，搭配 V 軸提高進攻辨識度。",
+      "zhName": "雷霆女武神·斬擊",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-vv.html",
+      "released": "2026-11-05",
+      "originalName": "ワルキューレボルトS4-70V ガンメタVer.",
+      "details": {
+        "sourceCombo": "ワルキューレボルトS4-70V",
+        "variant": "gunmetal",
+        "releaseLabel": "発売予定",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "inferred-right-spin",
+        "notes": [
+          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+        ],
+        "lockChip": {
+          "name": "Valkyrie",
+          "originalName": "ワルキューレ"
+        },
+        "mainBlade": {
+          "name": "Volt",
+          "originalName": "ボルト"
+        },
+        "assistBlade": {
+          "code": "S",
+          "name": "Slash",
+          "originalName": "スラッシュ",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX01.png"
+        }
+      }
+    },
+    {
+      "id": "cx-00-bucks-antlers-bumper",
+      "code": "CX-00",
+      "line": "CX",
+      "name": "Bucks Antlers Bumper",
+      "combo": "Bucks Antlers Bumper 2-60D",
+      "blade": "bucks-antlers-bumper",
+      "ratchet": "2-60",
+      "bit": "D",
+      "spin": "R",
+      "typeNote": "防禦",
+      "feature": "持久與防禦兼備的上層，搭配不易推出的 Dot 軸承受長時間攻擊。",
+      "zhName": "雄鹿巨角·緩衝",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-ba.html",
+      "released": "2026-07-09",
+      "originalName": "バックスアントラーズB2-60D メタルコート:オレンジ",
+      "details": {
+        "sourceCombo": "バックスアントラーズB2-60D",
+        "variant": "metal-coat-orange",
+        "releaseLabel": "発売予定",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "inferred-right-spin",
+        "notes": [
+          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+        ],
+        "lockChip": {
+          "name": "Bucks",
+          "originalName": "バックス"
+        },
+        "mainBlade": {
+          "name": "Antlers",
+          "originalName": "アントラーズ"
+        },
+        "assistBlade": {
+          "code": "B",
+          "name": "Bumper",
+          "originalName": "バンパー",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX03.png"
+        }
+      }
+    },
+    {
+      "id": "cx-00-kraken-wriggle-slash",
+      "code": "CX-00",
+      "line": "CX",
+      "name": "Kraken Wriggle Slash",
+      "combo": "Kraken Wriggle Slash 3-70O",
+      "blade": "kraken-wriggle-slash",
+      "ratchet": "3-70",
+      "bit": "O",
+      "spin": "R",
+      "typeNote": "持久",
+      "feature": "外緣重量與低摩擦 Orb 軸組合，重視對戰後段的續轉。",
+      "zhName": "海怪蠕動·斬擊",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-kw.html",
+      "released": "2026-07-09",
+      "originalName": "クラーケンリグルS3-70O メタルコート:ブルー",
+      "details": {
+        "sourceCombo": "クラーケンリグルS3-70O",
+        "variant": "metal-coat-blue",
+        "releaseLabel": "発売予定",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "inferred-right-spin",
+        "notes": [
+          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+        ],
+        "lockChip": {
+          "name": "Kraken",
+          "originalName": "クラーケン"
+        },
+        "mainBlade": {
+          "name": "Wriggle",
+          "originalName": "リグル"
+        },
+        "assistBlade": {
+          "code": "S",
+          "name": "Slash",
+          "originalName": "スラッシュ",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX01.png"
+        }
+      }
+    },
+    {
+      "id": "cx-00-hornet-fort-round",
+      "code": "CX-00",
+      "line": "CX",
+      "name": "Hornet Fort Round",
+      "combo": "Hornet Fort Round 7-60T",
+      "blade": "hornet-fort-round",
+      "ratchet": "7-60",
+      "bit": "T",
+      "spin": "R",
+      "typeNote": "平衡",
+      "feature": "均衡上層搭配兼顧進攻與持久的 Taper 軸，對應不同類型對手。",
+      "zhName": "黃蜂堡壘·圓環",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-hf.html",
+      "released": "2026-07-09",
+      "originalName": "ホーネットフォートR7-60T メタルコート:イエロー",
+      "details": {
+        "sourceCombo": "ホーネットフォートR7-60T",
+        "variant": "metal-coat-yellow",
+        "releaseLabel": "発売予定",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "inferred-right-spin",
+        "notes": [
+          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+        ],
+        "lockChip": {
+          "name": "Hornet",
+          "originalName": "ホーネット"
+        },
+        "mainBlade": {
+          "name": "Fort",
+          "originalName": "フォート"
+        },
+        "assistBlade": {
+          "code": "R",
+          "name": "Round",
+          "originalName": "ラウンド",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX02.png"
+        }
+      }
+    },
+    {
+      "id": "cx-00-drake-brave-gravity",
+      "code": "CX-00",
+      "line": "CX",
+      "name": "Drake Brave Gravity",
+      "combo": "Drake Brave Gravity 4-70I",
+      "blade": "drake-brave-gravity",
+      "ratchet": "4-70",
+      "bit": "I",
+      "spin": "R",
+      "typeNote": "攻擊",
+      "feature": "重型含金屬 Gravity 輔助刃與抓地軸先，形成高速重量級攻擊。",
+      "zhName": "龍獸勇擊·重力",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-drb.html",
+      "released": "2026-07-09",
+      "originalName": "ドレイクブレイブG4-70I メタルコート:ブルー",
+      "details": {
+        "sourceCombo": "ドレイクブレイブG4-70I",
+        "variant": "metal-coat-blue",
+        "releaseLabel": "発売予定",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "inferred-right-spin",
+        "notes": [
+          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。",
+          "官方明示 G=Gravity；不能與 Eclipse 主刃組合。"
+        ],
+        "lockChip": {
+          "name": "Drake",
+          "originalName": "ドレイク"
+        },
+        "mainBlade": {
+          "name": "Brave",
+          "originalName": "ブレイブ"
+        },
+        "assistBlade": {
+          "code": "G",
+          "name": "Gravity",
+          "originalName": "グラビティ",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-drb.html"
+        }
+      }
+    },
+    {
+      "id": "bx-00-storm-pegasus",
+      "code": "BX-00",
+      "line": "BX",
+      "name": "Storm Pegasus",
+      "combo": "Storm Pegasus 3-70RA",
+      "blade": "storm-pegasus",
+      "ratchet": "3-70",
+      "bit": "RA",
+      "spin": "R",
+      "typeNote": "攻擊",
+      "feature": "三片上挑刃搭配橡膠平底 Rubber Accel 軸，重視抓地與擊飛。",
+      "zhName": "暴風天馬",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-sp.html",
+      "released": "2026-07-11",
+      "originalName": "ストームペガシス3-70RA",
+      "details": {
+        "sourceCombo": "ストームペガシス3-70RA",
+        "variant": "original",
+        "releaseLabel": "発売予定",
+        "typeVerification": "official-product-description",
+        "spinVerification": "official-detail-image",
+        "notes": [
+          "遊戲沿用 Pegasus Blast 的 Pegasus 拼寫；官方詳解英字為 STORMPEGASIS。"
+        ],
+        "assistBlade": null,
+        "officialEnglishLabel": "STORMPEGASIS",
+        "detailSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG47.png"
+      }
+    },
+    {
+      "id": "bx-00-storm-spriggan",
+      "code": "BX-00",
+      "line": "BX",
+      "name": "Storm Spriggan",
+      "combo": "Storm Spriggan 2-70M",
+      "blade": "storm-spriggan",
+      "ratchet": "2-70",
+      "bit": "M",
+      "spin": "R",
+      "typeNote": "平衡",
+      "feature": "打擊與卸力輪廓搭配 Merge 橡膠外圈接觸軸，兼顧進攻與續轉。",
+      "zhName": "暴風巨神",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ss.html",
+      "released": "2026-03-28",
+      "originalName": "ストームスプリガン2-70M",
+      "details": {
+        "sourceCombo": "ストームスプリガン2-70M",
+        "variant": "original",
+        "releaseLabel": "発売予定",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "inferred-right-spin",
+        "notes": [
+          "遊戲使用 R 正規化；本次已取得官方商品文字未直接標示旋向，尚不可稱逐款官方確認。",
+          "官方說明書第1頁零件清單明示 M（マージ），配圖為白色橡膠外圈及紫紅色中央接觸軸尖，不能憑近似輪廓改為 U。"
+        ],
+        "assistBlade": null,
+        "manualSource": "https://beyblade.takaratomy.co.jp/beyblade-x/manual/BXG-21_manual.pdf",
+        "bitVerification": "official-manual-page-1"
+      }
+    },
+    {
+      "id": "cx-00-tiga-rage-flow-turn",
+      "code": "CX-00",
+      "line": "CX",
+      "name": "Tiga Rage Flow Turn",
+      "combo": "Tiga Rage Flow Turn 3-60T",
+      "blade": "tiga-rage-flow-turn",
+      "ratchet": "3-60",
+      "bit": "T",
+      "spin": "R",
+      "typeNote": "平衡",
+      "feature": "Flow 外刃與可翻面的 Turn 輔助刃，搭配多種配色還原迪卡三種形態。",
+      "zhName": "迪卡狂怒·流線·翻轉",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-tiga.html",
+      "released": "2026-09-12",
+      "originalName": "ティガレイジFT3-60T",
+      "details": {
+        "sourceCombo": "ティガレイジFT3-60T",
+        "variant": "multi-type",
+        "releaseLabel": "発売予定",
+        "typeVerification": "official-product-description",
+        "spinVerification": "official-detail-image",
+        "notes": [
+          "FT 是 F 外刃加 T 輔助刃，最後一個 T 才是 Taper 軸；本組附不同配色零件，不另外建立三筆性能相同的型態。"
+        ],
+        "lockChip": {
+          "name": "Tiga",
+          "originalName": "ティガ"
+        },
+        "mainBlade": {
+          "name": "Rage",
+          "originalName": "レイジ"
+        },
+        "assistBlade": {
+          "code": "T",
+          "name": "Turn",
+          "originalName": "ターン",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG70.png"
+        },
+        "overBlade": {
+          "code": "F",
+          "name": "Flow",
+          "originalName": "フロー",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG70.png"
+        },
+        "detailSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG70.png"
+      }
+    }
+  ]
+}

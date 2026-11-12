@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { mkdirSync, readFileSync } from "node:fs";
 const action = (page: Page, a: string) => page.locator(`[data-action="${a}"]`);
-test("83張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識", async ({ page }) => {
+test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -12,7 +12,7 @@ test("83張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
     .evaluateAll((imgs) =>
       imgs.map((img) => (img as HTMLImageElement).getAttribute("src")!),
     );
-  expect(new Set(sources).size).toBe(83);
+  expect(new Set(sources).size).toBe(91);
   for (const src of sources)
     expect((await page.request.get(src)).ok(), src).toBe(true);
   await expect
@@ -183,7 +183,7 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   mkdirSync("artifacts", { recursive: true });
   await page.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
   await action(page, "catalog").first().click();
-  await expect(page.locator(".bey-card")).toHaveCount(83);
+  await expect(page.locator(".bey-card")).toHaveCount(91);
   await page.getByRole("searchbox").fill("Wizard Rod");
   await expect(page.locator(".bey-card")).toHaveCount(1);
   await page.locator(".art-button").click();

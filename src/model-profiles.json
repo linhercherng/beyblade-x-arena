@@ -1273,5 +1273,141 @@
     "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
     "confidence": "family-approximation",
     "note": "同Reaper兩向外刃，無完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-00-valkyrie-volt-slash": {
+    "bladeThickness": 0.128,
+    "coreRadius": 0.171,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.091,
+    "gearRadius": 0.087,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "stepped-shoulder",
+      "recessed-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-vv.html",
+    "confidence": "photo-approximation",
+    "note": "三向後掠槍灰金屬肩與紅色尖角晶片座；側面可見紅色下層與較低的內凹中心。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "cx-00-bucks-antlers-bumper": {
+    "bladeThickness": 0.141,
+    "coreRadius": 0.184,
+    "coreRise": 0.023,
+    "shoulderDrop": 0.042,
+    "tipRadius": 0.047,
+    "gearRadius": 0.086,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "forked-antler",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-ba.html",
+    "confidence": "photo-approximation",
+    "note": "橙色中央座、深藍分叉角狀上肩與橙紅塗裝大外刃；側面有明顯分層及藍色下圈。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "cx-00-kraken-wriggle-slash": {
+    "bladeThickness": 0.124,
+    "coreRadius": 0.196,
+    "coreRise": 0.018,
+    "shoulderDrop": 0.026,
+    "tipRadius": 0.063,
+    "gearRadius": 0.084,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "rounded-arms",
+      "clear-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-kw.html",
+    "confidence": "photo-approximation",
+    "note": "三組圓弧藍色外肩、青色透明觸手紋上環與紫色三角晶片座；側面上環偏平、下層紫色。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "cx-00-hornet-fort-round": {
+    "bladeThickness": 0.137,
+    "coreRadius": 0.191,
+    "coreRise": 0.019,
+    "shoulderDrop": 0.032,
+    "tipRadius": 0.046,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "honeycomb-ring",
+      "round-guard"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-hf.html",
+    "confidence": "photo-approximation",
+    "note": "黃綠三向寬外弧，白色蜂巢狀內環與橙色幾何紋；側面有白色下圈與橙色軸心。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "cx-00-drake-brave-gravity": {
+    "bladeThickness": 0.143,
+    "coreRadius": 0.166,
+    "coreRise": 0.029,
+    "shoulderDrop": 0.041,
+    "tipRadius": 0.102,
+    "gearRadius": 0.088,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "swept-edge",
+      "heavy-lower-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-drb.html",
+    "confidence": "photo-approximation",
+    "note": "藍色金屬塗裝三個大後掠肩、黑色內層與紅色Gravity下緣；第三張官方圖提供獨立紅銀Gravity輔助刃。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "bx-00-storm-pegasus": {
+    "bladeThickness": 0.099,
+    "coreRadius": 0.213,
+    "coreRise": 0.035,
+    "shoulderDrop": 0.023,
+    "tipRadius": 0.085,
+    "gearRadius": 0.087,
+    "features": [
+      "x-over",
+      "three-wing",
+      "raised-core",
+      "clear-plastic-disc"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-sp.html",
+    "confidence": "photo-approximation",
+    "note": "大型透明青藍上盤、凸起六角中心與三段亮銀色圓弧外環；RA是藍身加紅色實心平底膠頭，非空心環。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "bx-00-storm-spriggan": {
+    "bladeThickness": 0.107,
+    "coreRadius": 0.187,
+    "coreRise": 0.029,
+    "shoulderDrop": 0.026,
+    "tipRadius": 0.077,
+    "gearRadius": 0.085,
+    "features": [
+      "x-over",
+      "two-wing",
+      "offset-shoulder",
+      "clear-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ss.html",
+    "confidence": "photo-approximation",
+    "note": "紅色透明上層、兩個不對稱紅色大外肩與細銀色中環；M軸心深酒紅身、白色環狀接地膠及紫紅中央接觸部。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "cx-00-tiga-rage-flow-turn": {
+    "bladeThickness": 0.148,
+    "coreRadius": 0.168,
+    "coreRise": 0.03,
+    "shoulderDrop": 0.038,
+    "tipRadius": 0.083,
+    "gearRadius": 0.087,
+    "features": [
+      "cx-layered",
+      "expanded-blade",
+      "two-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-tiga.html",
+    "confidence": "photo-approximation",
+    "note": "紅色Tiga晶片座、藍色Flow上刃、銀色金屬外環及紅色Turn下環，整體多層且較高；主圖採紅晶片／藍Flow，不使用附贈銀晶片／紅Flow。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
   }
 }

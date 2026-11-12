@@ -4,7 +4,7 @@ test("中文名稱可搜尋，戰鬥全寬放大且可切換全螢幕", async ({
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/");
   await action("catalog").first().click();
-  await expect(page.locator(".bey-card .bey-name")).toHaveCount(83);
+  await expect(page.locator(".bey-card .bey-name")).toHaveCount(91);
   await page.getByRole("searchbox").fill("蒼龍神劍");
   await expect(page.locator(".bey-card")).toHaveCount(1);
   await expect(page.locator(".bey-card")).toContainText("Dran Sword");

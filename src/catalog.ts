@@ -1,4 +1,7 @@
 import raw from "./catalog-data.json" with { type: "json" };
+import additions from "../scripts/catalog-expansion.json" with { type: "json" };
+export const NEW_BEY_IDS = new Set(additions.products.map(b => b.id));
+const addedById = new Map(additions.products.map(b => [b.id, b]));
 import verified from "../scripts/catalog-overrides.json" with { type: "json" };
 import names from "./chinese-names.json" with { type: "json" };
 export const CHINESE_NAMES = names as Record<
@@ -69,7 +72,7 @@ export interface Bit {
 const bitGroups: [BeyType, string][] = [
   [
     "attack",
-    "F:Flat LF:Low_Flat GF:Gear_Flat R:Rush LR:Low_Rush A:Accel Q:Quake C:Cyclone L:Level V:Vortex UF:Under_Flat LC:Low_Cyclone FF:Free_Flat GR:Gear_Rush Tr:Turbo I:Ignition",
+    "F:Flat LF:Low_Flat GF:Gear_Flat R:Rush LR:Low_Rush A:Accel Q:Quake C:Cyclone L:Level V:Vortex UF:Under_Flat LC:Low_Cyclone FF:Free_Flat GR:Gear_Rush Tr:Turbo I:Ignition RA:Rubber_Accel",
   ],
   [
     "defense",
@@ -111,7 +114,7 @@ for (const [type, group] of bitGroups)
       provisional: !known.has(code),
     };
   }
-for (const [code, entry] of Object.entries(verified.bits)) {
+for (const [code, entry] of Object.entries({ ...verified.bits, ...additions.bits })) {
   const type = entry.type as BeyType;
   const [atk, def, sta, dash, burst] = profiles[type];
   Object.assign(bits[code], {
@@ -144,6 +147,7 @@ export const blades: Record<string, Blade> = {};
 export const ratchets: Record<string, Ratchet> = {};
 export interface Bey {
   zhName: string;
+  spinNote: string;
   id: string;
   code: string;
   line: string;
@@ -165,7 +169,8 @@ export interface Bey {
   integrated: "blade" | "bit" | null;
 }
 // 所有數值均為遊戲平衡參數；產品類型與日期另依官方來源覆寫。
-export const BEYS: Bey[] = raw.map((row) => {
+export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
+  const added = addedById.get(row.id);
   const bit = bits[row.bit];
   if (!bit) throw new Error(`缺少軸心：${row.bit}`);
   const h = hash(row.blade);
@@ -197,10 +202,11 @@ export const BEYS: Bey[] = raw.map((row) => {
   return {
     ...row,
     zhName: CHINESE_NAMES[row.id].name,
+    spinNote: added?.details.spinVerification.startsWith("inferred") ? `右旋依${row.line}相容規格推定，未經逐款官方明示。` : "",
     type: bit.type,
     provisional: bit.provisional,
-    released: release?.date ?? null,
-    source: release?.source ?? "",
+    released: added?.released ?? release?.date ?? null,
+    source: added?.source ?? release?.source ?? "",
     integrated: row.ratchet.startsWith("integrated")
       ? ["UX-19", "UX-20", "UX-21"].includes(row.code)
         ? "blade"
@@ -235,7 +241,7 @@ export function filterBeys(
   const q = query.toLowerCase().trim();
   return BEYS.filter(
     (b) =>
-      (line === "all" || b.line === line) &&
+      (line === "all" || (line === "new" ? NEW_BEY_IDS.has(b.id) : b.line === line)) &&
       (type === "all" || b.type === type) &&
       `${b.zhName} ${b.name} ${b.code} ${b.combo} ${b.feature} ${TYPE[b.type].label}`
         .toLowerCase()

@@ -5,13 +5,13 @@ import { createHash } from "node:crypto";
 import { BEYS } from "../src/catalog.ts";
 import { PRODUCT_IMAGES } from "../src/appearance.ts";
 import { MODEL_REFERENCES } from "../src/bey-model.ts";
-test("83顆各有獨立實物原圖、來源、輪廓，檔案雜湊相符", () => {
+test("全部陀螺各有獨立實物原圖、來源、輪廓，檔案雜湊相符", () => {
   const hashes = new Set<string>(),
     outlines = new Set<string>();
   for (const bey of BEYS) {
     const p = PRODUCT_IMAGES[bey.id];
     assert.ok(p, bey.id);
-    assert.ok(/^\/beys\/[a-z0-9-]+\.(png|webp)$/.test(p.src));
+    assert.ok(/^\/(beys|model-references)\/[a-z0-9_-]+\.(png|webp)$/i.test(p.src));
     assert.ok(
       ["beygear.app", "beyblade.takaratomy.co.jp"].includes(
         new URL(p.source).hostname,
@@ -30,8 +30,8 @@ test("83顆各有獨立實物原圖、來源、輪廓，檔案雜湊相符", () 
     hashes.add(p.sha256);
     outlines.add(JSON.stringify(p.shape));
   }
-  assert.equal(hashes.size, 83);
-  assert.equal(outlines.size, 83);
+  assert.equal(hashes.size, BEYS.length);
+  assert.equal(outlines.size, BEYS.length);
 });
 
 test("原廠組合各角度原圖可追溯，未遺漏卡牌、色碼或輪廓", () => {

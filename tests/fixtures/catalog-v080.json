@@ -1,0 +1,1247 @@
+[
+  {
+    "id": "bx-01-dran-sword",
+    "stats": {
+      "atk": 89,
+      "def": 64,
+      "sta": 85,
+      "dash": 88,
+      "burst": 80,
+      "weight": 67
+    },
+    "spin": "R",
+    "ratchet": "3-60",
+    "bit": "F",
+    "height": 60
+  },
+  {
+    "id": "bx-02-hells-scythe",
+    "stats": {
+      "atk": 73,
+      "def": 70,
+      "sta": 76,
+      "dash": 65,
+      "burst": 77,
+      "weight": 63
+    },
+    "spin": "R",
+    "ratchet": "4-60",
+    "bit": "T",
+    "height": 60
+  },
+  {
+    "id": "bx-03-wizard-arrow",
+    "stats": {
+      "atk": 60,
+      "def": 61,
+      "sta": 90,
+      "dash": 38,
+      "burst": 63,
+      "weight": 70
+    },
+    "spin": "R",
+    "ratchet": "4-80",
+    "bit": "B",
+    "height": 80
+  },
+  {
+    "id": "bx-04-knight-shield",
+    "stats": {
+      "atk": 58,
+      "def": 78,
+      "sta": 68,
+      "dash": 33,
+      "burst": 85,
+      "weight": 71
+    },
+    "spin": "R",
+    "ratchet": "3-80",
+    "bit": "N",
+    "height": 80
+  },
+  {
+    "id": "bx-13-knight-lance",
+    "stats": {
+      "atk": 64,
+      "def": 88,
+      "sta": 69,
+      "dash": 33,
+      "burst": 85,
+      "weight": 75
+    },
+    "spin": "R",
+    "ratchet": "4-80",
+    "bit": "HN",
+    "height": 80
+  },
+  {
+    "id": "bx-14-shark-edge",
+    "stats": {
+      "atk": 86,
+      "def": 62,
+      "sta": 83,
+      "dash": 88,
+      "burst": 80,
+      "weight": 85
+    },
+    "spin": "R",
+    "ratchet": "3-60",
+    "bit": "LF",
+    "height": 60
+  },
+  {
+    "id": "bx-15-leon-claw",
+    "stats": {
+      "atk": 68,
+      "def": 64,
+      "sta": 68,
+      "dash": 65,
+      "burst": 76,
+      "weight": 67
+    },
+    "spin": "R",
+    "ratchet": "5-60",
+    "bit": "P",
+    "height": 60
+  },
+  {
+    "id": "bx-16-viper-tail",
+    "stats": {
+      "atk": 50,
+      "def": 55,
+      "sta": 81,
+      "dash": 38,
+      "burst": 62,
+      "weight": 59
+    },
+    "spin": "R",
+    "ratchet": "5-80",
+    "bit": "O",
+    "height": 80
+  },
+  {
+    "id": "bx-19-rhino-horn",
+    "stats": {
+      "atk": 57,
+      "def": 82,
+      "sta": 67,
+      "dash": 33,
+      "burst": 85,
+      "weight": 84
+    },
+    "spin": "R",
+    "ratchet": "3-80",
+    "bit": "S",
+    "height": 80
+  },
+  {
+    "id": "bx-20-dran-dagger",
+    "stats": {
+      "atk": 78,
+      "def": 61,
+      "sta": 86,
+      "dash": 88,
+      "burst": 80,
+      "weight": 82
+    },
+    "spin": "R",
+    "ratchet": "4-60",
+    "bit": "R",
+    "height": 60
+  },
+  {
+    "id": "bx-21-hells-chain",
+    "stats": {
+      "atk": 75,
+      "def": 75,
+      "sta": 74,
+      "dash": 65,
+      "burst": 76,
+      "weight": 81
+    },
+    "spin": "R",
+    "ratchet": "5-60",
+    "bit": "HT",
+    "height": 60
+  },
+  {
+    "id": "bx-23-phoenix-wing",
+    "stats": {
+      "atk": 85,
+      "def": 54,
+      "sta": 74,
+      "dash": 97,
+      "burst": 76,
+      "weight": 76
+    },
+    "spin": "R",
+    "ratchet": "9-60",
+    "bit": "GF",
+    "height": 60
+  },
+  {
+    "id": "bx-24-wyvern-gale",
+    "stats": {
+      "atk": 57,
+      "def": 60,
+      "sta": 81,
+      "dash": 47,
+      "burst": 62,
+      "weight": 57
+    },
+    "spin": "R",
+    "ratchet": "5-80",
+    "bit": "GB",
+    "height": 80
+  },
+  {
+    "id": "bx-26-unicorn-sting",
+    "stats": {
+      "atk": 67,
+      "def": 72,
+      "sta": 72,
+      "dash": 74,
+      "burst": 76,
+      "weight": 83
+    },
+    "spin": "R",
+    "ratchet": "5-60",
+    "bit": "GP",
+    "height": 60
+  },
+  {
+    "id": "bx-27-sphinx-cowl",
+    "stats": {
+      "atk": 57,
+      "def": 89,
+      "sta": 77,
+      "dash": 42,
+      "burst": 81,
+      "weight": 79
+    },
+    "spin": "R",
+    "ratchet": "9-80",
+    "bit": "GN",
+    "height": 80
+  },
+  {
+    "id": "bx-31-tyranno-beat",
+    "stats": {
+      "atk": 89,
+      "def": 61,
+      "sta": 79,
+      "dash": 88,
+      "burst": 78,
+      "weight": 80
+    },
+    "spin": "R",
+    "ratchet": "4-70",
+    "bit": "Q",
+    "height": 70
+  },
+  {
+    "id": "bx-33-weiss-tiger",
+    "stats": {
+      "atk": 77,
+      "def": 75,
+      "sta": 79,
+      "dash": 65,
+      "burst": 77,
+      "weight": 83
+    },
+    "spin": "R",
+    "ratchet": "3-60",
+    "bit": "U",
+    "height": 60
+  },
+  {
+    "id": "bx-34-cobalt-dragoon",
+    "stats": {
+      "atk": 88,
+      "def": 57,
+      "sta": 80,
+      "dash": 88,
+      "burst": 81,
+      "weight": 63
+    },
+    "spin": "L",
+    "ratchet": "2-60",
+    "bit": "C",
+    "height": 60
+  },
+  {
+    "id": "bx-35-black-shell",
+    "stats": {
+      "atk": 62,
+      "def": 82,
+      "sta": 77,
+      "dash": 33,
+      "burst": 88,
+      "weight": 88
+    },
+    "spin": "R",
+    "ratchet": "4-60",
+    "bit": "D",
+    "height": 60
+  },
+  {
+    "id": "bx-36-whale-wave",
+    "stats": {
+      "atk": 74,
+      "def": 67,
+      "sta": 76,
+      "dash": 65,
+      "burst": 73,
+      "weight": 70
+    },
+    "spin": "R",
+    "ratchet": "5-80",
+    "bit": "E",
+    "height": 80
+  },
+  {
+    "id": "bx-37-bear-scratch",
+    "stats": {
+      "atk": 87,
+      "def": 58,
+      "sta": 74,
+      "dash": 88,
+      "burst": 79,
+      "weight": 82
+    },
+    "spin": "R",
+    "ratchet": "5-60",
+    "bit": "F",
+    "height": 60
+  },
+  {
+    "id": "bx-38-crimson-garuda",
+    "stats": {
+      "atk": 67,
+      "def": 69,
+      "sta": 72,
+      "dash": 65,
+      "burst": 75,
+      "weight": 64
+    },
+    "spin": "R",
+    "ratchet": "4-70",
+    "bit": "TP",
+    "height": 70
+  },
+  {
+    "id": "bx-39-shelter-drake",
+    "stats": {
+      "atk": 67,
+      "def": 66,
+      "sta": 76,
+      "dash": 74,
+      "burst": 72,
+      "weight": 77
+    },
+    "spin": "R",
+    "ratchet": "7-80",
+    "bit": "GP",
+    "height": 80
+  },
+  {
+    "id": "bx-44-tricera-press",
+    "stats": {
+      "atk": 60,
+      "def": 84,
+      "sta": 73,
+      "dash": 33,
+      "burst": 83,
+      "weight": 73
+    },
+    "spin": "R",
+    "ratchet": "M-85",
+    "bit": "BS",
+    "height": 85
+  },
+  {
+    "id": "bx-45-samurai-calibur",
+    "stats": {
+      "atk": 66,
+      "def": 72,
+      "sta": 75,
+      "dash": 65,
+      "burst": 74,
+      "weight": 74
+    },
+    "spin": "R",
+    "ratchet": "6-70",
+    "bit": "M",
+    "height": 70
+  },
+  {
+    "id": "bx-46-cobalt-drake",
+    "stats": {
+      "atk": 83,
+      "def": 64,
+      "sta": 74,
+      "dash": 88,
+      "burst": 76,
+      "weight": 78
+    },
+    "spin": "R",
+    "ratchet": "9-60",
+    "bit": "R",
+    "height": 60
+  },
+  {
+    "id": "bx-46-goat-tackle",
+    "stats": {
+      "atk": 68,
+      "def": 73,
+      "sta": 72,
+      "dash": 65,
+      "burst": 73,
+      "weight": 72
+    },
+    "spin": "R",
+    "ratchet": "7-70",
+    "bit": "T",
+    "height": 70
+  },
+  {
+    "id": "bx-48-mammoth-tusk",
+    "stats": {
+      "atk": 59,
+      "def": 90,
+      "sta": 76,
+      "dash": 33,
+      "burst": 86,
+      "weight": 73
+    },
+    "spin": "R",
+    "ratchet": "7-60",
+    "bit": "S",
+    "height": 60
+  },
+  {
+    "id": "bx-49-dran-strike",
+    "stats": {
+      "atk": 89,
+      "def": 57,
+      "sta": 80,
+      "dash": 88,
+      "burst": 81,
+      "weight": 74
+    },
+    "spin": "R",
+    "ratchet": "4-50",
+    "bit": "FF",
+    "height": 50
+  },
+  {
+    "id": "bx-50-heavens-ring",
+    "stats": {
+      "atk": 57,
+      "def": 90,
+      "sta": 75,
+      "dash": 33,
+      "burst": 88,
+      "weight": 86
+    },
+    "spin": "R",
+    "ratchet": "0-80",
+    "bit": "DS",
+    "height": 80
+  },
+  {
+    "id": "bx-52-luster-dragoon",
+    "stats": {
+      "atk": 89,
+      "def": 59,
+      "sta": 83,
+      "dash": 88,
+      "burst": 78,
+      "weight": 77
+    },
+    "spin": "L",
+    "ratchet": "6-60",
+    "bit": "LC",
+    "height": 60
+  },
+  {
+    "id": "bx-54-sieg-superion",
+    "stats": {
+      "atk": 76,
+      "def": 68,
+      "sta": 76,
+      "dash": 65,
+      "burst": 78,
+      "weight": 65
+    },
+    "spin": "R",
+    "ratchet": "0-70",
+    "bit": "LP",
+    "height": 70
+  },
+  {
+    "id": "ux-01-dran-buster",
+    "stats": {
+      "atk": 87,
+      "def": 58,
+      "sta": 78,
+      "dash": 88,
+      "burst": 82,
+      "weight": 74
+    },
+    "spin": "R",
+    "ratchet": "1-60",
+    "bit": "A",
+    "height": 60
+  },
+  {
+    "id": "ux-02-hells-hammer",
+    "stats": {
+      "atk": 78,
+      "def": 75,
+      "sta": 71,
+      "dash": 65,
+      "burst": 76,
+      "weight": 79
+    },
+    "spin": "R",
+    "ratchet": "3-70",
+    "bit": "H",
+    "height": 70
+  },
+  {
+    "id": "ux-03-wizard-rod",
+    "stats": {
+      "atk": 58,
+      "def": 61,
+      "sta": 84,
+      "dash": 38,
+      "burst": 64,
+      "weight": 87
+    },
+    "spin": "R",
+    "ratchet": "5-70",
+    "bit": "DB",
+    "height": 70
+  },
+  {
+    "id": "ux-05-shinobi-shadow",
+    "stats": {
+      "atk": 59,
+      "def": 86,
+      "sta": 69,
+      "dash": 33,
+      "burst": 87,
+      "weight": 98
+    },
+    "spin": "R",
+    "ratchet": "1-80",
+    "bit": "MN",
+    "height": 80
+  },
+  {
+    "id": "ux-06-leon-crest",
+    "stats": {
+      "atk": 63,
+      "def": 82,
+      "sta": 68,
+      "dash": 42,
+      "burst": 86,
+      "weight": 100
+    },
+    "spin": "R",
+    "ratchet": "7-60",
+    "bit": "GN",
+    "height": 60
+  },
+  {
+    "id": "ux-07-phoenix-rudder",
+    "stats": {
+      "atk": 54,
+      "def": 60,
+      "sta": 86,
+      "dash": 47,
+      "burst": 61,
+      "weight": 82
+    },
+    "spin": "R",
+    "ratchet": "9-70",
+    "bit": "G",
+    "height": 70
+  },
+  {
+    "id": "ux-08-silver-wolf",
+    "stats": {
+      "atk": 56,
+      "def": 60,
+      "sta": 88,
+      "dash": 38,
+      "burst": 63,
+      "weight": 73
+    },
+    "spin": "R",
+    "ratchet": "3-80",
+    "bit": "FB",
+    "height": 80
+  },
+  {
+    "id": "ux-09-samurai-saber",
+    "stats": {
+      "atk": 86,
+      "def": 63,
+      "sta": 75,
+      "dash": 88,
+      "burst": 80,
+      "weight": 79
+    },
+    "spin": "R",
+    "ratchet": "2-70",
+    "bit": "L",
+    "height": 70
+  },
+  {
+    "id": "ux-10-knight-mail",
+    "stats": {
+      "atk": 58,
+      "def": 89,
+      "sta": 70,
+      "dash": 33,
+      "burst": 85,
+      "weight": 100
+    },
+    "spin": "R",
+    "ratchet": "3-85",
+    "bit": "BS",
+    "height": 85
+  },
+  {
+    "id": "ux-10-ptera-swing",
+    "stats": {
+      "atk": 58,
+      "def": 57,
+      "sta": 86,
+      "dash": 38,
+      "burst": 62,
+      "weight": 66
+    },
+    "spin": "R",
+    "ratchet": "7-70",
+    "bit": "B",
+    "height": 70
+  },
+  {
+    "id": "ux-11-impact-drake",
+    "stats": {
+      "atk": 83,
+      "def": 53,
+      "sta": 79,
+      "dash": 88,
+      "burst": 76,
+      "weight": 99
+    },
+    "spin": "R",
+    "ratchet": "9-60",
+    "bit": "LR",
+    "height": 60
+  },
+  {
+    "id": "ux-12-ghost-circle",
+    "stats": {
+      "atk": 61,
+      "def": 53,
+      "sta": 81,
+      "dash": 47,
+      "burst": 66,
+      "weight": 88
+    },
+    "spin": "R",
+    "ratchet": "0-80",
+    "bit": "GB",
+    "height": 80
+  },
+  {
+    "id": "ux-13-golem-rock",
+    "stats": {
+      "atk": 63,
+      "def": 86,
+      "sta": 74,
+      "dash": 33,
+      "burst": 90,
+      "weight": 87
+    },
+    "spin": "R",
+    "ratchet": "1-60",
+    "bit": "UN",
+    "height": 60
+  },
+  {
+    "id": "ux-14-scorpio-spear",
+    "stats": {
+      "atk": 72,
+      "def": 68,
+      "sta": 70,
+      "dash": 65,
+      "burst": 78,
+      "weight": 96
+    },
+    "spin": "R",
+    "ratchet": "0-70",
+    "bit": "Z",
+    "height": 70
+  },
+  {
+    "id": "ux-15-shark-scale",
+    "stats": {
+      "atk": 78,
+      "def": 54,
+      "sta": 82,
+      "dash": 88,
+      "burst": 81,
+      "weight": 90
+    },
+    "spin": "R",
+    "ratchet": "4-50",
+    "bit": "UF",
+    "height": 50
+  },
+  {
+    "id": "ux-15-tyranno-roar",
+    "stats": {
+      "atk": 86,
+      "def": 58,
+      "sta": 75,
+      "dash": 88,
+      "burst": 80,
+      "weight": 89
+    },
+    "spin": "R",
+    "ratchet": "1-70",
+    "bit": "L",
+    "height": 70
+  },
+  {
+    "id": "ux-16-clock-mirage",
+    "stats": {
+      "atk": 62,
+      "def": 60,
+      "sta": 84,
+      "dash": 38,
+      "burst": 61,
+      "weight": 76
+    },
+    "spin": "R",
+    "ratchet": "9-65",
+    "bit": "B",
+    "height": 65
+  },
+  {
+    "id": "ux-17-meteor-dragoon",
+    "stats": {
+      "atk": 89,
+      "def": 63,
+      "sta": 77,
+      "dash": 88,
+      "burst": 79,
+      "weight": 91
+    },
+    "spin": "L",
+    "ratchet": "3-70",
+    "bit": "J",
+    "height": 70
+  },
+  {
+    "id": "ux-18-mummy-curse",
+    "stats": {
+      "atk": 61,
+      "def": 86,
+      "sta": 74,
+      "dash": 33,
+      "burst": 86,
+      "weight": 96
+    },
+    "spin": "R",
+    "ratchet": "7-55",
+    "bit": "W",
+    "height": 55
+  },
+  {
+    "id": "ux-19-bullet-griffon",
+    "stats": {
+      "atk": 69,
+      "def": 76,
+      "sta": 69,
+      "dash": 65,
+      "burst": 76,
+      "weight": 85
+    },
+    "spin": "R",
+    "ratchet": "integrated-H",
+    "bit": "H",
+    "height": 65
+  },
+  {
+    "id": "ux-20-glory-valkyrie",
+    "stats": {
+      "atk": 82,
+      "def": 58,
+      "sta": 82,
+      "dash": 88,
+      "burst": 79,
+      "weight": 86
+    },
+    "spin": "R",
+    "ratchet": "integrated-LF",
+    "bit": "LF",
+    "height": 65
+  },
+  {
+    "id": "ux-21-hells-nether",
+    "stats": {
+      "atk": 71,
+      "def": 72,
+      "sta": 69,
+      "dash": 65,
+      "burst": 76,
+      "weight": 82
+    },
+    "spin": "R",
+    "ratchet": "integrated-Z",
+    "bit": "Z",
+    "height": 65
+  },
+  {
+    "id": "ux-21-wyvern-hover",
+    "stats": {
+      "atk": 56,
+      "def": 56,
+      "sta": 87,
+      "dash": 38,
+      "burst": 60,
+      "weight": 71
+    },
+    "spin": "R",
+    "ratchet": "8-80",
+    "bit": "B",
+    "height": 80
+  },
+  {
+    "id": "bx-53-aero-pegasus",
+    "stats": {
+      "atk": 80,
+      "def": 56,
+      "sta": 77,
+      "dash": 88,
+      "burst": 79,
+      "weight": 88
+    },
+    "spin": "R",
+    "ratchet": "3-70",
+    "bit": "A",
+    "height": 70
+  },
+  {
+    "id": "cx-01-dran-brave-slash",
+    "stats": {
+      "atk": 82,
+      "def": 60,
+      "sta": 85,
+      "dash": 88,
+      "burst": 78,
+      "weight": 76
+    },
+    "spin": "R",
+    "ratchet": "6-60",
+    "bit": "V",
+    "height": 60
+  },
+  {
+    "id": "cx-02-wizard-arc-round",
+    "stats": {
+      "atk": 58,
+      "def": 58,
+      "sta": 78,
+      "dash": 38,
+      "burst": 66,
+      "weight": 69
+    },
+    "spin": "R",
+    "ratchet": "4-55",
+    "bit": "LO",
+    "height": 55
+  },
+  {
+    "id": "cx-03-perseus-dark-bumper",
+    "stats": {
+      "atk": 60,
+      "def": 90,
+      "sta": 68,
+      "dash": 33,
+      "burst": 83,
+      "weight": 94
+    },
+    "spin": "R",
+    "ratchet": "6-80",
+    "bit": "W",
+    "height": 80
+  },
+  {
+    "id": "cx-05-hells-reaper-turn",
+    "stats": {
+      "atk": 75,
+      "def": 70,
+      "sta": 79,
+      "dash": 65,
+      "burst": 75,
+      "weight": 87
+    },
+    "spin": "R",
+    "ratchet": "4-70",
+    "bit": "K",
+    "height": 70
+  },
+  {
+    "id": "cx-05-rhino-reaper-charge",
+    "stats": {
+      "atk": 55,
+      "def": 81,
+      "sta": 70,
+      "dash": 33,
+      "burst": 88,
+      "weight": 92
+    },
+    "spin": "R",
+    "ratchet": "4-55",
+    "bit": "D",
+    "height": 55
+  },
+  {
+    "id": "cx-05-hells-arc-turn",
+    "stats": {
+      "atk": 54,
+      "def": 60,
+      "sta": 89,
+      "dash": 38,
+      "burst": 63,
+      "weight": 67
+    },
+    "spin": "R",
+    "ratchet": "3-85",
+    "bit": "O",
+    "height": 85
+  },
+  {
+    "id": "cx-06-fox-brush-jaggy",
+    "stats": {
+      "atk": 86,
+      "def": 58,
+      "sta": 75,
+      "dash": 88,
+      "burst": 75,
+      "weight": 79
+    },
+    "spin": "R",
+    "ratchet": "9-70",
+    "bit": "GR",
+    "height": 70
+  },
+  {
+    "id": "cx-07-pegasus-blast-assault",
+    "stats": {
+      "atk": 90,
+      "def": 63,
+      "sta": 80,
+      "dash": 88,
+      "burst": 79,
+      "weight": 81
+    },
+    "spin": "R",
+    "ratchet": "integrated-Tr",
+    "bit": "Tr",
+    "height": 65
+  },
+  {
+    "id": "cx-08-cerberus-flame-wheel",
+    "stats": {
+      "atk": 57,
+      "def": 60,
+      "sta": 85,
+      "dash": 38,
+      "burst": 62,
+      "weight": 62
+    },
+    "spin": "R",
+    "ratchet": "5-80",
+    "bit": "WB",
+    "height": 80
+  },
+  {
+    "id": "cx-08-whale-flame-massive",
+    "stats": {
+      "atk": 69,
+      "def": 65,
+      "sta": 72,
+      "dash": 65,
+      "burst": 74,
+      "weight": 73
+    },
+    "spin": "R",
+    "ratchet": "3-85",
+    "bit": "HT",
+    "height": 85
+  },
+  {
+    "id": "cx-08-cerberus-dark-wheel",
+    "stats": {
+      "atk": 82,
+      "def": 64,
+      "sta": 79,
+      "dash": 88,
+      "burst": 82,
+      "weight": 86
+    },
+    "spin": "R",
+    "ratchet": "1-60",
+    "bit": "F",
+    "height": 60
+  },
+  {
+    "id": "cx-09-sol-eclipse-dual",
+    "stats": {
+      "atk": 77,
+      "def": 65,
+      "sta": 72,
+      "dash": 65,
+      "burst": 75,
+      "weight": 77
+    },
+    "spin": "R",
+    "ratchet": "5-70",
+    "bit": "TK",
+    "height": 70
+  },
+  {
+    "id": "cx-10-wolf-hunt-free",
+    "stats": {
+      "atk": 59,
+      "def": 52,
+      "sta": 89,
+      "dash": 38,
+      "burst": 69,
+      "weight": 80
+    },
+    "spin": "R",
+    "ratchet": "0-60",
+    "bit": "DB",
+    "height": 60
+  },
+  {
+    "id": "cx-11-emperor-might-heavy",
+    "stats": {
+      "atk": 73,
+      "def": 65,
+      "sta": 68,
+      "dash": 65,
+      "burst": 76,
+      "weight": 88
+    },
+    "spin": "R",
+    "ratchet": "integrated-Op",
+    "bit": "Op",
+    "height": 65
+  },
+  {
+    "id": "cx-12-phoenix-flare-zillion",
+    "stats": {
+      "atk": 61,
+      "def": 90,
+      "sta": 73,
+      "dash": 33,
+      "burst": 81,
+      "weight": 90
+    },
+    "spin": "R",
+    "ratchet": "9-80",
+    "bit": "WW",
+    "height": 80
+  },
+  {
+    "id": "cx-13-bahamut-blitz-break-knuckle",
+    "stats": {
+      "atk": 80,
+      "def": 53,
+      "sta": 76,
+      "dash": 88,
+      "burst": 83,
+      "weight": 86
+    },
+    "spin": "R",
+    "ratchet": "1-50",
+    "bit": "I",
+    "height": 50
+  },
+  {
+    "id": "cx-14-knight-fortress-guard-vertical",
+    "stats": {
+      "atk": 60,
+      "def": 80,
+      "sta": 66,
+      "dash": 33,
+      "burst": 83,
+      "weight": 100
+    },
+    "spin": "R",
+    "ratchet": "8-70",
+    "bit": "UN",
+    "height": 70
+  },
+  {
+    "id": "cx-15-ragna-rage-flow-erase",
+    "stats": {
+      "atk": 55,
+      "def": 63,
+      "sta": 84,
+      "dash": 38,
+      "burst": 66,
+      "weight": 63
+    },
+    "spin": "R",
+    "ratchet": "4-55",
+    "bit": "Y",
+    "height": 55
+  },
+  {
+    "id": "cx-17-unicorn-delta-peak-odd",
+    "stats": {
+      "atk": 70,
+      "def": 69,
+      "sta": 72,
+      "dash": 65,
+      "burst": 77,
+      "weight": 88
+    },
+    "spin": "R",
+    "ratchet": "3-60",
+    "bit": "GU",
+    "height": 60
+  },
+  {
+    "id": "cx-18-brachio-whip-outer-wheel",
+    "stats": {
+      "atk": 53,
+      "def": 53,
+      "sta": 86,
+      "dash": 38,
+      "burst": 64,
+      "weight": 82
+    },
+    "spin": "R",
+    "ratchet": "5-70",
+    "bit": "Nr",
+    "height": 70
+  },
+  {
+    "id": "cx-19-croco-tread-tough-quell",
+    "stats": {
+      "atk": 63,
+      "def": 88,
+      "sta": 77,
+      "dash": 42,
+      "burst": 89,
+      "weight": 95
+    },
+    "spin": "R",
+    "ratchet": "5-50",
+    "bit": "GN",
+    "height": 50
+  },
+  {
+    "id": "cx-20-phoenix-force-weight-heavy",
+    "stats": {
+      "atk": 71,
+      "def": 74,
+      "sta": 79,
+      "dash": 65,
+      "burst": 75,
+      "weight": 88
+    },
+    "spin": "R",
+    "ratchet": "M-65",
+    "bit": "MT",
+    "height": 65
+  },
+  {
+    "id": "ux-15-hells-brave-jaggy",
+    "stats": {
+      "atk": 80,
+      "def": 61,
+      "sta": 79,
+      "dash": 97,
+      "burst": 80,
+      "weight": 73
+    },
+    "spin": "R",
+    "ratchet": "3-60",
+    "bit": "GF",
+    "height": 60
+  },
+  {
+    "id": "ux-18-pegasus-brush-massive",
+    "stats": {
+      "atk": 63,
+      "def": 84,
+      "sta": 75,
+      "dash": 33,
+      "burst": 85,
+      "weight": 97
+    },
+    "spin": "R",
+    "ratchet": "3-85",
+    "bit": "W",
+    "height": 85
+  },
+  {
+    "id": "ux-18-sol-brave-charge",
+    "stats": {
+      "atk": 74,
+      "def": 67,
+      "sta": 74,
+      "dash": 65,
+      "burst": 72,
+      "weight": 86
+    },
+    "spin": "R",
+    "ratchet": "9-70",
+    "bit": "TP",
+    "height": 70
+  },
+  {
+    "id": "bx-50-wolf-flame-dual",
+    "stats": {
+      "atk": 80,
+      "def": 64,
+      "sta": 76,
+      "dash": 88,
+      "burst": 75,
+      "weight": 87
+    },
+    "spin": "R",
+    "ratchet": "9-65",
+    "bit": "L",
+    "height": 65
+  },
+  {
+    "id": "bx-50-cerberus-reaper-bumper",
+    "stats": {
+      "atk": 56,
+      "def": 60,
+      "sta": 79,
+      "dash": 38,
+      "burst": 66,
+      "weight": 78
+    },
+    "spin": "R",
+    "ratchet": "0-80",
+    "bit": "WB",
+    "height": 80
+  }
+]

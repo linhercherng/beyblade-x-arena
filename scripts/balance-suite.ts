@@ -17,6 +17,7 @@ export function runSuite(samples = 32, firstSeed = 1) {
     extreme: 0,
   };
   const times: number[] = [];
+  const outsideCases: { beys: string[]; seed: number; launches: unknown; time: number }[] = [];
   let dashes = 0;
   for (let i = 0; i < 4; i++)
     for (let j = i; j < 4; j++)
@@ -42,6 +43,8 @@ export function runSuite(samples = 32, firstSeed = 1) {
           }
           if (!s.result) throw new Error(`未終結：${a.name}/${b.name}`);
           times.push(s.time);
+          if (s.time < 15 || s.time > 40)
+            outsideCases.push({ beys: beys.map(b => b.id), seed, launches, time: s.time });
           finishes[s.result.finish]++;
           dashes += s.tops[0].dashes + s.tops[1].dashes;
           for (const p of [0, 1]) {
@@ -82,6 +85,7 @@ export function runSuite(samples = 32, firstSeed = 1) {
     p05: round(times[Math.floor(times.length * 0.05)]),
     p95: round(times[Math.floor(times.length * 0.95)]),
     outsideTarget: times.filter((t) => t < 15 || t > 40).length,
+    outsideCases,
     finishes,
     dashes,
     types: Object.fromEntries(

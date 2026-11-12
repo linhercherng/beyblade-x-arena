@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { BEYS, filterBeys } from "../src/catalog.ts";
 import names from "../src/chinese-names.json" with { type: "json" };
 
-test("83顆均有繁體中文名稱及命名來源，中文或英文搜尋都能定位", () => {
+test("全部陀螺均有繁體中文名稱及命名來源，中文或英文搜尋都能定位", () => {
   for (const b of BEYS) {
     assert.match(b.zhName, /[\u3400-\u9fff]/u, b.id);
     const entry = names[b.id as keyof typeof names];

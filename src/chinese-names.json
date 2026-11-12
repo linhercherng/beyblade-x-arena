@@ -496,5 +496,53 @@
     "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
     "status": "translated",
     "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-00-valkyrie-volt-slash": {
+    "name": "雷霆女武神·斬擊",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-vv.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "cx-00-bucks-antlers-bumper": {
+    "name": "雄鹿巨角·緩衝",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-ba.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "cx-00-kraken-wriggle-slash": {
+    "name": "海怪蠕動·斬擊",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-kw.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "cx-00-hornet-fort-round": {
+    "name": "黃蜂堡壘·圓環",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-hf.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "cx-00-drake-brave-gravity": {
+    "name": "龍獸勇擊·重力",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-drb.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "bx-00-storm-pegasus": {
+    "name": "暴風天馬",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-sp.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "bx-00-storm-spriggan": {
+    "name": "暴風巨神",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ss.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "cx-00-tiga-rage-flow-turn": {
+    "name": "迪卡狂怒·流線·翻轉",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-tiga.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
   }
 }

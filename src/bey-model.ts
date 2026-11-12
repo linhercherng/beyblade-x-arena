@@ -255,6 +255,7 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
         )
       : lathe([[0, 0], ...tip, [0, tipHeight]], tipMaterial, "bit-contact");
   if (spec.part?.offsetTip) foot.position.x = 0.035;
+  if (b.bit === "RA") foot.position.y = .018;
   foot.geometry.computeBoundingBox();
   const tipRadius = Math.max(
     Math.abs(foot.geometry.boundingBox!.min.x),
@@ -370,7 +371,12 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
       ),
     );
   if (b.bit === "M")
-    bit.add(torus(0.072, 0.015, solid("#3aa59a"), "bit-rubber-contact", 0.023));
+    bit.add(torus(0.072, 0.015, solid(b.id === "bx-00-storm-spriggan" ? "#e5e3df" : "#3aa59a"), "bit-rubber-contact", 0.023));
+  if (b.bit === "RA") {
+    const rubber = solid("#d62016");
+    rubber.roughness = .95;
+    bit.add(piece(new THREE.CylinderGeometry(spec.profile.tipRadius*.94, spec.profile.tipRadius*.94, .018, 32), rubber, "bit-rubber-contact", 0, .009));
+  }
   if (b.bit === "Y")
     bit.add(
       radial(

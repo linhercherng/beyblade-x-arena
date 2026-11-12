@@ -3283,3 +3283,4 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 @media (prefers-reduced-motion: reduce) {
   .finish-card, .finish-victor, .finish-overlay .finish-score, .round-result, .round-score, .victory-emblem, .winning-team > div, .result-hero .result-score { animation: none; }
 }
+.new-bey-label { margin-left: 6px; padding: 2px 4px; font: 700 9px var(--mono); color: #caff53; border: 1px solid #526c32; vertical-align: middle; }
