@@ -1,0 +1,11 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>競技盤立體細節驗收</title>
+<style>body{margin:0;background:radial-gradient(ellipse at 50% 45%,#193041,#09131e 75%);color:#dbe9f2;font:14px sans-serif}header{position:absolute;top:12px;left:16px;z-index:2}button{padding:9px;margin:4px}#stage{height:100vh}output{display:block;font-size:12px;color:#a1bdcc}</style>
+<header>競技盤立體細節<br><button id="wide">全景</button><button id="close">齒軌近鏡</button><button id="low">低角度</button><output>實際遊戲盤體與燈光・不寫入戰績</output></header><div id="stage"></div>
+<script type="module">
+import{Arena}from'/src/arena.ts';
+const arena=new Arena();arena.attach(document.querySelector('#stage'),'home');let view='wide',last=0;const frames=[];
+function camera(){const mobile=innerWidth<700;const pos=view==='close'?[5.9,3.9,7.2]:view==='low'?[8,3.8,10]:mobile?[17,21,26]:[9,10,12.5];const target=view==='close'?[1.5,.43,3.9]:[0,0,0];arena.camera.position.set(...pos);arena.camera.lookAt(...target);}
+document.addEventListener('click',e=>{if(['wide','close','low'].includes(e.target.id)){view=e.target.id;camera();}});addEventListener('resize',camera);camera();
+function frame(t){if(last&&frames.length<300)frames.push(t-last);last=t;arena.renderer.render(arena.scene,arena.camera);requestAnimationFrame(frame);}requestAnimationFrame(frame);
+window.stadiumMetrics=()=>({calls:arena.renderer.info.render.calls,triangles:arena.renderer.info.render.triangles,frames,teeth:arena.stadium.getObjectByName('x-rail-teeth').count,meshes:arena.stadium.children.length,view});
+</script></html>

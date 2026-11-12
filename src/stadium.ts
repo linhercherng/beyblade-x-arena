@@ -15,12 +15,17 @@ const gates = [
   { angle: Math.PI / 2, half: GATE_HALF_ANGLES.extreme },
   { angle: Math.PI, half: GATE_HALF_ANGLES.over },
 ];
-function gate(angle: number) {
+const rimArcs = [
+  [GATE_HALF_ANGLES.over, Math.PI / 2 - GATE_HALF_ANGLES.extreme],
+  [Math.PI / 2 + GATE_HALF_ANGLES.extreme, Math.PI - GATE_HALF_ANGLES.over],
+  [Math.PI + GATE_HALF_ANGLES.over, Math.PI * 2 - GATE_HALF_ANGLES.over],
+];
+function gate(angle: number, padding = 0) {
   return gates.some(
     (g) =>
       Math.abs(
         Math.atan2(Math.sin(angle - g.angle), Math.cos(angle - g.angle)),
-      ) < g.half,
+      ) < g.half + padding,
   );
 }
 function material(color: string, metalness = 0.08, roughness = 0.4) {
@@ -62,23 +67,18 @@ function instances(
   mesh.userData.count = placements.length;
   return mesh;
 }
-function radial(count: number, r: number, y: number, skipGates = false) {
+function radial(count: number, r: number, y: number, skipGates = false, padding = 0) {
   const points: Placement[] = [];
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
-    if (skipGates && gate(a)) continue;
+    if (skipGates && gate(a, padding)) continue;
     points.push({ x: Math.cos(a) * r, y, z: Math.sin(a) * r, angle: -a });
   }
   return points;
 }
 function band(inner: number, outer: number, bottom: number, height: number) {
-  const arcs = [
-    [0.24, Math.PI / 2 - 0.29],
-    [Math.PI / 2 + 0.29, Math.PI - 0.24],
-    [Math.PI + 0.24, Math.PI * 2 - 0.24],
-  ];
   return mergeGeometries(
-    arcs.map(([start, end]) => {
+    rimArcs.map(([start, end]) => {
       const points: THREE.Vector2[] = [],
         steps = Math.ceil((end - start) * 22);
       for (let i = 0; i <= steps; i++) {
@@ -105,6 +105,44 @@ function band(inner: number, outer: number, bottom: number, height: number) {
       return g.rotateX(-Math.PI / 2).translate(0, bottom, 0);
     }),
   )!;
+}
+function rimDeck() {
+  const profile = [
+    [4.29,-.15],[4.99,-.15],[5.05,-.08],[5.05,-.035],
+    [4.995,-.008],[4.995,.035],[5.05,.06],[5.05,.3],
+    [5.025,.36],[4.97,.4],[4.29,.4],[4.29,-.15],
+  ].map(([r,y])=>new THREE.Vector2(r,y));
+  const pieces: THREE.BufferGeometry[] = [];
+  for (const [start,end] of rimArcs) {
+    pieces.push(new THREE.LatheGeometry(profile,Math.ceil((end-start)*32),Math.PI/2-end,end-start));
+    for (const [angle,reverse] of [[start,true],[end,false]] as const) {
+      const cap = new THREE.ShapeGeometry(new THREE.Shape(profile));
+      // ShapeGeometry會統一輪廓方向，起點端蓋須明確反轉繞序才朝向出口。
+      if (reverse) {
+        const index = cap.getIndex()!;
+        for(let i=0;i<index.count;i+=3) {
+          const b=index.getX(i+1);index.setX(i+1,index.getX(i+2));index.setX(i+2,b);
+        }
+        cap.computeVertexNormals();
+      }
+      pieces.push(cap.rotateY(-angle));
+    }
+  }
+  return mergeGeometries(pieces)!;
+}
+function railTooth() {
+  const profile = new THREE.Shape();
+  profile.moveTo(-.11, -.014);
+  profile.lineTo(-.07, -.026);
+  profile.lineTo(.075, -.026);
+  profile.lineTo(.075, .026);
+  profile.lineTo(-.035, .026);
+  profile.lineTo(-.11, .014);
+  profile.closePath();
+  return new THREE.ExtrudeGeometry(profile, {
+    depth: .095, bevelEnabled: true, bevelSize: .005,
+    bevelThickness: .006, bevelSegments: 2, steps: 1,
+  }).rotateX(-Math.PI / 2);
 }
 function ring(
   radius: number,
@@ -171,6 +209,10 @@ export function createStadium(): THREE.Group {
   const blue = material("#06667f", 0.28, 0.27),
     steel = material("#9bb4bf", 0.72, 0.26),
     ink = material("#567b8d", 0, 0.75);
+  const bowlMaterial = new THREE.MeshPhysicalMaterial({
+    color: "#d5dfe4", vertexColors: true, metalness: .06, roughness: .3,
+    clearcoat: .5, clearcoatRoughness: .24,
+  });
   const cyan = new THREE.MeshBasicMaterial({
     color: "#56dce6",
     toneMapped: false,
@@ -185,11 +227,16 @@ export function createStadium(): THREE.Group {
 
   stadium.add(
     part(
-      new THREE.CylinderGeometry(5.26, 5.48, 0.28, 96),
+      new THREE.LatheGeometry([
+        new THREE.Vector2(0,-.68), new THREE.Vector2(5.05,-.68),
+        new THREE.Vector2(5.38,-.61), new THREE.Vector2(5.48,-.5),
+        new THREE.Vector2(5.48,-.42), new THREE.Vector2(5.32,-.31),
+        new THREE.Vector2(5.02,-.27), new THREE.Vector2(0,-.27),
+      ], 128),
       chassis,
       "lower-chassis",
       0,
-      -0.53,
+      0,
     ),
   );
   stadium.add(
@@ -201,8 +248,8 @@ export function createStadium(): THREE.Group {
       -0.28,
     ),
   );
-  stadium.add(ring(5.22, 0.035, steel, "chassis-edge-bead", -0.38));
-  stadium.add(ring(5.25, 0.012, cyan, "lower-light-pipe", -0.3));
+  stadium.add(ring(5.4, 0.025, steel, "chassis-edge-bead", -0.56));
+  stadium.add(ring(5.32, 0.014, cyan, "lower-light-pipe", -0.3));
   stadium.add(
     instances(
       new THREE.CylinderGeometry(0.31, 0.35, 0.15, 12),
@@ -234,11 +281,26 @@ export function createStadium(): THREE.Group {
     const r = (RADIUS * i) / 48;
     bowlProfile.push(new THREE.Vector2(r, surface(r)));
   }
-  stadium.add(
-    part(new THREE.LatheGeometry(bowlProfile, 128), white, "bowl-surface"),
-  );
-  stadium.add(part(band(4.29, 5.05, -0.15, 0.55), white, "molded-rim-deck"));
+  const bowlGeometry = new THREE.LatheGeometry(bowlProfile, 160);
+  const bowlPositions = bowlGeometry.getAttribute("position"), colors: number[] = [];
+  const centerColor = new THREE.Color("#e2ebef"), edgeColor = new THREE.Color("#91aebf");
+  for (let i=0;i<bowlPositions.count;i++) {
+    const r = Math.hypot(bowlPositions.getX(i),bowlPositions.getZ(i));
+    const color = centerColor.clone().lerp(edgeColor,Math.pow(Math.min(1,r/4.34),3)*.72);
+    if (bowlPositions.getY(i)<surface(r)-.04) color.multiplyScalar(.66);
+    colors.push(color.r,color.g,color.b);
+  }
+  bowlGeometry.setAttribute("color",new THREE.Float32BufferAttribute(colors,3));
+  stadium.add(part(bowlGeometry,bowlMaterial,"bowl-surface"));
+  stadium.add(part(rimDeck(), white, "molded-rim-deck"));
   stadium.add(part(band(4.29, 4.53, 0.4, 0.066), blue, "rail-carrier"));
+  stadium.add(part(band(4.28,4.4,.416,.092),chassis,"rail-root-channel"));
+  stadium.add(part(mergeGeometries([
+    band(4.4,4.43,.498,.014),band(4.29,4.32,.415,.014),
+  ])!,steel,"rail-edge-beads"));
+  const support = new THREE.Shape();
+  support.moveTo(-.25,-.3);support.lineTo(.32,-.3);support.lineTo(.32,.2);support.lineTo(-.25,-.05);support.closePath();
+  stadium.add(instances(new THREE.ExtrudeGeometry(support,{depth:.07,bevelEnabled:true,bevelSize:.012,bevelThickness:.008,bevelSegments:1,steps:1}).translate(0,0,-.035),blue,"rim-support-webs",radial(48,4.97,-.06,true,.025)));
   stadium.add(part(band(4.96, 5.01, 0.405, 0.012), cyan, "rim-light-guides"));
   stadium.add(part(band(4.57, 4.65, 0.48, 0.54), guard, "guard-panels"));
   stadium.add(
@@ -274,13 +336,13 @@ export function createStadium(): THREE.Group {
     ),
   );
   const teeth = instances(
-    new THREE.BoxGeometry(0.073, 0.095, 0.095),
+    railTooth(),
     steel,
     "x-rail-teeth",
-    radial(128, 4.18, 0.465, true),
+    radial(320, 4.24, 0.43, true, .018),
   );
   for (let i = 0; i < teeth.count; i++)
-    teeth.setColorAt(i, new THREE.Color(i % 8 === 0 ? "#bcf66b" : "#91beca"));
+    teeth.setColorAt(i, new THREE.Color(i % 20 === 0 ? "#bcf66b" : "#b5d3df"));
   stadium.add(teeth);
   stadium.add(
     instances(

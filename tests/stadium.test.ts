@@ -79,6 +79,36 @@ test("盤面曲率符合現有落點，三個出口保持可穿過的護牆開�
   );
 });
 
+test("整圈細齒含斜面倒角與齒根支撐，立體細節維持合批預算", () => {
+  const model=createStadium();
+  const teeth=model.getObjectByName("x-rail-teeth") as THREE.InstancedMesh;
+  assert.ok(teeth.count>=220, `${teeth.count} teeth`);
+  assert.ok(teeth.geometry.getAttribute("position").count>50, "齒形應有倒角與斜面");
+  for(const name of ["rail-root-channel","rail-edge-beads","rim-support-webs"])
+    assert.ok(model.getObjectByName(name),name);
+  const positions=teeth.geometry.getAttribute("position");
+  const xs=new Set(Array.from({length:positions.count},(_,i)=>positions.getX(i).toFixed(3)));
+  assert.ok(xs.size>=4,"齒牙不是只有兩個平行面的方塊");
+  let triangles=0;
+  model.traverse(n=>{if(n instanceof THREE.Mesh)triangles+=(n.geometry.index?.count??n.geometry.getAttribute('position').count)/3*(n instanceof THREE.InstancedMesh?n.count:1);});
+  assert.ok(triangles<=100000,`${triangles} triangles`);
+  model.updateMatrixWorld(true);
+  const rim=model.getObjectByName("molded-rim-deck")!;
+  const radiusAt=(y:number)=>{
+    const n=Math.SQRT1_2;
+    const hit=new THREE.Raycaster(new THREE.Vector3(6*n,y,6*n),new THREE.Vector3(-n,0,-n),0,2).intersectObject(rim)[0];
+    assert.ok(hit,"側面剖面可被光線命中");
+    return Math.hypot(hit.point.x,hit.point.z);
+  };
+  assert.ok(radiusAt(.2)-radiusAt(.02)>.035,"側面凹槽為實際幾何深度");
+  for(const [angle,side] of [[.24,-1],[Math.PI/2-.29,1],[Math.PI/2+.29,-1],[Math.PI-.24,1],[Math.PI+.24,-1],[Math.PI*2-.24,1]]) {
+    const outward=new THREE.Vector3(-Math.sin(angle)*side,0,Math.cos(angle)*side);
+    const origin=new THREE.Vector3(Math.cos(angle)*4.7,.2,Math.sin(angle)*4.7).addScaledVector(outward,.2);
+    const hits=new THREE.Raycaster(origin,outward.negate(),0,.4).intersectObject(rim);
+    assert.ok(hits.length>0,`出口端蓋從外側可見：${angle}`);
+  }
+});
+
 test("細節盤體幾何有限、重複件實例化、透明護牆不使用折射且高度不遮視野", () => {
   const model = createStadium();
   let drawables = 0,
