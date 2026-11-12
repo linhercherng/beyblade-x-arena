@@ -17,6 +17,7 @@ import { capturePoses, type TopPose } from "./motion.ts";
 import { Sound } from "./audio.ts";
 import { musicFor } from "./music-state.ts";
 import { FINISH_COLORS, scorePreview } from "./finish.ts";
+import { HighlightRecorder, HIGHLIGHT_RATE, type HighlightReplay } from "./highlight.ts";
 import {
   createBattle,
   stepBattle,
@@ -102,6 +103,8 @@ let detailId: string | null = null,
   modalReturnBeys: Bey[] = [];
 let previousPoses: TopPose[] = [];
 let lastHudTime = 0;
+const highlightRecorder=new HighlightRecorder();
+let highlight:HighlightReplay|null=null,highlightShown=false,highlightFinishing=false;
 let replay: Round | null = null,
   replayMatch: Match | null = null,
   historyId: string | null = null,
@@ -181,7 +184,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.14.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.15.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -198,6 +201,7 @@ function title(eyebrow: string, h: string, description: string, side = "") {
   return `<div class="page-title"><div><div class="eyebrow">${eyebrow}</div><h1>${h}</h1><p>${description}</p></div>${side}</div>`;
 }
 function home() {
+  clearHighlight();
   screen = "home";
   battle = null;
   replay = null;
@@ -380,6 +384,8 @@ function chargePower(p: number) {
     : Math.max(0.65, 0.98 - Math.abs(phase - 0.88) * 0.4);
 }
 function startBattle() {
+  clearHighlight();highlightRecorder.reset();highlightShown=false;
+  if(battle)highlightRecorder.record(battle);
   screen = "battle";
   processed = false;
   accumulator = 0;
@@ -412,6 +418,26 @@ function roundEnded() {
   shell(
     `<section class="round-result panel" data-finish="${winner === null ? "draw" : r.result.finish}" style="--finish-color:${FINISH_COLORS[winner === null ? "draw" : r.result.finish]}"><span class="eyebrow">ROUND ${r.index} COMPLETE</span>${winner === null ? '<div class="round-victor">DRAW · 本場重打</div>' : `<div class="round-victor">${art(getBey(r.beys[winner]), 70)}<div><span>${winnerLabel} WIN</span><h2>${safe(getBey(r.beys[winner]).zhName)}</h2></div><b>+${r.result.points}</b></div>`}<h1>${r.result.winner === null ? "雙方平手" : f.label}</h1><div class="round-score">${match.scores[0]} <small>:</small> ${match.scores[1]}</div><p>${r.result.winner === null ? "雙方同時終結，保持本場出場順序重打。" : `${r.result.winner === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P"} 取得 ${r.result.points} 分 · ${r.result.time.toFixed(1)} 秒`}</p><div class="next-pair">下一場：${beyName(getBey(match.teams[0][match.slot]))}<span>VS</span>${beyName(getBey(match.teams[1][match.slot]))}</div>${btn(r.result.winner === null ? "重新發射 →" : "下一場對決 →", "next-round", "primary")}</section>`,
   );
+}
+function clearHighlight() {
+  if(highlight){highlight=null;arena?.endHighlight();sound.stopEffects();}
+  highlightFinishing=false;
+  byId("highlight-panel")?.remove();
+  byId("main")?.classList.remove("showing-highlight");
+}
+function skipHighlight() {
+  if(!highlight)return;
+  clearHighlight();if(paused)setPaused(false);roundEnded();
+}
+function beginHighlight() {
+  if(!battle||!arena||arena.reduced)return false;
+  highlight=highlightRecorder.clip(battle);if(!highlight)return false;
+  const first=highlight.advance(0);sound.stopEffects();arena.beginHighlight(first.battle);
+  for(const event of first.events){const dashHit=arena.event(event,first.battle);sound.event(event,dashHit);}
+  const message=byId("battle-message")!;message.classList.remove("finish-overlay");message.innerHTML="";
+  message.insertAdjacentHTML("afterend",`<section id="highlight-panel" class="highlight-panel" aria-label="終結精彩重播"><div><span class="eyebrow">HIGHLIGHT REPLAY</span><strong aria-live="polite">精彩重播 · 最後一擊</strong><small id="highlight-shot">追擊鏡位 · 0.55× 慢動作</small></div>${btn("跳過重播 →","skip-highlight","primary")}<div class="highlight-progress" aria-hidden="true"><i id="highlight-progress"></i></div></section>`);
+  byId("main")?.classList.add("showing-highlight");
+  return true;
 }
 function roundTable(m: Match, playable = false) {
   return `<div class="table-scroll"><table><thead><tr><th>場次</th><th>1P 陀螺</th><th>${m.mode === "cpu" ? "CPU" : "2P"} 陀螺</th><th>勝方 / 終結</th><th>耗時</th>${playable ? "<th>重播</th>" : ""}</tr></thead><tbody>${m.rounds.map((r, i) => `<tr><td>0${r.index}</td><td>${beyName(getBey(r.beys[0]))}</td><td>${beyName(getBey(r.beys[1]))}</td><td>${r.result.winner === null ? "平手" : r.result.winner === 0 ? "1P" : m.mode === "cpu" ? "CPU" : "2P"} · ${FINISH[r.result.finish].label} ${r.result.points ? `+${r.result.points}` : ""}</td><td>${r.result.time.toFixed(1)}s</td>${playable ? `<td>${btn("▶", "replay", "small-button", `data-match="${safe(m.id)}" data-index="${i}" aria-label="重播第${i + 1}場"`)}</td>` : ""}</tr>`).join("")}</tbody></table></div>`;
@@ -767,6 +793,9 @@ app.addEventListener("click", (e) => {
     case "pause":
       setPaused(!paused);
       break;
+    case "skip-highlight":
+      skipHighlight();
+      break;
     case "speed":
       speed = speed === 1 ? 2 : speed === 2 ? 4 : 1;
       target.textContent = speed + "×";
@@ -995,6 +1024,7 @@ function frame(time: number) {
           shout(battle, 1);
         capturePoses(battle, previousPoses);
         stepBattle(battle);
+        if(!replay)highlightRecorder.record(battle);
         for (const event of battle.events) {
           const dashHit=arena?.event(event,battle) ?? false;
           sound.event(event,dashHit);
@@ -1029,7 +1059,17 @@ function frame(time: number) {
       message.style.setProperty("--finish-color", FINISH_COLORS[kind]);
       message.innerHTML = `<div class="finish-card"><span class="eyebrow">${r.winner === null ? "DOUBLE FINISH / DRAW" : "ROUND DECIDED"}</span><strong class="finish-text">${r.winner === null ? "DRAW" : f.en}</strong><span class="finish-subtitle">${r.winner === null ? "雙方同時終結・本場重打" : f.label}</span><div class="finish-victor">${r.winner === null ? "保持原出場順序" : `<b>${winnerLabel} WIN</b><span>${safe(battle.tops[r.winner].bey.zhName)}</span><em>+${r.points}</em>`}</div>${replay ? '<p class="finish-score">對戰重播・不計入戰績</p>' : `<div class="finish-score"><span>比分</span><b>${before[0]} : ${before[1]}</b><i>→</i><strong>${after[0]} : ${after[1]}</strong></div>`}</div>`;
     }
-    if (battle.result && processed && time - finishStart > 2300) {
+    if(highlight) {
+      const frame=highlight.advance(realDt);
+      for(const event of frame.events){const dashHit=arena?.event(event,frame.battle)??false;sound.event(event,dashHit);}
+      if(frame.phase==="finish"&&!highlightFinishing){
+        highlightFinishing=true;arena?.showHighlightFinish(frame.battle);sound.finish(frame.battle.result!,HIGHLIGHT_RATE,true);
+        const shot=byId("highlight-shot");if(shot)shot.textContent="終結特寫 · 0.55× 慢動作";
+      }
+      const progress=byId("highlight-progress");if(progress)progress.style.transform=`scaleX(${frame.progress})`;
+      if(frame.done)skipHighlight();
+    }
+    if ((screen==="battle"||screen==="replay") && battle.result && processed && !highlight && time - finishStart > 2300) {
       if (replay) {
         const r = replay;
         const same = JSON.stringify(battle.result) === JSON.stringify(r.result);
@@ -1041,26 +1081,29 @@ function frame(time: number) {
         replay = null;
         battle = null;
         stats();
+      } else if(!highlightShown) {
+        highlightShown=true;
+        if(!beginHighlight())roundEnded();
       } else roundEnded();
     }
   }
   if ((arena && byId("stage")?.isConnected) || detailId)
     arena?.draw(
-      paused ? 0 : realDt,
+      paused ? 0 : realDt*(highlight?HIGHLIGHT_RATE:1),
       detailId
         ? null
         : ["countdown", "battle", "replay"].includes(screen)
-          ? battle
+          ? highlight?.battle ?? battle
           : null,
-      previousPoses,
-      battle?.result ? 1 : accumulator / DT,
+      highlight?[]:previousPoses,
+      highlight||battle?.result ? 1 : accumulator / DT,
       screen === "countdown"
         ? ((paused ? pauseStarted : time) - countdownStart) / 1000
         : null,
     );
   sound.update(
-    battle,
-    active && !battle?.result,
+    highlight?.battle ?? battle,
+    active && (highlight?!highlight.battle.result:!battle?.result),
     musicFor({ screen, paused, hidden: document.hidden,
       finished: !!battle?.result,
       matchPoint: !!match && Math.max(...match.scores) >= 3 }),

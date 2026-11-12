@@ -104,6 +104,7 @@ export class Arena {
   pitch = 0.54;
   exploded = false;
   closeUp = true;
+  highlightShot: "approach" | "finish" | null = null;
   dragging = false;
   lastX = 0;
   lastY = 0;
@@ -340,9 +341,7 @@ export class Arena {
     this.renderer.domElement.style.height = h + "px";
   }
   setBeys(beys: Bey[]) {
-    this.finishRate=1;this.finishShock=this.finishZoom=0;
-    (this.hitRing.material as THREE.MeshBasicMaterial).color.set("#b8f6ff");
-    this.hitPlayback.reset();this.hitRing.visible=false;
+    this.highlightShot=null;
     this.impactHeight = Math.max(...beys.map(b => {
       const spec = modelSpec(b);
       return spec.bitHeight + spec.ratchetHeight + spec.bladeThickness + spec.profile.coreRise + .055;
@@ -383,6 +382,13 @@ export class Arena {
       this.scene.add(g);
       return g;
     });
+    this.resetEffects();
+  }
+  private resetEffects() {
+    this.finishRate=1;this.finishShock=this.finishZoom=0;
+    this.hitPlayback.reset();this.hitRing.visible=false;
+    (this.hitRing.material as THREE.MeshBasicMaterial).color.set("#b8f6ff");
+    this.models.forEach(g=>{g.userData.lean={x:0,z:0};(g.userData.parts as THREE.Group[]).forEach(p=>{p.position.set(0,0,0);p.rotation.set(0,0,0);});});
     this.trailPositions = [[], []];
     this.trailTimes = [[], []];
     this.dashStates = [null,null];
@@ -393,6 +399,34 @@ export class Arena {
     this.finished = null;
     this.exitTrail.visible = false;
   }
+  private frameHighlight(b:Battle) {
+    this.draw(0,b);
+    this.camera.position.copy(this.cameraBase);this.cameraFocus.copy(this.cameraTarget);
+    this.fitHighlight(b,b.tops);
+    this.camera.lookAt(this.cameraFocus);
+  }
+  private fitHighlight(b:Battle,poses:readonly TopPose[]) {
+    if(!this.highlightShot)return;
+    const focus=this.cameraFocus;
+    let radius=0;
+    if(b.result&&["over","extreme"].includes(b.result.finish))radius=6.5+focus.length();
+    else poses.forEach((p,i)=>{
+      const margin=b.result?.finish==="burst"?1.62:.8;
+      radius=Math.max(radius,Math.hypot(p.x-focus.x,.385+(p.x*p.x+p.z*p.z)*.024-focus.y,p.z-focus.z)+margin);
+      const state=this.dashStates[i];
+      if(!b.result&&state?.grip&&dashVisual(this.time-state.at).latch>0)
+        radius=Math.max(radius,Math.hypot(state.x-focus.x,.75-focus.y,state.z-focus.z)+.8);
+    });
+    const distance=this.camera.position.distanceTo(focus),required=viewRange(radius,this.camera);
+    if(distance<required)this.camera.position.sub(focus).multiplyScalar(required/Math.max(.001,distance)).add(focus);
+  }
+  beginHighlight(b:Battle) {
+    this.resetEffects();this.highlightShot="approach";this.frameHighlight(b);
+  }
+  showHighlightFinish(b:Battle) {
+    this.highlightShot="finish";this.finish(b);this.finishRate=1;this.frameHighlight(b);
+  }
+  endHighlight() {this.highlightShot=null;this.resetEffects();}
   event(e: BattleEvent, battle?: Battle): boolean {
     const dashHit=battle ? this.hitPlayback.trigger(e,battle,this.time) : false;
     if (e.type === "hit") {
@@ -519,7 +553,7 @@ export class Arena {
     if (this.renderer.domElement.dataset.opening !== openingPhase)
       this.renderer.domElement.dataset.opening = openingPhase;
     this.landingRings.forEach((r) => (r.visible = false));
-    const az = inspecting ? this.angle : this.angle * 0.3;
+    const az = inspecting ? this.angle : this.angle * 0.3+(this.highlightShot==="approach"?.75:this.highlightShot==="finish"?-.45:0);
     const previewDistance = this.exploded ? 2.4 : 1.9;
     const base = inspecting
       ? this.cameraBase.set(
@@ -578,6 +612,7 @@ export class Arena {
       this.camera.position.lerp(base, cameraBlend);
       this.cameraFocus.lerp(look, cameraBlend);
     }
+    if(battle&&dt>0)this.fitHighlight(battle,poses!);
     this.camera.lookAt(this.cameraFocus);
     this.shakeAge += dt;
     const kick = impactShake(this.shakeAge, this.shake, this.reduced);

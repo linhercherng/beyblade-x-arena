@@ -291,7 +291,7 @@ export class Sound {
     });
     this.cues.clear();
   }
-  private playCue(kind: Cue, initialRate=1) {
+  private playCue(kind: Cue, initialRate=1, slowReplay=false) {
     if (!this.ctx || !this.sfx || this.muted) return;
     this.stopImpacts(initialRate<1?.065:.015);
     this.stopDashes();
@@ -306,7 +306,7 @@ export class Sound {
     source.buffer = this.cueBuffers.get(kind)!;
     const now=this.ctx.currentTime;
     source.playbackRate.setValueAtTime(initialRate,now);
-    source.playbackRate.linearRampToValueAtTime(1,now+FINISH_RECOVERY);
+    if(!slowReplay)source.playbackRate.linearRampToValueAtTime(1,now+FINISH_RECOVERY);
     gain.gain.setValueAtTime(initialRate<1?0:1.2,now);
     if(initialRate<1)gain.gain.linearRampToValueAtTime(1.2,now+.035);
     source.connect(gain).connect(this.sfx);
@@ -317,10 +317,11 @@ export class Sound {
       const duck = this.musicDuck.gain;
       duck.cancelAndHoldAtTime(now);
       duck.linearRampToValueAtTime(Math.min(duck.value,.25), now + .015);
-      duck.setTargetAtTime(1, now + (initialRate<1?1.45:.65), .12);
+      duck.setTargetAtTime(1, now + (slowReplay?source.buffer.duration/initialRate:initialRate<1?1.45:.65), .12);
     }
   }
-  finish(result: Result, initialRate=1) { this.playCue(result.winner === null ? "draw" : result.finish,initialRate); }
+  finish(result: Result, initialRate=1, slowReplay=false) { this.playCue(result.winner === null ? "draw" : result.finish,initialRate,slowReplay); }
+  stopEffects() {this.stopImpacts();this.stopDashes();this.stopCues();}
   victory(won: boolean) { this.playCue(won ? "victory" : "defeat"); }
   update(
     battle: Battle | null,
