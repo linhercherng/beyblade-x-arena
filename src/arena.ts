@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
 import { impactProfile, impactShake } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
+import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
 import { exitPose, burstPose, FINISH_COLORS } from "./finish.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
@@ -123,6 +124,9 @@ export class Arena {
   trailTimes: number[][] = [[], []];
   dashStates: ({at:number;x:number;z:number;grip:boolean}|null)[] = [null,null];
   dashRibbons: THREE.Mesh[] = [];
+  hitPlayback = new DashHitPlayback();
+  hitRing = ring(.45,.018,"#b8f6ff");
+  get playbackScale() { return this.hitPlayback.sample(this.time,this.reduced).scale; }
   exitTrail = new THREE.Line(
     new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(new Float32Array(18 * 3), 3)),
     new THREE.LineBasicMaterial({ color: "#68dbff", transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
@@ -174,6 +178,10 @@ export class Arena {
     blue.position.set(4, 4, -3);
     this.scene.add(blue);
     this.scene.add(this.stadium);
+    const hitMaterial=this.hitRing.material as THREE.MeshBasicMaterial;
+    hitMaterial.transparent=true;hitMaterial.depthWrite=false;hitMaterial.toneMapped=false;
+    this.hitRing.visible=false;this.hitRing.castShadow=this.hitRing.receiveShadow=false;
+    this.scene.add(this.hitRing);
     this.exitTrail.visible = false;
     this.scene.add(this.exitTrail);
     for (const color of ["#a9e8ff", "#ffc7aa"]) {
@@ -327,6 +335,7 @@ export class Arena {
     this.renderer.domElement.style.height = h + "px";
   }
   setBeys(beys: Bey[]) {
+    this.hitPlayback.reset();this.hitRing.visible=false;
     this.impactHeight = Math.max(...beys.map(b => {
       const spec = modelSpec(b);
       return spec.bitHeight + spec.ratchetHeight + spec.bladeThickness + spec.profile.coreRise + .055;
@@ -377,9 +386,15 @@ export class Arena {
     this.finished = null;
     this.exitTrail.visible = false;
   }
-  event(e: BattleEvent) {
+  event(e: BattleEvent, battle?: Battle): boolean {
+    const dashHit=battle ? this.hitPlayback.trigger(e,battle,this.time) : false;
     if (e.type === "hit") {
-      const profile = impactProfile(e.strength);
+      const profile = impactProfile(dashHit ? Math.max(10,e.strength*1.35) : e.strength);
+      if(dashHit) {
+        profile.shake*=1.5;
+        this.dashStates.forEach(s=>{if(s)s.grip=false;});
+        this.hitRing.position.set(e.x,.06+(e.x*e.x+e.z*e.z)*.024,e.z);
+      }
       if (!this.reduced && profile.shake > this.shake * Math.exp(-this.shakeAge * 20)) {
         this.shake = profile.shake;
         this.shakeAge = 0;
@@ -389,6 +404,7 @@ export class Arena {
         const flare = this.impactFlashes.find(f => f.userData.life <= 0)
           ?? this.impactFlashes.reduce((a, b) => a.userData.life < b.userData.life ? a : b);
         flare.position.set(e.x, height, e.z);
+        (flare.material as THREE.SpriteMaterial).color.set(dashHit?"#d7faff":"#ffb044");
         flare.userData.life = flare.userData.totalLife = .065 + profile.tier * .025;
         flare.userData.size = .3 + profile.gain * .55;
       }
@@ -405,22 +421,23 @@ export class Arena {
             Math.sin(a) * speed,
           ),
           life, totalLife: life,
-          color: new THREE.Color(i % 3 ? "#ffbd60" : "#fff5d2"),
+          color: new THREE.Color(dashHit ? i%3 ? "#8eefff" : "#ffffff" : i % 3 ? "#ffbd60" : "#fff5d2"),
         });
       }
     }
     if (e.type === "dash" && (e.player===0||e.player===1)) {
       const old=this.dashStates[e.player];
-      if(old&&this.time-old.at<.12)return;
+      if(old&&this.time-old.at<.12)return false;
       const r=Math.max(.01,Math.hypot(e.x,e.z)),nx=e.x/r,nz=e.z/r;
       const grip=hasRail(e.x,e.z);
       // shortcut: 貼軌位置依現有齒軌與模型外緣近似，盤體尺寸改動時需同步校準。
       this.dashStates[e.player]={at:this.time,x:nx*3.84,z:nz*3.84,grip};
       this.trailPositions[e.player]=[];this.trailTimes[e.player]=[];
-      if(!grip)return;
+      if(!grip)return false;
       const x=nx*4.13,z=nz*4.13;
       if(!this.reduced) {
         const flare=this.impactFlashes.find(f=>f.userData.life<=0)??this.impactFlashes[0];
+        (flare.material as THREE.SpriteMaterial).color.set("#8eefff");
         flare.position.set(x,.51,z);flare.userData.life=flare.userData.totalLife=.10;flare.userData.size=.65;
       }
       const count=Math.min(360-this.particles.length,this.reduced?4:innerWidth<700?12:24);
@@ -429,9 +446,11 @@ export class Arena {
         this.particles.push({p:new THREE.Vector3(x,.51,z),v:this.reduced?new THREE.Vector3():new THREE.Vector3(-nx*(1+i%3)-nz*tangent,.8+(i%4)*.45,-nz*(1+i%3)+nx*tangent),life,totalLife:life,color:new THREE.Color(i%3?"#8eefff":"#fff6d9")});
       }
     }
+    return dashHit;
   }
   finish(b: Battle) {
     if (!b.result) return;
+    this.hitPlayback.reset();this.hitRing.visible=false;
     this.finished = b;
     this.dashStates=[null,null];this.dashRibbons.forEach(r=>r.visible=false);
     this.finishTime = this.time;
@@ -464,6 +483,10 @@ export class Arena {
     openingSeconds: number | null = null,
   ) {
     this.time += dt;
+    const hit=this.hitPlayback.sample(this.time,this.reduced);
+    this.hitRing.visible=!!battle&&!battle.result&&hit.shock>0;
+    this.hitRing.scale.setScalar(1+(1-hit.shock)*3.8);
+    (this.hitRing.material as THREE.MeshBasicMaterial).opacity=hit.shock*.65;
     const poses = battle?.tops.map((t, i) =>
       interpolatePose(previous[i] ?? t, t, alpha),
     );
@@ -513,6 +536,10 @@ export class Arena {
         3.4,
         look.z + Math.cos(az + 0.4) * range,
       );
+      if(!battle.result && hit.zoom>0) {
+        const factor=hitZoomFactor(base.distanceTo(look),range*1.03,hit.zoom);
+        base.sub(look).multiplyScalar(factor).add(look);
+      }
     }
     if (entry) {
       look.y += entry.height * 0.25;

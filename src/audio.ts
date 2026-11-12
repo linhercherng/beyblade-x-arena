@@ -31,7 +31,7 @@ export class Sound {
   private failed = new Set<MusicMode>();
   private offsets = new Map<MusicMode, number>();
   private strikes: AudioBuffer[] = [];
-  private impacts = new Set<AudioBufferSourceNode>();
+  private impacts = new Map<AudioBufferSourceNode,GainNode>();
   private lastImpact = -Infinity;
   private lastStrength = 0;
   private cueBuffers = new Map<Cue, AudioBuffer>();
@@ -99,7 +99,7 @@ export class Sound {
   }
   toggle() {
     this.muted = !this.muted;
-    if (this.muted) { this.stopCues(); this.stopDashes(); }
+    if (this.muted) { this.stopCues(); this.stopDashes(); this.stopImpacts(); }
     try {
       localStorage.setItem("spinforge-muted", String(this.muted));
     } catch {
@@ -204,32 +204,42 @@ export class Sound {
     osc.start();
     osc.stop(now + duration);
   }
-  event(e: BattleEvent) {
+  event(e: BattleEvent, dashHit=false) {
     if (e.type === "hit") {
       if (!this.ctx || !this.sfx || !this.musicDuck || this.muted) return;
       const now = this.ctx.currentTime;
-      if (this.impacts.size >= 6 || (now - this.lastImpact < .035 && e.strength <= this.lastStrength)) return;
+      // 為衝刺命中保留一聲部，普通擦撞的節流不應吞掉主撞擊聲。
+      if (this.impacts.size >= (dashHit?6:5) || (!dashHit && now - this.lastImpact < .035 && e.strength <= this.lastStrength)) return;
       this.lastImpact = now;
       this.lastStrength = e.strength;
-      const profile = impactProfile(e.strength);
+      const profile = impactProfile(dashHit ? Math.max(10,e.strength*1.35) : e.strength);
       const source = this.ctx.createBufferSource(), gain = this.ctx.createGain(), pan = this.ctx.createStereoPanner();
       source.buffer = this.strikes[profile.tier];
-      source.playbackRate.value = 1 + Math.sin(e.time * 17 + e.x) * .04;
-      gain.gain.value = profile.gain;
+      source.playbackRate.value = dashHit ? .8 : 1 + Math.sin(e.time * 17 + e.x) * .04;
+      gain.gain.value = profile.gain*(dashHit?1.1:1);
       pan.pan.value = Math.max(-.85, Math.min(.85, e.x / 5));
       source.connect(gain).connect(pan).connect(this.sfx);
-      this.impacts.add(source);
+      this.impacts.set(source,gain);
       source.onended = () => { source.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source); };
       source.start();
       const duck = this.musicDuck.gain;
       duck.cancelAndHoldAtTime(now);
-      duck.linearRampToValueAtTime(Math.min(duck.value, profile.duck), now + .004);
-      duck.setTargetAtTime(1, now + .08, .085);
+      duck.linearRampToValueAtTime(Math.min(duck.value, dashHit?.18:profile.duck), now + .004);
+      duck.setTargetAtTime(1, now + (dashHit?.15:.08), .085);
     }
     if (e.type === "dash") this.playDash(e);
     if (e.type === "shout") {
       this.tone(330, 0.25, "triangle", 0.6, 990);
     }
+  }
+  private stopImpacts() {
+    if(!this.ctx)return;
+    const now=this.ctx.currentTime;
+    for(const [source,gain] of this.impacts) {
+      gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);
+      source.stop(now+.015);
+    }
+    this.impacts.clear();
   }
   private stopDashes() {
     if(!this.ctx)return;
@@ -273,6 +283,7 @@ export class Sound {
   }
   private playCue(kind: Cue) {
     if (!this.ctx || !this.sfx || this.muted) return;
+    this.stopImpacts();
     this.stopDashes();
     this.stopCues();
     if (!this.cueBuffers.has(kind)) {
@@ -303,7 +314,7 @@ export class Sound {
     mode: MusicMode | null,
   ) {
     if (!this.ctx) return;
-    if(mode===null||mode==="menu")this.stopDashes();
+    if(mode===null||mode==="menu") { this.stopDashes();this.stopImpacts(); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)
       this.music?.gain.setTargetAtTime(musicLevel(this.volume, mode), this.ctx.currentTime, .06);
