@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { createStadium } from "./stadium.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
@@ -10,11 +11,8 @@ import {
   damping,
   type TopPose,
 } from "./motion.ts";
-import { type Battle, type BattleEvent, RADIUS } from "./physics.ts";
+import { type Battle, type BattleEvent } from "./physics.ts";
 
-function metal(color: THREE.ColorRepresentation, roughness = 0.28) {
-  return new THREE.MeshStandardMaterial({ color, metalness: 0.78, roughness });
-}
 function mesh(g: THREE.BufferGeometry, m: THREE.Material, x = 0, y = 0, z = 0) {
   const o = new THREE.Mesh(g, m);
   o.position.set(x, y, z);
@@ -72,7 +70,7 @@ export class Arena {
   cameraBase = new THREE.Vector3();
   cameraTarget = new THREE.Vector3();
   landingRings: THREE.Mesh[] = [];
-  stadium = new THREE.Group();
+  stadium = createStadium();
   models: THREE.Group[] = [];
   host: HTMLElement | null = null;
   mode: "home" | "battle" | "inspect" = "home";
@@ -118,10 +116,11 @@ export class Arena {
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.45;
+    this.renderer.toneMappingExposure = 1.15;
     const room = new RoomEnvironment(),
       pmrem = new THREE.PMREMGenerator(this.renderer);
     this.scene.environment = pmrem.fromScene(room, 0.06).texture;
+    this.scene.environmentIntensity = 0.7;
     room.dispose();
     pmrem.dispose();
     this.renderer.shadowMap.enabled = innerWidth > 700;
@@ -131,8 +130,8 @@ export class Arena {
       "原創立體陀螺競技場，可拖曳旋轉視角",
     );
     this.renderer.domElement.setAttribute("role", "img");
-    this.scene.add(new THREE.HemisphereLight("#dcecff", "#1a2636", 3));
-    const key = new THREE.DirectionalLight("#d8f3ff", 4);
+    this.scene.add(new THREE.HemisphereLight("#dcecff", "#1a2636", 1.6));
+    const key = new THREE.DirectionalLight("#d8f3ff", 3);
     key.position.set(3, 9, 5);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
@@ -147,7 +146,6 @@ export class Arena {
     const blue = new THREE.PointLight("#428cff", 24, 18);
     blue.position.set(4, 4, -3);
     this.scene.add(blue);
-    this.makeStadium();
     this.scene.add(this.stadium);
     this.beam.visible = false;
     this.scene.add(this.beam);
@@ -231,111 +229,6 @@ export class Arena {
       () => (this.dragging = false),
     );
     this.setBeys([BEYS[0], BEYS[11]]);
-  }
-  makeStadium() {
-    const floor = mesh(
-      new THREE.CylinderGeometry(5.5, 5.7, 0.32, 12),
-      metal("#111c29"),
-      0,
-      -0.6,
-    );
-    this.stadium.add(floor);
-    const bevel = mesh(
-      new THREE.CylinderGeometry(5.25, 5.5, 0.13, 12),
-      metal("#283443"),
-      0,
-      -0.37,
-    );
-    this.stadium.add(bevel);
-    const points = [];
-    for (let i = 0; i <= 40; i++) {
-      const r = (i / 40) * RADIUS;
-      points.push(new THREE.Vector2(r, r * r * 0.024 - 0.03));
-    }
-    const bowl = mesh(
-      new THREE.LatheGeometry(points, 96),
-      new THREE.MeshPhysicalMaterial({
-        color: "#647c8e",
-        metalness: 0.38,
-        roughness: 0.27,
-        transparent: true,
-        opacity: 0.42,
-        side: THREE.DoubleSide,
-      }),
-    );
-    bowl.receiveShadow = true;
-    this.stadium.add(bowl);
-    const lower = mesh(
-      new THREE.CylinderGeometry(4.18, 4.18, 0.04, 96),
-      metal("#172838", 0.65),
-      0,
-      -0.08,
-    );
-    this.stadium.add(lower);
-    for (const r of [1.3, 2.5, 3.5, 4.25]) {
-      const o = ring(r, 0.012, r === 4.25 ? "#caff53" : "#425a6b");
-      o.position.y = r * r * 0.024;
-      this.stadium.add(o);
-    }
-    for (let i = 0; i < 100; i++) {
-      const a = (i / 100) * Math.PI * 2;
-      const rail = mesh(
-        new THREE.BoxGeometry(0.035, 0.09, 0.14),
-        metal(i % 5 === 0 ? "#dcff6c" : "#65873c"),
-        Math.cos(a) * 4.17,
-        0.48,
-        Math.sin(a) * 4.17,
-      );
-      rail.rotation.y = -a;
-      this.stadium.add(rail);
-    }
-    for (let i = 0; i < 32; i++) {
-      const a = (i / 32) * Math.PI * 2;
-      if (Math.abs(Math.sin(a)) < 0.15 || Math.abs(a - Math.PI / 2) < 0.2)
-        continue;
-      const wall = mesh(
-        new THREE.BoxGeometry(0.7, 0.38, 0.13),
-        metal("#405366"),
-        Math.cos(a) * 4.45,
-        0.52,
-        Math.sin(a) * 4.45,
-      );
-      wall.rotation.y = -a + Math.PI / 2;
-      this.stadium.add(wall);
-    }
-    for (const [x, z, extreme] of [
-      [-4.8, 0, false],
-      [4.8, 0, false],
-      [0, 4.85, true],
-    ] as const) {
-      const pocket = mesh(
-        new THREE.BoxGeometry(extreme ? 1.6 : 1.25, 0.12, extreme ? 1.4 : 1.2),
-        metal("#652c32"),
-        x,
-        0.12,
-        z,
-      );
-      this.stadium.add(pocket);
-      const marker = mesh(
-        new THREE.BoxGeometry(extreme ? 1.5 : 0.1, 0.045, extreme ? 0.1 : 1.2),
-        new THREE.MeshBasicMaterial({ color: extreme ? "#ff654d" : "#fba76a" }),
-        x,
-        0.2,
-        z,
-      );
-      this.stadium.add(marker);
-    }
-    for (const sign of [-1, 1]) {
-      const cross = mesh(
-        new THREE.BoxGeometry(0.08, 0.018, 0.9),
-        metal("#8caaac"),
-        0,
-        0.015,
-        0,
-      );
-      cross.rotation.y = sign * 0.7;
-      this.stadium.add(cross);
-    }
   }
   attach(host: HTMLElement, mode: "home" | "battle" | "inspect" = "home") {
     if (this.host) this.observer.unobserve(this.host);
@@ -492,7 +385,7 @@ export class Arena {
     }
     const look = this.cameraTarget.set(0, inspecting ? 0.25 : 0, 0);
     if (battle && !this.closeUp)
-      base.multiplyScalar(Math.max(1, 0.95 / this.camera.aspect));
+      base.multiplyScalar(Math.max(1, 1.1 / this.camera.aspect));
     if (battle && this.closeUp) {
       const [a, b] = poses!,
         distance = Math.hypot(a.x - b.x, a.z - b.z);

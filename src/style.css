@@ -3219,3 +3219,17 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
   .fighter-identity em {font-size:8px}
   .arena-view .remaining-lineup {display:none}
 }
+.music-controls { position: relative; font-size: 12px; }
+.music-controls summary { cursor: pointer; color: var(--muted); list-style: none; white-space: nowrap; padding: 8px 2px; }
+.music-controls summary::-webkit-details-marker { display: none; }
+.music-controls summary:focus-visible { outline: 2px solid #caff53; outline-offset: 3px; }
+.music-controls[open] summary { color: #caff53; }
+.music-controls > div { position: absolute; right: 0; top: 36px; width: 220px; padding: 18px; border: 1px solid #35434f; background: #111d29; box-shadow: 0 12px 32px #0008; z-index: 30; }
+.music-controls label { display: flex; justify-content: space-between; color: #e4ebef; }
+.music-controls input { width: 100%; margin: 16px 0 12px; accent-color: #caff53; cursor: pointer; }
+.music-controls small { color: #99aab9; line-height: 1.8; }
+@media (max-width: 600px) {
+  .top-actions { gap: 9px; }
+  .top-actions .local-badge { display: none; }
+  .music-controls { font-size: 11px; }
+}

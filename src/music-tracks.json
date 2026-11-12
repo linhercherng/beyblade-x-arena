@@ -1,0 +1,34 @@
+{
+  "menu": {
+    "src": "/audio/menu.mp3",
+    "title": "靜電工坊",
+    "bpm": 112,
+    "duration": 68.57142857142857,
+    "loop": true,
+    "credit": "SPINFORGE 原創合成配樂；程式作曲、合成與混音，未使用第三方錄音或旋律樣本。"
+  },
+  "battle": {
+    "src": "/audio/battle.mp3",
+    "title": "鋼翼交鋒",
+    "bpm": 144,
+    "duration": 53.333333333333336,
+    "loop": true,
+    "credit": "SPINFORGE 原創合成配樂；程式作曲、合成與混音，未使用第三方錄音或旋律樣本。"
+  },
+  "clutch": {
+    "src": "/audio/clutch.mp3",
+    "title": "最後一擊",
+    "bpm": 144,
+    "duration": 26.666666666666668,
+    "loop": true,
+    "credit": "SPINFORGE 原創合成配樂；程式作曲、合成與混音，未使用第三方錄音或旋律樣本。"
+  },
+  "results": {
+    "src": "/audio/results.mp3",
+    "title": "餘光凱歌",
+    "bpm": 104,
+    "duration": 36.92308390022676,
+    "loop": true,
+    "credit": "SPINFORGE 原創合成配樂；程式作曲、合成與混音，未使用第三方錄音或旋律樣本。"
+  }
+}
