@@ -1,0 +1,1277 @@
+{
+  "bx-01-dran-sword": {
+    "bladeThickness": 0.1,
+    "coreRadius": 0.18,
+    "coreRise": 0.018,
+    "shoulderDrop": 0.024,
+    "tipRadius": 0.085,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx01.html",
+    "confidence": "photo-approximation",
+    "note": "三個細長金屬上擊肩，藍色中環較窄。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-02-hells-scythe": {
+    "bladeThickness": 0.094,
+    "coreRadius": 0.205,
+    "coreRise": 0.014,
+    "shoulderDrop": 0.018,
+    "tipRadius": 0.084,
+    "gearRadius": 0.083,
+    "features": [
+      "four-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx02.html",
+    "confidence": "photo-approximation",
+    "note": "四向寬金屬肩，圓形中環佔比高。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-03-wizard-arrow": {
+    "bladeThickness": 0.09,
+    "coreRadius": 0.205,
+    "coreRise": 0.021,
+    "shoulderDrop": 0.016,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "recessed-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx03.html",
+    "confidence": "photo-approximation",
+    "note": "三片狹長外弧，中央塑膠隆起。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-04-knight-shield": {
+    "bladeThickness": 0.112,
+    "coreRadius": 0.185,
+    "coreRise": 0.016,
+    "shoulderDrop": 0.032,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "shield",
+      "four-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx04.html",
+    "confidence": "photo-approximation",
+    "note": "較高的四面護盾肩與內凹綠色核心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-13-knight-lance": {
+    "bladeThickness": 0.122,
+    "coreRadius": 0.17,
+    "coreRise": 0.02,
+    "shoulderDrop": 0.036,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "lance",
+      "three-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx13.html",
+    "confidence": "photo-approximation",
+    "note": "三向尖肩與較厚的外沿。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-14-shark-edge": {
+    "bladeThickness": 0.123,
+    "coreRadius": 0.175,
+    "coreRise": 0.015,
+    "shoulderDrop": 0.036,
+    "tipRadius": 0.08,
+    "gearRadius": 0.083,
+    "features": [
+      "claw",
+      "three-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx14.html",
+    "confidence": "family-approximation",
+    "note": "俯視可見三個外伸大爪；無此組合斜視，以同類攻擊肩厚度近似。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-15-leon-claw": {
+    "bladeThickness": 0.098,
+    "coreRadius": 0.195,
+    "coreRise": 0.014,
+    "shoulderDrop": 0.027,
+    "tipRadius": 0.082,
+    "gearRadius": 0.083,
+    "features": [
+      "claw",
+      "five-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx15.html",
+    "confidence": "photo-approximation",
+    "note": "五向爪刃，中央黑色基座外露。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-16-viper-tail": {
+    "bladeThickness": 0.115,
+    "coreRadius": 0.185,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.033,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx16.html",
+    "confidence": "photo-approximation",
+    "note": "三個下切角與下層塑膠裙邊。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-19-rhino-horn": {
+    "bladeThickness": 0.122,
+    "coreRadius": 0.155,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "compact",
+      "horn"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx19.html",
+    "confidence": "photo-approximation",
+    "note": "小直徑、厚實的凸角肩與較小中心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-20-dran-dagger": {
+    "bladeThickness": 0.106,
+    "coreRadius": 0.18,
+    "coreRise": 0.017,
+    "shoulderDrop": 0.025,
+    "tipRadius": 0.058,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "double-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx20.html",
+    "confidence": "photo-approximation",
+    "note": "三組雙層短刀肩，邊緣比Sword更寬。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-21-hells-chain": {
+    "bladeThickness": 0.118,
+    "coreRadius": 0.19,
+    "coreRise": 0.018,
+    "shoulderDrop": 0.031,
+    "tipRadius": 0.084,
+    "gearRadius": 0.083,
+    "features": [
+      "chain",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx21.html",
+    "confidence": "photo-approximation",
+    "note": "周向肩塊連接成高低交錯的鏈環。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-23-phoenix-wing": {
+    "bladeThickness": 0.136,
+    "coreRadius": 0.19,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.037,
+    "tipRadius": 0.083,
+    "gearRadius": 0.11,
+    "features": [
+      "three-wing",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx23.html",
+    "confidence": "photo-approximation",
+    "note": "紅金屬三大片厚翼，底部有金橘塑膠內架。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-24-wyvern-gale": {
+    "bladeThickness": 0.1,
+    "coreRadius": 0.195,
+    "coreRise": 0.018,
+    "shoulderDrop": 0.023,
+    "tipRadius": 0.064,
+    "gearRadius": 0.11,
+    "features": [
+      "four-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx24.html",
+    "confidence": "family-approximation",
+    "note": "四個弧形翼口；無單品斜視，厚度以近似同系肩部處理。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-26-unicorn-sting": {
+    "bladeThickness": 0.108,
+    "coreRadius": 0.185,
+    "coreRise": 0.02,
+    "shoulderDrop": 0.032,
+    "tipRadius": 0.082,
+    "gearRadius": 0.11,
+    "features": [
+      "asymmetric",
+      "dual-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx26.html",
+    "confidence": "photo-approximation",
+    "note": "尖刺側與圓弧側輪廓不對稱。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-27-sphinx-cowl": {
+    "bladeThickness": 0.151,
+    "coreRadius": 0.195,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.048,
+    "gearRadius": 0.11,
+    "features": [
+      "thick-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx27.html",
+    "confidence": "photo-approximation",
+    "note": "斜視可見大面積厚金屬側壁和深色下裙。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-31-tyranno-beat": {
+    "bladeThickness": 0.139,
+    "coreRadius": 0.18,
+    "coreRise": 0.019,
+    "shoulderDrop": 0.039,
+    "tipRadius": 0.09,
+    "gearRadius": 0.083,
+    "features": [
+      "claw",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx31.html",
+    "confidence": "family-approximation",
+    "note": "俯視有寬大的斜角撞擊肩；缺指定單品斜視，厚度屬同類近似。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-33-weiss-tiger": {
+    "bladeThickness": 0.106,
+    "coreRadius": 0.175,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.029,
+    "tipRadius": 0.082,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx33.html",
+    "confidence": "photo-approximation",
+    "note": "三向細長折角肩，灰色中環外露較少。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-34-cobalt-dragoon": {
+    "bladeThickness": 0.126,
+    "coreRadius": 0.18,
+    "coreRise": 0.026,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.083,
+    "gearRadius": 0.083,
+    "features": [
+      "two-wing",
+      "left-spin"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx34.html",
+    "confidence": "photo-approximation",
+    "note": "左旋兩大片外翼與明顯中央環。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-35-black-shell": {
+    "bladeThickness": 0.115,
+    "coreRadius": 0.195,
+    "coreRise": 0.013,
+    "shoulderDrop": 0.036,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "four-wing",
+      "shield"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx35.html",
+    "confidence": "photo-approximation",
+    "note": "四組寬角防護塊與低平中央。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-36-whale-wave": {
+    "bladeThickness": 0.166,
+    "coreRadius": 0.195,
+    "coreRise": 0.02,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.105,
+    "gearRadius": 0.083,
+    "features": [
+      "thick-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx36.html",
+    "confidence": "photo-approximation",
+    "note": "斜視有特別厚的金屬上層及明顯下層藍色盤。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-37-bear-scratch": {
+    "bladeThickness": 0.108,
+    "coreRadius": 0.195,
+    "coreRise": 0.015,
+    "shoulderDrop": 0.029,
+    "tipRadius": 0.085,
+    "gearRadius": 0.083,
+    "features": [
+      "claw",
+      "four-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx37.html",
+    "confidence": "photo-approximation",
+    "note": "四組短爪凸角，外沿有凹槽。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-38-crimson-garuda": {
+    "bladeThickness": 0.113,
+    "coreRadius": 0.18,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.032,
+    "tipRadius": 0.082,
+    "gearRadius": 0.083,
+    "features": [
+      "two-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx38.html",
+    "confidence": "photo-approximation",
+    "note": "雙向斜長翼肩，紅色內環高於凹面。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-39-shelter-drake": {
+    "bladeThickness": 0.136,
+    "coreRadius": 0.205,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.039,
+    "tipRadius": 0.082,
+    "gearRadius": 0.11,
+    "features": [
+      "shield",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx39.html",
+    "confidence": "photo-approximation",
+    "note": "大塊寬厚金屬防護肩，核心較高。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-44-tricera-press": {
+    "bladeThickness": 0.151,
+    "coreRadius": 0.185,
+    "coreRise": 0.023,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.055,
+    "gearRadius": 0.083,
+    "features": [
+      "horn",
+      "thick-wing",
+      "bound-spike"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx44.html",
+    "confidence": "photo-approximation",
+    "note": "三個突出的厚重肩塊，整體側面高。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-45-samurai-calibur": {
+    "bladeThickness": 0.116,
+    "coreRadius": 0.19,
+    "coreRise": 0.021,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.082,
+    "gearRadius": 0.083,
+    "features": [
+      "two-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx45.html",
+    "confidence": "photo-approximation",
+    "note": "雙向折刃與凹入核心，外圈局部較厚。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-46-cobalt-drake": {
+    "bladeThickness": 0.142,
+    "coreRadius": 0.175,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.039,
+    "tipRadius": 0.058,
+    "gearRadius": 0.083,
+    "features": [
+      "four-wing",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx46.html",
+    "confidence": "photo-approximation",
+    "note": "紅金屬四個寬翼，中央青色塑膠較緊湊。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-46-goat-tackle": {
+    "bladeThickness": 0.131,
+    "coreRadius": 0.185,
+    "coreRise": 0.019,
+    "shoulderDrop": 0.038,
+    "tipRadius": 0.084,
+    "gearRadius": 0.083,
+    "features": [
+      "horn",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx46.html",
+    "confidence": "photo-approximation",
+    "note": "四向厚突肩與凸起紫色核心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-48-mammoth-tusk": {
+    "bladeThickness": 0.132,
+    "coreRadius": 0.18,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.038,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "tusk",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx48.html",
+    "confidence": "photo-approximation",
+    "note": "黑色外肩帶突牙，中心橘色高層。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-49-dran-strike": {
+    "bladeThickness": 0.129,
+    "coreRadius": 0.18,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.037,
+    "tipRadius": 0.083,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx49.html",
+    "confidence": "photo-approximation",
+    "note": "三組厚外伸刃肩，中央藍色鎖定層清楚。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-50-heavens-ring": {
+    "bladeThickness": 0.108,
+    "coreRadius": 0.225,
+    "coreRise": 0.01,
+    "shoulderDrop": 0.023,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "disc",
+      "recessed-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
+    "confidence": "photo-approximation",
+    "note": "大面積連續外環與低平中央盤。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-52-luster-dragoon": {
+    "bladeThickness": 0.124,
+    "coreRadius": 0.185,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.083,
+    "gearRadius": 0.083,
+    "features": [
+      "two-wing",
+      "left-spin"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx52.html",
+    "confidence": "photo-approximation",
+    "note": "左旋兩大片折翼，紫色內圈環繞晶片。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-54-sieg-superion": {
+    "bladeThickness": 0.115,
+    "coreRadius": 0.18,
+    "coreRise": 0.027,
+    "shoulderDrop": 0.032,
+    "tipRadius": 0.082,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx54.html",
+    "confidence": "photo-approximation",
+    "note": "三角向肩與明顯金色高核心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-01-dran-buster": {
+    "bladeThickness": 0.148,
+    "coreRadius": 0.165,
+    "coreRise": 0.03,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.095,
+    "gearRadius": 0.083,
+    "features": [
+      "single-strike",
+      "asymmetric",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux01.html",
+    "confidence": "photo-approximation",
+    "note": "單一特別長的大擊刃，核心偏緊；不可改為均勻三刃外形。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-02-hells-hammer": {
+    "bladeThickness": 0.129,
+    "coreRadius": 0.19,
+    "coreRise": 0.028,
+    "shoulderDrop": 0.036,
+    "tipRadius": 0.083,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "hammer"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux02.html",
+    "confidence": "photo-approximation",
+    "note": "三塊厚錘面，橘色核心高低差明顯。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-03-wizard-rod": {
+    "bladeThickness": 0.102,
+    "coreRadius": 0.225,
+    "coreRise": 0.035,
+    "shoulderDrop": 0.017,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "disc",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux03.html",
+    "confidence": "photo-approximation",
+    "note": "圓周大盤較薄，中心黃色結構高起。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-05-shinobi-shadow": {
+    "bladeThickness": 0.091,
+    "coreRadius": 0.205,
+    "coreRise": 0.014,
+    "shoulderDrop": 0.018,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "disc",
+      "recessed-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux05.html",
+    "confidence": "photo-approximation",
+    "note": "薄圓盤式外沿、低平三向中心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-06-leon-crest": {
+    "bladeThickness": 0.142,
+    "coreRadius": 0.18,
+    "coreRise": 0.03,
+    "shoulderDrop": 0.039,
+    "tipRadius": 0.048,
+    "gearRadius": 0.11,
+    "features": [
+      "claw",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux06.html",
+    "confidence": "photo-approximation",
+    "note": "多層外伸爪肩，黑色內架在肩間外露。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-07-phoenix-rudder": {
+    "bladeThickness": 0.118,
+    "coreRadius": 0.21,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.029,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux07.html",
+    "confidence": "photo-approximation",
+    "note": "三向大外環與較寬的紅色中央盤。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-08-silver-wolf": {
+    "bladeThickness": 0.137,
+    "coreRadius": 0.19,
+    "coreRise": 0.023,
+    "shoulderDrop": 0.036,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "free-ring",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux08.html",
+    "confidence": "photo-approximation",
+    "note": "下方獨立自由環與三組高低層外肩。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-09-samurai-saber": {
+    "bladeThickness": 0.118,
+    "coreRadius": 0.17,
+    "coreRise": 0.021,
+    "shoulderDrop": 0.037,
+    "tipRadius": 0.105,
+    "gearRadius": 0.083,
+    "features": [
+      "two-wing",
+      "asymmetric"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux09.html",
+    "confidence": "photo-approximation",
+    "note": "雙向長刃，兩側外沿不等寬。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-10-knight-mail": {
+    "bladeThickness": 0.147,
+    "coreRadius": 0.195,
+    "coreRise": 0.023,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.055,
+    "gearRadius": 0.083,
+    "features": [
+      "shield",
+      "thick-wing",
+      "bound-spike"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux10.html",
+    "confidence": "photo-approximation",
+    "note": "三大寬盾肩與深的金屬側壁。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-10-ptera-swing": {
+    "bladeThickness": 0.111,
+    "coreRadius": 0.18,
+    "coreRise": 0.02,
+    "shoulderDrop": 0.03,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "two-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux10.html",
+    "confidence": "family-approximation",
+    "note": "寬翼形上刃；缺此單品斜視，側面採近似。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-11-impact-drake": {
+    "bladeThickness": 0.153,
+    "coreRadius": 0.18,
+    "coreRise": 0.027,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.058,
+    "gearRadius": 0.083,
+    "features": [
+      "rubber-blade",
+      "three-wing",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux11.html",
+    "confidence": "photo-approximation",
+    "note": "三組大撞擊肩與紅色橡膠接觸區，核心比外肩低。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-12-ghost-circle": {
+    "bladeThickness": 0.083,
+    "coreRadius": 0.215,
+    "coreRise": 0.012,
+    "shoulderDrop": 0.015,
+    "tipRadius": 0.064,
+    "gearRadius": 0.11,
+    "features": [
+      "disc",
+      "recessed-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux12.html",
+    "confidence": "photo-approximation",
+    "note": "非常平滑的薄圓盤外沿，凹入中央。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-13-golem-rock": {
+    "bladeThickness": 0.148,
+    "coreRadius": 0.17,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "rock",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux13.html",
+    "confidence": "photo-approximation",
+    "note": "三塊厚大岩塊肩與高側壁。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-14-scorpio-spear": {
+    "bladeThickness": 0.126,
+    "coreRadius": 0.18,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.09,
+    "gearRadius": 0.112,
+    "features": [
+      "spear",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux14.html",
+    "confidence": "photo-approximation",
+    "note": "三向槍肩、中央橘色結構隆起。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-15-shark-scale": {
+    "bladeThickness": 0.16,
+    "coreRadius": 0.175,
+    "coreRise": 0.021,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.092,
+    "gearRadius": 0.083,
+    "features": [
+      "claw",
+      "three-wing",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux15.html",
+    "confidence": "photo-approximation",
+    "note": "三個特厚外伸爪肩與大面積金屬壁。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-15-tyranno-roar": {
+    "bladeThickness": 0.139,
+    "coreRadius": 0.18,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.037,
+    "tipRadius": 0.105,
+    "gearRadius": 0.083,
+    "features": [
+      "claw",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux15.html",
+    "confidence": "photo-approximation",
+    "note": "三組外伸短爪，肩部有明顯兩層。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-16-clock-mirage": {
+    "bladeThickness": 0.118,
+    "coreRadius": 0.23,
+    "coreRise": 0.012,
+    "shoulderDrop": 0.024,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "disc",
+      "serrated-skirt"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux16.html",
+    "confidence": "photo-approximation",
+    "note": "寬且平的中央盤、外周密集齒紋裙邊。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-17-meteor-dragoon": {
+    "bladeThickness": 0.133,
+    "coreRadius": 0.18,
+    "coreRise": 0.028,
+    "shoulderDrop": 0.038,
+    "tipRadius": 0.055,
+    "gearRadius": 0.112,
+    "features": [
+      "two-wing",
+      "left-spin",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux17.html",
+    "confidence": "photo-approximation",
+    "note": "兩塊寬厚的白色外翼，紅色核心較高。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-18-mummy-curse": {
+    "bladeThickness": 0.114,
+    "coreRadius": 0.175,
+    "coreRise": 0.02,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.074,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "claw"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux18.html",
+    "confidence": "photo-approximation",
+    "note": "三塊內彎的凸肩與緊湊核心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-19-bullet-griffon": {
+    "bladeThickness": 0.168,
+    "coreRadius": 0.205,
+    "coreRise": 0.032,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.083,
+    "gearRadius": 0.083,
+    "features": [
+      "integrated-blade",
+      "thick-wing",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux19.html",
+    "confidence": "photo-approximation",
+    "note": "戰刃／棘輪連成較高的兩層本體，紅色頂部高起。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-20-glory-valkyrie": {
+    "bladeThickness": 0.163,
+    "coreRadius": 0.19,
+    "coreRise": 0.032,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.08,
+    "gearRadius": 0.083,
+    "features": [
+      "integrated-blade",
+      "three-wing",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux20.html",
+    "confidence": "photo-approximation",
+    "note": "一體式厚本體與高白色核心，底部另接LF。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-21-hells-nether": {
+    "bladeThickness": 0.159,
+    "coreRadius": 0.21,
+    "coreRise": 0.031,
+    "shoulderDrop": 0.039,
+    "tipRadius": 0.09,
+    "gearRadius": 0.112,
+    "features": [
+      "integrated-blade",
+      "disc",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux21.html",
+    "confidence": "photo-approximation",
+    "note": "寬橘色中心盤與厚的外緣及一體式下層。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-21-wyvern-hover": {
+    "bladeThickness": 0.127,
+    "coreRadius": 0.195,
+    "coreRise": 0.02,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "four-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux21.html",
+    "confidence": "photo-approximation",
+    "note": "四組外伸肩及較高下裙。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-53-aero-pegasus": {
+    "bladeThickness": 0.143,
+    "coreRadius": 0.18,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.039,
+    "tipRadius": 0.095,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx53.html",
+    "confidence": "photo-approximation",
+    "note": "三組厚長翼肩，青色金屬外壁。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-01-dran-brave-slash": {
+    "bladeThickness": 0.125,
+    "coreRadius": 0.175,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.083,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx01.html",
+    "confidence": "photo-approximation",
+    "note": "晶片、塑膠主刃與金屬外肩層次清楚。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-02-wizard-arc-round": {
+    "bladeThickness": 0.105,
+    "coreRadius": 0.21,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.02,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "disc"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx02.html",
+    "confidence": "photo-approximation",
+    "note": "圓弧外肩連接成薄盤，黃色中央層稍高。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-03-perseus-dark-bumper": {
+    "bladeThickness": 0.136,
+    "coreRadius": 0.18,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.038,
+    "tipRadius": 0.074,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "shield",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx03.html",
+    "confidence": "photo-approximation",
+    "note": "三組寬護盾肩，深色塑膠底層佔比高。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-05-hells-reaper-turn": {
+    "bladeThickness": 0.133,
+    "coreRadius": 0.195,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.037,
+    "tipRadius": 0.105,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "two-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html",
+    "confidence": "photo-approximation",
+    "note": "兩組寬刃與紅色輔助刃下層。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-05-rhino-reaper-charge": {
+    "bladeThickness": 0.133,
+    "coreRadius": 0.195,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.037,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "two-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html",
+    "confidence": "family-approximation",
+    "note": "同Reaper主刃層寬肩；無此完整組合斜視，層高採Reaper近似。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-05-hells-arc-turn": {
+    "bladeThickness": 0.105,
+    "coreRadius": 0.21,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.02,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "disc"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html",
+    "confidence": "family-approximation",
+    "note": "沿用Arc主刃的圓弧低平肩，缺此完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-06-fox-brush-jaggy": {
+    "bladeThickness": 0.121,
+    "coreRadius": 0.175,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.083,
+    "gearRadius": 0.11,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "claw"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx06.html",
+    "confidence": "photo-approximation",
+    "note": "三個斜長爪肩與較窄核心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-07-pegasus-blast-assault": {
+    "bladeThickness": 0.138,
+    "coreRadius": 0.195,
+    "coreRise": 0.028,
+    "shoulderDrop": 0.039,
+    "tipRadius": 0.105,
+    "gearRadius": 0.19,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "integrated-bit"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx07.html",
+    "confidence": "photo-approximation",
+    "note": "外翼與白色下層交錯，下方接大體積一體式軸心。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-08-cerberus-flame-wheel": {
+    "bladeThickness": 0.127,
+    "coreRadius": 0.195,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html",
+    "confidence": "photo-approximation",
+    "note": "三組紅色外肩，下層黑色輔助環清楚外露。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-08-whale-flame-massive": {
+    "bladeThickness": 0.127,
+    "coreRadius": 0.195,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.084,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html",
+    "confidence": "family-approximation",
+    "note": "同Flame主刃的三肩層次，無此完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-08-cerberus-dark-wheel": {
+    "bladeThickness": 0.136,
+    "coreRadius": 0.18,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.038,
+    "tipRadius": 0.085,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "shield",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html",
+    "confidence": "family-approximation",
+    "note": "同Dark主刃寬護盾肩，無此完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-09-sol-eclipse-dual": {
+    "bladeThickness": 0.132,
+    "coreRadius": 0.195,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.036,
+    "tipRadius": 0.105,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "dual-face",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx09.html",
+    "confidence": "photo-approximation",
+    "note": "藍面為預設，外緣有高低交錯肩，紅／藍為雙面模式。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-10-wolf-hunt-free": {
+    "bladeThickness": 0.111,
+    "coreRadius": 0.185,
+    "coreRise": 0.021,
+    "shoulderDrop": 0.026,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "disc"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx10.html",
+    "confidence": "photo-approximation",
+    "note": "圓形外肩內有多組削口，下層輔助環獨立；不僅依名稱推定轉動機構。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-11-emperor-might-heavy": {
+    "bladeThickness": 0.154,
+    "coreRadius": 0.18,
+    "coreRise": 0.03,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.105,
+    "gearRadius": 0.19,
+    "features": [
+      "cx-layered",
+      "thick-wing",
+      "integrated-bit"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx11.html",
+    "confidence": "photo-approximation",
+    "note": "四組厚金色肩塊，下方接Op一體式粗環。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-12-phoenix-flare-zillion": {
+    "bladeThickness": 0.134,
+    "coreRadius": 0.18,
+    "coreRise": 0.029,
+    "shoulderDrop": 0.036,
+    "tipRadius": 0.074,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx12.html",
+    "confidence": "photo-approximation",
+    "note": "三組長紅翼、黑色主刃夾層。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-13-bahamut-blitz-break-knuckle": {
+    "bladeThickness": 0.147,
+    "coreRadius": 0.175,
+    "coreRise": 0.026,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.1,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "claw",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx13.html",
+    "confidence": "photo-approximation",
+    "note": "粉紅框與多組寬厚金屬爪，外緣分層高。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-14-knight-fortress-guard-vertical": {
+    "bladeThickness": 0.151,
+    "coreRadius": 0.19,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.048,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "shield",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx14.html",
+    "confidence": "photo-approximation",
+    "note": "三片特厚護盾肩，綠色外框與金色內架。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-15-ragna-rage-flow-erase": {
+    "bladeThickness": 0.122,
+    "coreRadius": 0.195,
+    "coreRise": 0.028,
+    "shoulderDrop": 0.03,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "raised-core"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx15.html",
+    "confidence": "photo-approximation",
+    "note": "三向下切外肩，橘色核心相對高起。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-17-unicorn-delta-peak-odd": {
+    "bladeThickness": 0.118,
+    "coreRadius": 0.19,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.031,
+    "tipRadius": 0.082,
+    "gearRadius": 0.11,
+    "features": [
+      "cx-layered",
+      "asymmetric",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx17.html",
+    "confidence": "photo-approximation",
+    "note": "偏斜尖肩與不等寬外弧，紫色核心低於外緣。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-18-brachio-whip-outer-wheel": {
+    "bladeThickness": 0.108,
+    "coreRadius": 0.225,
+    "coreRise": 0.015,
+    "shoulderDrop": 0.022,
+    "tipRadius": 0.042,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "disc"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx18.html",
+    "confidence": "photo-approximation",
+    "note": "寬圓盤與薄外緣，中央面低平。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-19-croco-tread-tough-quell": {
+    "bladeThickness": 0.14,
+    "coreRadius": 0.19,
+    "coreRise": 0.022,
+    "shoulderDrop": 0.038,
+    "tipRadius": 0.048,
+    "gearRadius": 0.11,
+    "features": [
+      "cx-layered",
+      "serrated-skirt",
+      "thick-wing"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx19.html",
+    "confidence": "photo-approximation",
+    "note": "密集外沿削口與厚金色肩，下層綠環。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "cx-20-phoenix-force-weight-heavy": {
+    "bladeThickness": 0.158,
+    "coreRadius": 0.19,
+    "coreRise": 0.03,
+    "shoulderDrop": 0.04,
+    "tipRadius": 0.084,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "thick-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html",
+    "confidence": "photo-approximation",
+    "note": "厚銀色上肩與大面積紅色下層，斜視可見深側壁。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-15-hells-brave-jaggy": {
+    "bladeThickness": 0.125,
+    "coreRadius": 0.175,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.083,
+    "gearRadius": 0.11,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux15.html",
+    "confidence": "photo-approximation",
+    "note": "沿用Brave金屬肩，藍紫塑膠主刃與不同輔助刃。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-18-pegasus-brush-massive": {
+    "bladeThickness": 0.121,
+    "coreRadius": 0.175,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.034,
+    "tipRadius": 0.074,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "claw"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux18.html",
+    "confidence": "family-approximation",
+    "note": "同Brush三斜爪肩；無完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "ux-18-sol-brave-charge": {
+    "bladeThickness": 0.125,
+    "coreRadius": 0.175,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.082,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "swept-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux18.html",
+    "confidence": "family-approximation",
+    "note": "同Brave三向金屬肩，無完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-50-wolf-flame-dual": {
+    "bladeThickness": 0.127,
+    "coreRadius": 0.195,
+    "coreRise": 0.024,
+    "shoulderDrop": 0.035,
+    "tipRadius": 0.105,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "three-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
+    "confidence": "family-approximation",
+    "note": "同Flame三組寬肩，無完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  },
+  "bx-50-cerberus-reaper-bumper": {
+    "bladeThickness": 0.133,
+    "coreRadius": 0.195,
+    "coreRise": 0.025,
+    "shoulderDrop": 0.037,
+    "tipRadius": 0.064,
+    "gearRadius": 0.083,
+    "features": [
+      "cx-layered",
+      "two-wing",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
+    "confidence": "family-approximation",
+    "note": "同Reaper兩向外刃，無完整組合斜視。 厚度、核心層高及軸心肩寬為照片分級近似，非量測；軸心未有獨立照片時沿用同代碼族群。"
+  }
+}

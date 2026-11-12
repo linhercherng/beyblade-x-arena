@@ -1,5 +1,10 @@
 import raw from "./catalog-data.json" with { type: "json" };
 import verified from "../scripts/catalog-overrides.json" with { type: "json" };
+import names from "./chinese-names.json" with { type: "json" };
+export const CHINESE_NAMES = names as Record<
+  string,
+  { name: string; source: string; status: string; note: string }
+>;
 
 export type BeyType = "attack" | "defense" | "stamina" | "balance";
 export type Stats = {
@@ -138,6 +143,7 @@ export interface Ratchet {
 export const blades: Record<string, Blade> = {};
 export const ratchets: Record<string, Ratchet> = {};
 export interface Bey {
+  zhName: string;
   id: string;
   code: string;
   line: string;
@@ -190,6 +196,7 @@ export const BEYS: Bey[] = raw.map((row) => {
   )[row.code];
   return {
     ...row,
+    zhName: CHINESE_NAMES[row.id].name,
     type: bit.type,
     provisional: bit.provisional,
     released: release?.date ?? null,
@@ -230,7 +237,7 @@ export function filterBeys(
     (b) =>
       (line === "all" || b.line === line) &&
       (type === "all" || b.type === type) &&
-      `${b.name} ${b.code} ${b.combo} ${b.feature} ${TYPE[b.type].label}`
+      `${b.zhName} ${b.name} ${b.code} ${b.combo} ${b.feature} ${TYPE[b.type].label}`
         .toLowerCase()
         .includes(q),
   ).sort((a, b) =>

@@ -1,0 +1,500 @@
+{
+  "bx-01-dran-sword": {
+    "name": "蒼龍神劍",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx01.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-02-hells-scythe": {
+    "name": "惡魔紅鐮",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx02.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-03-wizard-arrow": {
+    "name": "魔導幻箭",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx03.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-04-knight-shield": {
+    "name": "騎士重盾",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx04.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-13-knight-lance": {
+    "name": "騎士長槍",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx13.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-14-shark-edge": {
+    "name": "鮫鯊鋒鰭",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx14.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-15-leon-claw": {
+    "name": "雄獅獵爪",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx15.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-16-viper-tail": {
+    "name": "王蛇鞭尾",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx16.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-19-rhino-horn": {
+    "name": "戰犀號角",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx19.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-20-dran-dagger": {
+    "name": "蒼龍利刃",
+    "source": "https://img.skmbuy.com.tw/App_Images/727/WSDMUpload/2024/0319/4f5799a7-010c-4a95-8aa9-0eb670fd8cc5.pdf",
+    "status": "official-tw",
+    "note": "新光三越2024兒童節刊物Funbox專櫃以BX-20蒼龍利刃改造組刊登；本卡沿用其中戰刃名。"
+  },
+  "bx-21-hells-chain": {
+    "name": "惡魔鎖鏈",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx21.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-23-phoenix-wing": {
+    "name": "鳳凰飛翼",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx23.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-24-wyvern-gale": {
+    "name": "飛龍旋翼",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx24.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-26-unicorn-sting": {
+    "name": "獨角刺心",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx26.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-27-sphinx-cowl": {
+    "name": "魔獸護甲",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx27.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-31-tyranno-beat": {
+    "name": "暴龍霸擊",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx31.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-33-weiss-tiger": {
+    "name": "皓戰猛虎",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx33.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-34-cobalt-dragoon": {
+    "name": "蒼穹龍騎士",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx34.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-35-black-shell": {
+    "name": "玄冥戰甲",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx35.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-36-whale-wave": {
+    "name": "巨鯨怒濤",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx36.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-37-bear-scratch": {
+    "name": "悍熊猛爪",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx37.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-38-crimson-garuda": {
+    "name": "赫燃天鳳",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx38.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-39-shelter-drake": {
+    "name": "護城龍神",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx39.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-44-tricera-press": {
+    "name": "三角強襲",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx44.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-45-samurai-calibur": {
+    "name": "武士魂斬",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx45.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-46-cobalt-drake": {
+    "name": "蒼穹龍神",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx46.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-46-goat-tackle": {
+    "name": "戰羊阻截",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx46.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-48-mammoth-tusk": {
+    "name": "猛獁獠牙",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx48.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-49-dran-strike": {
+    "name": "蒼龍突擊",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx49.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-50-heavens-ring": {
+    "name": "天界神環",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-52-luster-dragoon": {
+    "name": "輝耀龍騎士",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx52.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-54-sieg-superion": {
+    "name": "凱旋巨神",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx54.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-01-dran-buster": {
+    "name": "蒼龍爆刃",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux01.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-02-hells-hammer": {
+    "name": "惡魔戰鎚",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux02.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-03-wizard-rod": {
+    "name": "魔導神杖",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux03.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-05-shinobi-shadow": {
+    "name": "忍者闇影",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux05.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-06-leon-crest": {
+    "name": "雄獅巔峰",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux06.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-07-phoenix-rudder": {
+    "name": "鳳凰尾翼",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux07.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-08-silver-wolf": {
+    "name": "霜輝銀狼",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux08.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-09-samurai-saber": {
+    "name": "武士星劍",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux09.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-10-knight-mail": {
+    "name": "騎士圓甲",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux10.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-10-ptera-swing": {
+    "name": "翼龍擺擊",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux10.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-11-impact-drake": {
+    "name": "衝擊龍神",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux11.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-12-ghost-circle": {
+    "name": "幽靈元魂",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux12.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-13-golem-rock": {
+    "name": "魔像奇岩",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux13.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-14-scorpio-spear": {
+    "name": "天蠍長矛",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux14.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-15-shark-scale": {
+    "name": "鮫鯊狂鱗",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux15.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-15-tyranno-roar": {
+    "name": "暴龍咆哮",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux15.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-16-clock-mirage": {
+    "name": "時鐘幻象",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux16.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-17-meteor-dragoon": {
+    "name": "隕星龍騎士",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux17.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-18-mummy-curse": {
+    "name": "古屍詛咒",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux18.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-19-bullet-griffon": {
+    "name": "彈丸獅鷲",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux19.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-20-glory-valkyrie": {
+    "name": "榮耀武神",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux20.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-21-hells-nether": {
+    "name": "惡魔冥界",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux21.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-21-wyvern-hover": {
+    "name": "飛龍颶風",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux21.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-53-aero-pegasus": {
+    "name": "空力天馬",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx53.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-01-dran-brave-slash": {
+    "name": "蒼龍勇氣・斬擊",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx01.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-02-wizard-arc-round": {
+    "name": "魔導至尊・圓環",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx02.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-03-perseus-dark-bumper": {
+    "name": "英仙幽冥・緩衝",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx03.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-05-hells-reaper-turn": {
+    "name": "惡魔獵魂・迴轉",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-05-rhino-reaper-charge": {
+    "name": "戰犀獵魂・衝鋒",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-05-hells-arc-turn": {
+    "name": "惡魔至尊・迴轉",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx05.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-06-fox-brush-jaggy": {
+    "name": "極狐九尾・鋸齒",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx06.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-07-pegasus-blast-assault": {
+    "name": "天馬爆擊・突襲",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx07.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-08-cerberus-flame-wheel": {
+    "name": "魔犬烈焰・輪舞",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-08-whale-flame-massive": {
+    "name": "巨鯨烈焰・重裝",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-08-cerberus-dark-wheel": {
+    "name": "魔犬幽冥・輪舞",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx08.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-09-sol-eclipse-dual": {
+    "name": "焰神滅世・雙重",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx09.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-10-wolf-hunt-free": {
+    "name": "銀狼狩獵・自由",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx10.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-11-emperor-might-heavy": {
+    "name": "帝王威能・重裝",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx11.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-12-phoenix-flare-zillion": {
+    "name": "鳳凰閃焰・萬象",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx12.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-13-bahamut-blitz-break-knuckle": {
+    "name": "龍王閃擊・破擊・拳鋒",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx13.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-14-knight-fortress-guard-vertical": {
+    "name": "騎士堡壘・守衛・垂直",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx14.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-15-ragna-rage-flow-erase": {
+    "name": "邪神狂怒・流動・抹除",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx15.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-17-unicorn-delta-peak-odd": {
+    "name": "獨角三角・尖峰・奇襲",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx17.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-18-brachio-whip-outer-wheel": {
+    "name": "腕龍鞭打・外環・輪舞",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx18.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "cx-19-croco-tread-tough-quell": {
+    "name": "鱷魚裂甲・堅韌・鎮壓",
+    "source": "https://shop.funbox.com.tw/products/bb08062",
+    "status": "translated",
+    "note": "臺灣麗嬰直營Funbox商品頁確認主名「鱷魚裂甲」；Tough/Quell延伸段「堅韌／鎮壓」為遊戲譯名，完整名稱仍標translated。"
+  },
+  "cx-20-phoenix-force-weight-heavy": {
+    "name": "鳳凰武力・配重・重裝",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-15-hells-brave-jaggy": {
+    "name": "惡魔勇氣・鋸齒",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux15.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-18-pegasus-brush-massive": {
+    "name": "天馬九尾・重裝",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux18.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "ux-18-sol-brave-charge": {
+    "name": "焰神勇氣・衝鋒",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/ux18.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-50-wolf-flame-dual": {
+    "name": "銀狼烈焰・雙重",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  },
+  "bx-50-cerberus-reaper-bumper": {
+    "name": "魔犬獵魂・緩衝",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx50.html",
+    "status": "translated",
+    "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。英文原名及型號以原廠頁對照，CX完整名稱依零件順序翻譯。"
+  }
+}

@@ -5,6 +5,39 @@ import { BEYS } from "../src/catalog.ts";
 import { beyModel, modelSpec } from "../src/bey-model.ts";
 const bey = (code: string) => BEYS.find((b) => b.code === code)!;
 
+test("核心實體低於照片頂面，旋轉時不會有共面深度閃爍", () => {
+  for (const b of BEYS) {
+    const m = beyModel(b, new THREE.Texture());
+    m.updateMatrixWorld(true);
+    const ray = new THREE.Raycaster(
+      new THREE.Vector3(0.04, 1, 0.02),
+      new THREE.Vector3(0, -1, 0),
+    );
+    const core = ray.intersectObject(
+      m.getObjectByName("blade-center-core")!,
+    )[0];
+    const surface = ray.intersectObject(
+      m.getObjectByName("blade-product-surface")!,
+    )[0];
+    assert.ok(surface.point.y - core.point.y > 0.001, b.id);
+  }
+});
+
+test("同系列的薄圓盤、單擊厚刃與核心分層依各顆照片保留差異", () => {
+  assert.ok(
+    modelSpec(bey("UX-01")).bladeThickness >
+      modelSpec(bey("UX-12")).bladeThickness * 1.4,
+  );
+  assert.ok(new Set(BEYS.map((b) => modelSpec(b).bladeThickness)).size > 20);
+  const thick = beyModel(bey("UX-01"), new THREE.Texture()),
+    thin = beyModel(bey("UX-12"), new THREE.Texture());
+  const height = (m: THREE.Group) =>
+    new THREE.Box3()
+      .setFromObject(m.getObjectByName("blade")!)
+      .getSize(new THREE.Vector3()).y;
+  assert.ok(height(thick) > height(thin) * 1.2);
+});
+
 test("軸心平底封閉，開孔盤與固定盤均有接合表面", () => {
   const flat = beyModel(bey("BX-01"), new THREE.Texture());
   flat.updateMatrixWorld(true);

@@ -25,7 +25,7 @@ test("83張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
     .toBeGreaterThan(0);
   await page.screenshot({ path: "artifacts/catalog-real-products.png" });
   await page
-    .getByRole("button", { name: "查看 Dran Sword 資訊", exact: true })
+    .getByRole("button", { name: /查看.*Dran Sword.*資訊/, exact: true })
     .click();
   await expect(
     page.getByRole("img", { name: /Dran Sword：實物貼圖/ }),
@@ -42,7 +42,7 @@ test("83張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
   await page.keyboard.press("Escape");
   await page.getByRole("searchbox").fill("Dran Brave");
   await page
-    .getByRole("button", { name: "查看 Dran Brave Slash 資訊", exact: true })
+    .getByRole("button", { name: /查看.*Dran Brave Slash.*資訊/, exact: true })
     .click();
   await expect(
     page.getByRole("img", { name: /Dran Brave Slash：實物貼圖/ }),
@@ -119,7 +119,10 @@ async function playMatch(page: Page, local = false) {
       "battle",
       { timeout: 12000 },
     );
-    await action(page, "close-up").click();
+    if (
+      (await action(page, "close-up").getAttribute("aria-pressed")) !== "true"
+    )
+      await action(page, "close-up").click();
     await expect(action(page, "close-up")).toHaveAttribute(
       "aria-pressed",
       "true",

@@ -3,6 +3,20 @@ import type { Bey } from "./catalog.ts";
 import { PRODUCT_IMAGES, type ProductImage } from "./appearance.ts";
 import references from "./model-references.json" with { type: "json" };
 import shapes from "./part-shapes.json" with { type: "json" };
+import profiles from "./model-profiles.json" with { type: "json" };
+interface ModelProfile {
+  bladeThickness: number;
+  coreRadius: number;
+  coreRise: number;
+  shoulderDrop: number;
+  tipRadius: number;
+  gearRadius: number;
+  features: string[];
+  source: string;
+  confidence: string;
+  note: string;
+}
+const MODEL_PROFILES = profiles as Record<string, ModelProfile>;
 
 export interface ModelReference {
   source: string;
@@ -38,6 +52,7 @@ export const MODEL_REFERENCES = references as unknown as Record<
 const PART_SHAPES = shapes as unknown as Record<string, PartShape>;
 
 export function modelSpec(b: Bey) {
+  const profile = MODEL_PROFILES[b.id];
   const reference = MODEL_REFERENCES[b.id];
   const photo = reference?.top ?? PRODUCT_IMAGES[b.id];
   const part = PART_SHAPES[b.bit];
@@ -46,6 +61,7 @@ export function modelSpec(b: Bey) {
     part?.height === "low" ? 0.145 : part?.height === "high" ? 0.205 : 0.175;
   const bitHeight = integrated === "bit" ? 0.255 : height;
   return {
+    profile,
     reference,
     photo,
     part,
@@ -64,8 +80,8 @@ export function modelSpec(b: Bey) {
           : b.height * 0.00165,
     integration: integrated,
     bitHeight,
-    // shortcut: 厚度依系列估算，取得逐顆量測或掃描時改用實際尺寸。
-    bladeThickness: b.line === "UX" ? 0.125 : b.line === "CX" ? 0.112 : 0.095,
+    // shortcut: 逐顆厚度仍為照片分級，取得量測或掃描時換成實際尺寸。
+    bladeThickness: profile.bladeThickness,
     colors: {
       blade: reference?.colors.bladePlastic ?? photo.primaryColor,
       metal: reference?.colors.bladeMetal ?? "#bbc4ce",
@@ -239,6 +255,12 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
         )
       : lathe([[0, 0], ...tip, [0, tipHeight]], tipMaterial, "bit-contact");
   if (spec.part?.offsetTip) foot.position.x = 0.035;
+  foot.geometry.computeBoundingBox();
+  const tipRadius = Math.max(
+    Math.abs(foot.geometry.boundingBox!.min.x),
+    Math.abs(foot.geometry.boundingBox!.max.x),
+  );
+  foot.scale.x = foot.scale.z = spec.profile.tipRadius / tipRadius;
   bit.add(foot);
   bit.add(
     lathe(
@@ -252,12 +274,7 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
       "bit-shaft",
     ),
   );
-  const gearRadius =
-    spec.integration === "bit"
-      ? 0.19
-      : ["J", "Z"].includes(b.bit)
-        ? 0.112
-        : 0.083;
+  const gearRadius = spec.profile.gearRadius;
   bit.add(
     piece(
       new THREE.CylinderGeometry(
@@ -449,8 +466,8 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
     indices: number[] = [];
   const tiers = [
     [0.84, 0],
-    [1, 0.026],
-    [1.0, thickness * 0.74],
+    [1, Math.min(spec.profile.shoulderDrop, thickness * 0.3)],
+    [1.0, thickness - spec.profile.shoulderDrop],
     [0.94, thickness],
   ];
   const metalColor = new THREE.Color(spec.colors.metal);
@@ -458,7 +475,11 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
     for (let i = 0; i < contour.length; i++) {
       const a = (i / contour.length) * Math.PI * 2,
         r = contour[i] * 0.52 * scale;
-      vertices.push(Math.cos(a) * r, bladeBase + y, Math.sin(a) * r);
+      const rise =
+        y === thickness && spec.profile.features.includes("single-strike")
+          ? Math.max(0, contour[i] - 0.85) * 0.05
+          : 0;
+      vertices.push(Math.cos(a) * r, bladeBase + y + rise, Math.sin(a) * r);
       const shade = 0.88 + Math.sin(a * reference.teeth) * 0.07;
       colors.push(
         metalColor.r * shade,
@@ -504,11 +525,16 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
   );
   blade.add(
     piece(
-      new THREE.CylinderGeometry(0.19, 0.23, thickness * 0.8, 16),
+      new THREE.CylinderGeometry(
+        spec.profile.coreRadius,
+        spec.profile.coreRadius * 1.18,
+        thickness + spec.profile.coreRise - 0.002,
+        24,
+      ),
       plastic,
       "blade-center-core",
       0,
-      bladeBase + thickness * 0.49,
+      bladeBase + (thickness + spec.profile.coreRise - 0.002) * 0.5,
     ),
   );
   blade.add(torus(0.12, 0.009, dark, "blade-lock-ring", bladeBase + 0.008));
@@ -537,6 +563,31 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
     blade.add(
       torus(0.385, 0.027, plastic, "blade-free-ring", bladeBase - 0.006),
     );
+  if (spec.profile.features.includes("rubber-blade")) {
+    const rubber = solid("#e43c32");
+    rubber.roughness = 0.85;
+    const contacts = radial(
+      new THREE.BoxGeometry(0.1, 0.065, 0.11),
+      rubber,
+      3,
+      0.43,
+      bladeBase + 0.035,
+      "blade-rubber-contacts",
+    );
+    contacts.rotation.y = 0.17;
+    blade.add(contacts);
+  }
+  if (spec.profile.features.includes("serrated-skirt"))
+    blade.add(
+      radial(
+        new THREE.BoxGeometry(0.035, 0.025, 0.026),
+        metal,
+        24,
+        0.41,
+        bladeBase + 0.012,
+        "blade-serrated-skirt",
+      ),
+    );
   // 分層頂面沿各顆照片輪廓建立，側面與厚度依參考圖近似。
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4;
@@ -546,7 +597,8 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
   const [bx, by, bw, bh] = reference.imageBounds;
   const radiusPixels =
     Math.max(bw * reference.width, bh * reference.height) / 2;
-  const topRings = [0, 0.38, 0.69, 0.94];
+  const coreScale = spec.profile.coreRadius / 0.52;
+  const topRings = [0, coreScale, 0.69, 0.94];
   for (const scale of topRings)
     for (let i = 0; i < contour.length; i++) {
       const a = (i / contour.length) * Math.PI * 2,
@@ -554,11 +606,14 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
       const x = Math.cos(a) * r,
         z = Math.sin(a) * r;
       const height =
-        scale < 0.4
-          ? thickness + 0.016
+        scale <= coreScale
+          ? thickness + spec.profile.coreRise
           : scale < 0.7
-            ? thickness - 0.012
-            : thickness;
+            ? thickness - spec.profile.shoulderDrop * 0.5
+            : thickness +
+              (spec.profile.features.includes("single-strike")
+                ? Math.max(0, contour[i] - 0.85) * 0.05
+                : 0);
       topVertices.push(x, bladeBase + height, z);
       uvs.push(
         bx + bw / 2 + ((x / 0.52) * radiusPixels) / reference.width,

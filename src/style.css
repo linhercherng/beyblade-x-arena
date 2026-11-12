@@ -3184,3 +3184,37 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 .model-references p {flex:1 1 180px;font-size:10px;color:var(--muted);line-height:1.8;margin:0}
 .model-references .reference-photo {position:static;padding:0;border:0;background:none}
 .model-references .reference-photo .bey-art {--art-size:58px !important}
+.bey-name {display:block;line-height:1.4;overflow-wrap:anywhere}
+.bey-name > small {display:block;font-size:.65em;font-weight:400;color:#a4b6c9;letter-spacing:0;line-height:1.5;margin-top:3px}
+.name-source {font-size:10px;color:var(--muted);margin:-4px 0 10px}
+.name-source a {text-decoration:underline;text-underline-offset:3px}
+.fighter-identity {display:flex;align-items:center;gap:10px;margin:10px 0}
+.fighter-identity h2 {margin:0;min-width:0}
+.fighter-identity em {display:block;font-style:normal;font-size:9px;font-weight:400;color:#9fb393;margin-top:5px}
+.arena-view .sidebar,.arena-view .footer {display:none}
+.arena-view .workspace {margin-left:0;min-height:100svh}
+.arena-view .topbar {height:48px;padding:0 20px}
+.arena-view main {max-width:none;padding:14px 16px 10px}
+.arena-view .battle-topline {margin-bottom:12px;gap:12px}
+.arena-view .battle-stage {width:100%;left:0;height:clamp(540px,calc(100svh - 210px),1100px)}
+.arena-view[data-screen="launch"] .battle-stage {height:clamp(420px,calc(100svh - 390px),780px)}
+.arena-view .fighter {width:235px;padding:12px;top:14px}
+.arena-view #battle-controls {position:sticky;bottom:0;z-index:4;background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
+#app:fullscreen {background:var(--bg);overflow-y:auto;min-height:100%}
+@media(max-width:700px){
+  .arena-view main {padding:10px 8px 8px}
+  .arena-view .topbar {height:44px;padding:0 12px}
+  .arena-view .battle-topline {gap:6px;margin-bottom:8px}
+  .arena-view .battle-topline h1 {font-size:17px}
+  .arena-view .battle-tools {justify-content:center;gap:6px}
+  .arena-view .battle-tools button {padding:6px 10px;min-height:36px}
+  .arena-view .battle-stage {height:clamp(510px,calc(100svh - 230px),800px)}
+  .arena-view[data-screen="launch"] .battle-stage {height:410px}
+  .arena-view .fighter {width:calc(50% - 18px);padding:8px;top:10px}
+  .arena-view .fighter-0 {left:10px}.arena-view .fighter-1 {right:10px}
+  .fighter-identity {gap:6px;margin:8px 0}
+  .fighter-identity .bey-art {--art-size:30px !important}
+  .arena-view .fighter h2 {font-size:11px;min-height:0;margin:0}
+  .fighter-identity em {font-size:8px}
+  .arena-view .remaining-lineup {display:none}
+}

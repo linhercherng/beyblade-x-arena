@@ -3,6 +3,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
 import { BEYS } from "./catalog.ts";
 import { beyModel, modelSpec } from "./bey-model.ts";
+import { interpolatePose, spinLean, type TopPose } from "./motion.ts";
 import { type Battle, type BattleEvent, RADIUS } from "./physics.ts";
 
 function metal(color: THREE.ColorRepresentation, roughness = 0.28) {
@@ -51,7 +52,7 @@ export class Arena {
   angle = 0;
   pitch = 0.54;
   exploded = false;
-  closeUp = false;
+  closeUp = true;
   dragging = false;
   lastX = 0;
   lastY = 0;
@@ -148,8 +149,16 @@ export class Arena {
     );
     this.scene.add(this.particlePoints);
     for (const c of ["#8bdfff", "#ff926b"]) {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(new Float32Array(90), 3).setUsage(
+          THREE.DynamicDrawUsage,
+        ),
+      );
+      geometry.setDrawRange(0, 0);
       const line = new THREE.Line(
-        new THREE.BufferGeometry(),
+        geometry,
         new THREE.LineBasicMaterial({
           color: c,
           transparent: true,
@@ -157,6 +166,7 @@ export class Arena {
           blending: THREE.AdditiveBlending,
         }),
       );
+      line.frustumCulled = false;
       this.scene.add(line);
       this.trails.push(line);
     }
@@ -387,8 +397,16 @@ export class Arena {
       this.beam.visible = true;
     }
   }
-  draw(dt: number, battle: Battle | null = null) {
+  draw(
+    dt: number,
+    battle: Battle | null = null,
+    previous: readonly TopPose[] = [],
+    alpha = 1,
+  ) {
     this.time += dt;
+    const poses = battle?.tops.map((t, i) =>
+      interpolatePose(previous[i] ?? t, t, alpha),
+    );
     const inspecting = this.mode === "inspect";
     const az = inspecting ? this.angle : this.angle * 0.3;
     const previewDistance = this.exploded ? 2.4 : 1.9;
@@ -418,8 +436,10 @@ export class Arena {
       }
     }
     const look = new THREE.Vector3(0, inspecting ? 0.25 : 0, 0);
+    if (battle && !this.closeUp)
+      base.multiplyScalar(Math.max(1, 0.95 / this.camera.aspect));
     if (battle && this.closeUp) {
-      const [a, b] = battle.tops,
+      const [a, b] = poses!,
         distance = Math.hypot(a.x - b.x, a.z - b.z);
       look.set((a.x + b.x) / 2, 0.2, (a.z + b.z) / 2);
       const range = closeUpRange(distance, this.camera);
@@ -437,10 +457,15 @@ export class Arena {
     this.models.forEach((g, i) => {
       const t = battle?.tops[i];
       if (t) {
-        g.position.set(t.x, 0.035 + (t.x * t.x + t.z * t.z) * 0.024, t.z);
-        g.rotation.y = t.rotation;
-        g.rotation.x = Math.sin(this.time * 22) * t.tilt * 0.3;
-        g.rotation.z = Math.cos(this.time * 19) * t.tilt * 0.3;
+        const pose = poses![i],
+          lean = spinLean(pose.tilt, pose.rotation, i);
+        g.position.set(
+          pose.x,
+          0.035 + (pose.x * pose.x + pose.z * pose.z) * 0.024,
+          pose.z,
+        );
+        g.rotation.set(lean.x, 0, lean.z);
+        g.rotateY(pose.rotation);
         if (battle!.result) {
           const elapsed = this.time - this.finishTime;
           const loser =
@@ -464,15 +489,15 @@ export class Arena {
           }
         }
         const path = this.trailPositions[i];
-        path.push(t.x, g.position.y + 0.22, t.z);
+        if (dt > 0) path.push(g.position.x, g.position.y + 0.22, g.position.z);
         if (path.length > 90) path.splice(0, 3);
         const line = this.trails[i];
-        line.geometry.dispose();
-        line.geometry = new THREE.BufferGeometry();
-        line.geometry.setAttribute(
+        const positions = line.geometry.getAttribute(
           "position",
-          new THREE.Float32BufferAttribute(path, 3),
-        );
+        ) as THREE.BufferAttribute;
+        (positions.array as Float32Array).set(path);
+        positions.needsUpdate = true;
+        line.geometry.setDrawRange(0, path.length / 3);
         line.visible = t.rpm > 0.3;
         (line.material as THREE.LineBasicMaterial).opacity =
           t.dashUntil > battle!.time ? 0.95 : 0.28;
