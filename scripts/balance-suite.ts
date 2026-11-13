@@ -32,6 +32,7 @@ export function runSuite(samples = 32, firstSeed = 1) {
           power: 0.65 + random() * 0.35,
           lane: Math.floor(random() * 3),
           angle: Math.round(random() * 30),
+          direction: Math.floor(random()*3)-1 as -1|0|1,
         }));
         for (const swapped of i === j ? [false] : [false, true]) {
           const beys = swapped ? [b, a] : [a, b],
@@ -139,10 +140,11 @@ export function runEdges() {
           [1, 15],
           [2, 30],
         ]) {
+          for(const direction of [-1,0,1] as const){
           const seed = (index * 7919 + i * 104729 + 1234567) >>> 0;
           const inputs = [
-            { power: p0, lane, angle },
-            { power: p1, lane: 2 - lane, angle: 30 - angle },
+            { power: p0, lane, angle,direction },
+            { power: p1, lane: 2 - lane, angle: 30 - angle,direction:-direction as -1|0|1 },
           ];
           const s = createBattle(a, b, inputs, seed);
           while (!s.result && s.time < 50) stepBattle(s);
@@ -152,6 +154,7 @@ export function runEdges() {
           if (s.time < 15 || s.time > 40)
             failures.push({ beys: [a.id, b.id], inputs, seed, time: s.time });
         }
+  }
   return {
     battles,
     minSeconds,
@@ -169,7 +172,7 @@ export function runAllPairs() {
       const seed = (20261113 + i * 104729 + j * 7919 + sample * 15485863) >>> 0;
       const random = rng(seed);
       const powers = [[.4, .4], [.65, 1], [1, 1], [.4 + random() * .6, .4 + random() * .6]][sample];
-      const inputs = powers.map((power, p) => ({ power, lane: (sample + p) % 3, angle: sample === 3 ? random() * 30 : p ? 30 : 0 }));
+      const inputs = powers.map((power, p) => ({ power, lane: (sample + p) % 3, angle: sample === 3 ? random() * 30 : p ? 30 : 0,direction:Math.floor(random()*3)-1 as -1|0|1 }));
       const s = createBattle(a, b, inputs, seed);
       while (!s.result && s.time < 41) {
         if (sample % 2 && s.tick === 720) shout(s, 0);

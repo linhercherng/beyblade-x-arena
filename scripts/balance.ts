@@ -9,7 +9,7 @@ const allPairs = runAllPairs();
 const report = {
   engineVersion: ENGINE_VERSION,
   method:
-    "四類型等量對手、每對互換玩家側；平手計入出戰分母，另列0.5分制。校準與驗收使用不同種子。蓄力覆蓋遊戲可用0.65–1，三個落點與0–30度傾角。",
+    "四類型等量對手、每對互換玩家側；平手計入出戰分母，另列0.5分制。校準與驗收使用不同種子。蓄力覆蓋遊戲可用0.65–1，三個落點、0–30度傾角、三種內外切方向。",
   tuning: TUNING,
   pacing: PACING,
   combatStyles: COMBAT_STYLE,

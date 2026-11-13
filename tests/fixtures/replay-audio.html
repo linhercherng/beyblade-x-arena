@@ -4,10 +4,10 @@
 <script type="module">
 import{Sound}from'/src/audio.ts';
 const sound=new Sound();let stage=null,pan=0,paused=false,meters,created=0,peakSfx=0,musicAtPeak=0,peakMix=0;
-const rms=a=>{const d=new Float32Array(a.fftSize);a.getFloatTimeDomainData(d);return{rms:Math.sqrt(d.reduce((s,v)=>s+v*v,0)/d.length),peak:d.reduce((s,v)=>Math.max(s,Math.abs(v)),0)};};
+const rms=a=>{const d=new Float32Array(a.fftSize);a.getFloatTimeDomainData(d);return{data:d,rms:Math.sqrt(d.reduce((s,v)=>s+v*v,0)/d.length),peak:d.reduce((s,v)=>Math.max(s,Math.abs(v)),0)};};
 document.addEventListener('click',e=>{
  if(e.target.tagName!=='BUTTON')return;sound.unlock();const id=e.target.id;
- if(!meters){const create=sound.ctx.createBufferSource.bind(sound.ctx);sound.ctx.createBufferSource=(...args)=>{created++;return create(...args);};meters=[sound.sfx,sound.musicDuck,sound.master].map(bus=>{const a=sound.ctx.createAnalyser();a.fftSize=512;bus.connect(a);return a;});}
+ if(!meters){const create=sound.ctx.createBufferSource.bind(sound.ctx);sound.ctx.createBufferSource=(...args)=>{created++;return create(...args);};meters=[sound.sfx,sound.musicDuck,sound.master].map(bus=>{const a=sound.ctx.createAnalyser();a.fftSize=2048;bus.connect(a);return a;});}
  if(id==='begin'){sound.setMusicVolume(1);sound.beginReplay();stage='tracking';paused=false;}
  else if(id==='mute'){sound.toggle();return;}else if(id==='pause'){paused=!paused;return;}
  else if(id==='skip'){stage=null;sound.stopEffects();paused=false;return;}
@@ -16,6 +16,6 @@ document.addEventListener('click',e=>{
  sound.setReplay(stage,pan);
  if(id==='finish')sound.finish({winner:0,finish:'extreme',points:3,time:20},.55,true,pan);
 });
-function frame(){if(!paused)sound.setReplay(stage,pan);sound.update(null,false,paused?null:'results');if(meters){const s=rms(meters[0]),m=rms(meters[1]);if(s.rms>peakSfx){peakSfx=s.rms;musicAtPeak=m.rms;}peakMix=Math.max(peakMix,rms(meters[2]).peak);}requestAnimationFrame(frame);}
+function frame(){if(!paused)sound.setReplay(stage,pan);sound.update(null,false,paused?null:'results');if(meters){const s=rms(meters[0]),m=rms(meters[1]);for(let start=0;start<=s.data.length-512;start+=128){let se=0,me=0;for(let j=start;j<start+512;j++){se+=s.data[j]**2;me+=m.data[j]**2;}const level=Math.sqrt(se/512);if(level>peakSfx){peakSfx=level;musicAtPeak=Math.sqrt(me/512);}}peakMix=Math.max(peakMix,rms(meters[2]).peak);}requestAnimationFrame(frame);}
 window.replayAudioMetrics=()=>({stage:sound.replayStage,mix:sound.replayGain?.gain.value,cutoff:sound.replayFilter?.frequency.value,duck:sound.musicDuck?.gain.value,playing:sound.playing?.mode,offset:sound.playing?.startedAt,created,impacts:sound.impacts.size,tails:sound.impactTails.size,cues:sound.cues.size,dashes:sound.dashVoices.size,accent:!!sound.replayAccent,played:sound.replayPlayed.size,accentPan:sound.replayAccent?.pan.pan.value,cuePans:[...sound.cuePans.values()].map(p=>p.pan.value),cueRates:[...sound.cues.keys()].map(s=>s.playbackRate.value),cache:sound.replayAccents.size,peakSfx,musicAtPeak,peakMix,rms:meters?rms(meters[2]).rms:0});requestAnimationFrame(frame);
 </script></html>

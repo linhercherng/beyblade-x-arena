@@ -2,7 +2,7 @@
 <style>body{margin:0;background:#101927;color:white;font:14px sans-serif}header{position:absolute;z-index:2;padding:12px}button{padding:10px;margin-right:8px}#stage{height:100vh}output{display:block;margin-top:8px}</style>
 <header>實際物理對決 · 4×驗收<br><button id="burst">爆裂</button><button id="over">越界</button><button id="extreme">極限</button><button id="spin">持久戰</button><output id="result">選擇固定輸入，勝負由物理計算</output></header><div id="stage"></div>
 <script type="module">
-import{Arena}from'/src/arena.ts';import{Sound}from'/src/audio.ts';import{getBey}from'/src/catalog.ts';import{createBattle,stepBattle,shout,DT}from'/src/physics.ts';import{capturePoses}from'/src/motion.ts';import examples from'/tests/fixtures/v4-combat.json';
+import{Arena}from'/src/arena.ts';import{Sound}from'/src/audio.ts';import{getBey}from'/src/catalog.ts';import{createBattle,stepBattle,shout,DT}from'/src/physics.ts';import{capturePoses}from'/src/motion.ts';import examples from'/tests/fixtures/v5-combat.json';
 const arena=new Arena(),sound=new Sound();arena.attach(document.querySelector('#stage'),'battle');let battle=null,example=null,last=0,acc=0,previous=null;
 document.addEventListener('click',e=>{if(!examples[e.target.id])return;example=examples[e.target.id];sound.unlock();battle=createBattle(...example.beys.map(getBey),example.launches,example.seed);arena.setBeys(example.beys.map(getBey));previous=capturePoses(battle);acc=0;document.querySelector('#result').textContent='交戰中';});
 function frame(now){const dt=Math.min(.25,(now-last)/1000||0);last=now;

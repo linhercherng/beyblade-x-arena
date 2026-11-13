@@ -3,7 +3,7 @@ import assert from"node:assert/strict";
 import{DashHitPlayback,hitZoomFactor}from"../src/dash-hit.ts";
 import{BEYS,getBey}from"../src/catalog.ts";
 import{createBattle,stepBattle,shout,DT}from"../src/physics.ts";
-import examples from"./fixtures/v4-combat.json" with {type:"json"};
+import examples from"./fixtures/v5-combat.json" with {type:"json"};
 const make=()=>createBattle(BEYS[0],BEYS[1],[{power:1,lane:0,angle:0},{power:1,lane:0,angle:0}],1);
 const hit={type:"hit" as const,x:0,z:0,strength:7,player:0,time:1};
 test("只有有效衝刺命中觸發，同一衝刺與密集碰撞不重播慢動作",()=>{

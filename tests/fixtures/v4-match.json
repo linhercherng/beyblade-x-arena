@@ -1,0 +1,183 @@
+{
+  "id": "engine-v4-preserved",
+  "date": "2026-11-13T00:00:00.000Z",
+  "mode": "local",
+  "difficulty": "normal",
+  "teams": [
+    [
+      "bx-01-dran-sword",
+      "bx-02-hells-scythe",
+      "bx-03-wizard-arrow"
+    ],
+    [
+      "bx-04-knight-shield",
+      "bx-13-knight-lance",
+      "bx-14-shark-edge"
+    ]
+  ],
+  "scores": [
+    1,
+    4
+  ],
+  "slot": 2,
+  "rounds": [
+    {
+      "engineVersion": 4,
+      "index": 1,
+      "slot": 0,
+      "seed": 17010,
+      "beys": [
+        "bx-01-dran-sword",
+        "bx-04-knight-shield"
+      ],
+      "inputs": [
+        {
+          "power": 0.91,
+          "lane": 1,
+          "angle": 12
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 8
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          840
+        ]
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "over",
+        "points": 2,
+        "time": 16.725
+      },
+      "reports": [
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 70.1864535714574,
+          "maxImpulse": 13.047457636314011,
+          "dashes": 5,
+          "rpm": 0.4156749671511474
+        },
+        {
+          "id": "bx-04-knight-shield",
+          "impulse": 60.56777537196125,
+          "maxImpulse": 11.259373327459576,
+          "dashes": 0,
+          "rpm": 0.3861959363441498
+        }
+      ]
+    },
+    {
+      "engineVersion": 4,
+      "index": 2,
+      "slot": 1,
+      "seed": 24929,
+      "beys": [
+        "bx-02-hells-scythe",
+        "bx-13-knight-lance"
+      ],
+      "inputs": [
+        {
+          "power": 0.91,
+          "lane": 1,
+          "angle": 12
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 8
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          840
+        ]
+      ],
+      "result": {
+        "winner": 0,
+        "finish": "spin",
+        "points": 1,
+        "time": 30.28333333333333
+      },
+      "reports": [
+        {
+          "id": "bx-02-hells-scythe",
+          "impulse": 39.36414262399594,
+          "maxImpulse": 7.077892427859602,
+          "dashes": 3,
+          "rpm": 0.03412365041237927
+        },
+        {
+          "id": "bx-13-knight-lance",
+          "impulse": 44.070231386626006,
+          "maxImpulse": 7.924073439244051,
+          "dashes": 0,
+          "rpm": 0
+        }
+      ]
+    },
+    {
+      "engineVersion": 4,
+      "index": 3,
+      "slot": 2,
+      "seed": 32848,
+      "beys": [
+        "bx-03-wizard-arrow",
+        "bx-14-shark-edge"
+      ],
+      "inputs": [
+        {
+          "power": 0.91,
+          "lane": 1,
+          "angle": 12
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 8
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          840
+        ]
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "burst",
+        "points": 2,
+        "time": 15.366666666666667
+      },
+      "reports": [
+        {
+          "id": "bx-03-wizard-arrow",
+          "impulse": 43.29236710873535,
+          "maxImpulse": 10.965500382995874,
+          "dashes": 0,
+          "rpm": 0.5007116173824644
+        },
+        {
+          "id": "bx-14-shark-edge",
+          "impulse": 82.78888041201846,
+          "maxImpulse": 20.96955099696112,
+          "dashes": 4,
+          "rpm": 0.4339678779182019
+        }
+      ]
+    }
+  ],
+  "winner": 1,
+  "seed": 9091
+}

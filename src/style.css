@@ -3311,3 +3311,5 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
   .finish-card, .finish-victor, .finish-overlay .finish-score, .round-result, .round-score, .victory-emblem, .winning-team > div, .result-hero .result-score { animation: none; }
 }
 .new-bey-label { margin-left: 6px; padding: 2px 4px; font: 700 9px var(--mono); color: #caff53; border: 1px solid #526c32; vertical-align: middle; }
+
+.direction-label{display:flex;flex-direction:column;gap:8px;font-size:12px}.direction-label select{padding:8px;background:var(--panel,#152130);color:inherit;border:1px solid #405065;border-radius:6px}.angle-label small{font-size:10px;color:#a0afc1}.launch-options{grid-template-columns:1.1fr 1fr .8fr 1fr auto}@media(max-width:1100px){.launch-options{grid-template-columns:repeat(2,minmax(0,1fr))}.launch-options .primary{grid-column:1/-1}}

@@ -1,15 +1,15 @@
 {
-  "checkedAt": "2026-11-12",
-  "engineVersion": 4,
-  "method": "新增8款各對全91款，3組獨立種子、交換先後手；65–100%蓄力、三落點、0–30度傾角及呼喊。",
+  "checkedAt": "2026-11-13",
+  "engineVersion": 5,
+  "method": "新增8款各對全91款，3組獨立種子、交換先後手；65–100%蓄力、三落點、0–30度傾角、三種內外切方向及呼喊。",
   "battles": 4368,
-  "minSeconds": 15,
-  "maxSeconds": 31.599999999999998,
+  "minSeconds": 15.016666666666666,
+  "maxSeconds": 32.74166666666667,
   "finishes": {
-    "spin": 1545,
-    "burst": 1134,
-    "over": 925,
-    "extreme": 764
+    "spin": 2267,
+    "burst": 823,
+    "over": 672,
+    "extreme": 606
   },
   "outsideTarget": 0,
   "failures": []

@@ -241,7 +241,8 @@ export class Sound {
       source.connect(gain).connect(pan).connect(this.sfx);
       this.impacts.set(source,gain);
       source.onended = () => { source.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source);this.impactTails.delete(source); };
-      source.start();
+      // 先完成4ms配樂壓低，再起音，避免強拍遮住撞擊瞬態。
+      source.start(now+.008);
       const duck = this.musicDuck.gain;
       duck.cancelAndHoldAtTime(now);
       duck.linearRampToValueAtTime(Math.min(duck.value, dashHit?.18:profile.duck), now + .004);
@@ -368,7 +369,7 @@ export class Sound {
       source.buffer=this.replayAccents.get(accent)!;gain.gain.value=accent==="decision"?1.1:.85;stereo.pan.value=pan;
       source.connect(gain).connect(stereo).connect(this.sfx);this.impacts.set(source,gain);this.replayAccent={source,gain,pan:stereo};
       source.onended=()=>{source.disconnect();gain.disconnect();stereo.disconnect();this.impacts.delete(source);this.impactTails.delete(source);if(this.replayAccent?.source===source)this.replayAccent=null;};
-      source.start(now+.008);
+      source.start(now+mix.seconds+.008);
     }
   }
   victory(won: boolean) { this.playCue(won ? "victory" : "defeat"); }

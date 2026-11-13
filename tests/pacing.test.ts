@@ -35,14 +35,17 @@ test("開場保護同時涵蓋耗盡、爆裂與碰撞推出盤外，不留下�
   assert.equal(s.result?.time, 15);
   assert.equal(s.result?.finish, "burst");
 });
-test("末段耗轉保留能量差與左右旋交換，滿轉速也在40秒內自然終結", () => {
+test("隔離碰撞後末段耗轉保留能量差與左右旋交換，滿轉速40秒內耗盡", () => {
   for (const opposite of [false, true]) {
     const a = getBey("ux-03-wizard-rod");
     const b = { ...a, spin: opposite ? "L" as const : a.spin };
     const s = createBattle(a, b, [{ power: 1, lane: 0, angle: 0 }, { power: 1, lane: 0, angle: 0 }], 3);
     s.tick = 30 / DT; s.time = 30;
     s.tops[1].rpm = .9;
-    while (!s.result && s.time <= 40) stepBattle(s);
+    while (!s.result && s.time <= 40) {
+      s.tops.forEach((t,i)=>Object.assign(t,{x:i?2:-2,z:0,vx:0,vz:0}));
+      stepBattle(s);
+    }
     assert.ok(s.result && s.time <= 40, `${opposite}: ${s.time}`);
     assert.equal(s.result.finish, "spin");
     assert.equal(s.result.winner, 0);

@@ -1,14 +1,15 @@
 import type { Battle, Top } from "./physics.ts";
 
-export type TopPose = Pick<Top, "x" | "z" | "rotation" | "rpm" | "tilt">;
+export type TopPose = Pick<Top, "x" | "z" | "rotation" | "rpm" | "tilt" | "axisX" | "axisZ">;
 export function capturePoses(battle: Battle, reuse: TopPose[] = []): TopPose[] {
-  battle.tops.forEach(({ x, z, rotation, rpm, tilt }, i) => {
+  battle.tops.forEach(({ x, z, rotation, rpm, tilt, axisX,axisZ }, i) => {
     const pose = (reuse[i] ??= { x: 0, z: 0, rotation: 0, rpm: 0, tilt: 0 });
     pose.x = x;
     pose.z = z;
     pose.rotation = rotation;
     pose.rpm = rpm;
     pose.tilt = tilt;
+    if(axisX===undefined){delete pose.axisX;delete pose.axisZ;}else{pose.axisX=axisX;pose.axisZ=axisZ;}
   });
   return reuse;
 }
@@ -43,6 +44,8 @@ export function interpolatePose(
     rotation: previous.rotation + (current.rotation - previous.rotation) * a,
     rpm: previous.rpm + (current.rpm - previous.rpm) * a,
     tilt: previous.tilt + (current.tilt - previous.tilt) * a,
+    ...(current.axisX===undefined?{}:{axisX:(previous.axisX??current.axisX)+((current.axisX)-(previous.axisX??current.axisX))*a,
+      axisZ:(previous.axisZ??current.axisZ??0)+((current.axisZ??0)-(previous.axisZ??current.axisZ??0))*a}),
   };
 }
 export function spinLean(tilt: number, rotation: number, player: number) {

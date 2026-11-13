@@ -656,6 +656,7 @@ export class Arena {
       if (t) {
         const pose = poses![i], rotation=-pose.rotation, spin=t.bey.spin==="L"?1:-1,
           lean = spinLean(pose.tilt, pose.rotation, i);
+        if(pose.axisX!==undefined){lean.x+=(pose.axisZ??0)*.65;lean.z-=pose.axisX*.65;}
         const state=this.dashStates[i],dash=dashVisual(state?this.time-state.at:Infinity,this.reduced);
         const latch=state?.grip?dash.latch:0;
         const speed=Math.max(.01,Math.hypot(t.vx,t.vz));

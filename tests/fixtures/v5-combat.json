@@ -1,0 +1,126 @@
+{
+  "spin": {
+    "beys": [
+      "bx-01-dran-sword",
+      "cx-11-emperor-might-heavy"
+    ],
+    "seed": 314204,
+    "launches": [
+      {
+        "power": 0.9641376024461351,
+        "lane": 1,
+        "angle": 22,
+        "direction": 0
+      },
+      {
+        "power": 0.966195560421329,
+        "lane": 1,
+        "angle": 25,
+        "direction": -1
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 30.741666666666667,
+    "winner": 1
+  },
+  "burst": {
+    "beys": [
+      "bx-34-cobalt-dragoon",
+      "bx-01-dran-sword"
+    ],
+    "seed": 21364733,
+    "launches": [
+      {
+        "power": 0.7343375270022079,
+        "lane": 1,
+        "angle": 1,
+        "direction": 0
+      },
+      {
+        "power": 0.8080121277133003,
+        "lane": 0,
+        "angle": 15,
+        "direction": -1
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 15.208333333333334,
+    "winner": 0
+  },
+  "over": {
+    "beys": [
+      "ux-17-meteor-dragoon",
+      "bx-37-bear-scratch"
+    ],
+    "seed": 44405113,
+    "launches": [
+      {
+        "power": 0.6586857031332329,
+        "lane": 1,
+        "angle": 26,
+        "direction": -1
+      },
+      {
+        "power": 0.8142292660428211,
+        "lane": 1,
+        "angle": 15,
+        "direction": 0
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 15.166666666666666,
+    "winner": 0
+  },
+  "extreme": {
+    "beys": [
+      "bx-52-luster-dragoon",
+      "bx-23-phoenix-wing"
+    ],
+    "seed": 539354367,
+    "launches": [
+      {
+        "power": 0.869456068566069,
+        "lane": 0,
+        "angle": 29,
+        "direction": -1
+      },
+      {
+        "power": 0.664602883066982,
+        "lane": 1,
+        "angle": 8,
+        "direction": 0
+      }
+    ],
+    "shouts": [
+      [
+        720
+      ],
+      [
+        840
+      ]
+    ],
+    "time": 15.058333333333334,
+    "winner": 1
+  }
+}

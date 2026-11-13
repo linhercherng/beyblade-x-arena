@@ -1,3 +1,4 @@
+import {TRAIT_VERSION} from "./combat-profiles.ts";
 import { BEYS, type Bey, type BeyType } from "./catalog.ts";
 import { rng, ENGINE_VERSION, type Launch, type Result, type Battle } from "./physics.ts";
 export type Difficulty = "easy" | "normal" | "hard";
@@ -11,7 +12,8 @@ export interface TopReport {
   rpm: number;
 }
 export interface Round {
-  engineVersion?: 1 | 2 | 3 | 4;
+  engineVersion?: 1 | 2 | 3 | 4 | 5;
+  traitVersion?:number;
   index: number;
   slot: number;
   seed: number;
@@ -73,6 +75,7 @@ export function applyRound(
   const beys = [m.teams[0][m.slot], m.teams[1][m.slot]] as [string, string];
   m.rounds.push({
     engineVersion: battle?.version ?? ENGINE_VERSION,
+    ...((battle?.version??ENGINE_VERSION)===5?{traitVersion:TRAIT_VERSION}:{}),
     index: m.rounds.length + 1,
     slot: m.slot,
     seed: roundSeed(m),

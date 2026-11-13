@@ -59,7 +59,7 @@ test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
   await page.screenshot({ path: "artifacts/catalog-real-products-mobile.png" });
   expect(errors).toEqual([]);
 });
-for (const version of [1, 2, 3]) test(`已發布v${version}戰績匯入後仍使用舊引擎正確重播`, async ({ page }) => {
+for (const version of [1, 2, 3, 4]) test(`已發布v${version}戰績匯入後仍使用舊引擎正確重播`, async ({ page }) => {
   const m = JSON.parse(readFileSync(`tests/fixtures/v${version}-match.json`, "utf8"));
   const count = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
   const profile = {
@@ -108,8 +108,17 @@ async function playMatch(page: Page, local = false) {
   let rounds = 0;
   while (rounds++ < 14) {
     await expect(action(page, "lock").first()).toBeVisible();
+    await page.getByLabel("1P 傾斜方向").selectOption("1");
+    await page.getByLabel("1P 發射傾角").press("End");
+    await expect(page.getByLabel("1P 發射傾角")).toHaveValue("30");
+    if(local){
+      await page.getByLabel("2P 傾斜方向").selectOption("-1");
+      await page.getByLabel("2P 發射傾角").press("Home");
+    }
+    await page.locator("h1").click();
     await page.keyboard.press("a");
     await page.keyboard.press("Space");
+    if(local)await expect(page.getByLabel("1P 傾斜方向")).toBeDisabled();
     if (local) {
       await page.keyboard.press("ArrowRight");
       await page.keyboard.press("Enter");
@@ -190,6 +199,8 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.locator("#detail-stage canvas")).toBeVisible();
   await expect(page.getByRole("dialog")).toContainText("2024-03-30");
+  await expect(page.getByRole("dialog")).toContainText("個體特性 · V1");
+  await expect(page.getByRole("dialog")).toContainText("非實測重量");
   await page.screenshot({ path: "artifacts/card-desktop.png" });
   await page.keyboard.press("Escape");
   await action(page, "play").first().click();
@@ -225,6 +236,9 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   await action(page, "export").click();
   const d = await download;
   await d.saveAs("artifacts/backup.json");
+  const saved=JSON.parse(readFileSync("artifacts/backup.json","utf8")).recent[0];
+  expect(saved.rounds.every((r:any)=>r.engineVersion===5&&r.traitVersion===1)).toBe(true);
+  expect(saved.rounds[0].inputs[0]).toMatchObject({angle:30,direction:1});
   await page.locator("#backup-file").setInputFiles("artifacts/backup.json");
   await expect(page.locator("#toast")).toContainText("已匯入");
   expect(errors).toEqual([]);

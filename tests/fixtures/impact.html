@@ -10,12 +10,12 @@ const arena = new Arena(), sound = new Sound();
 arena.setBeys([BEYS[0],BEYS[11]]); arena.attach(document.querySelector("#stage"),"battle");
 const battle = createBattle(BEYS[0],BEYS[11],[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],13);
 battle.tops.forEach((t,i)=>{ t.x=i?.43:-.43; t.z=0; });
-let mode=null, paused=false, capture=false, last=0, meters, peakSfx=0, musicAtPeak=0, peakMix=0;
-function rms(analyser) { const data=new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(data); return {rms:Math.sqrt(data.reduce((s,v)=>s+v*v,0)/data.length),peak:data.reduce((m,v)=>Math.max(m,Math.abs(v)),0)}; }
+let mode=null, paused=false, capture=false, last=0, meters, peakSfx=0, musicAtPeak=0, peakMix=0,minDuck=1;
+function rms(analyser) { const data=new Float32Array(analyser.fftSize); analyser.getFloatTimeDomainData(data); return {data,rms:Math.sqrt(data.reduce((s,v)=>s+v*v,0)/data.length),peak:data.reduce((m,v)=>Math.max(m,Math.abs(v)),0)}; }
 document.addEventListener("click",e=>{
   if(e.target.tagName!=="BUTTON")return;
   sound.unlock();
-  if(!meters){ meters=[sound.sfx,sound.musicDuck??sound.music,sound.master].map(bus=>{const a=sound.ctx.createAnalyser(); a.fftSize=512;bus.connect(a);return a;}); }
+  if(!meters){ meters=[sound.sfx,sound.musicDuck??sound.music,sound.master].map(bus=>{const a=sound.ctx.createAnalyser(); a.fftSize=2048;bus.connect(a);return a;}); }
   const id=e.target.id;
   if(id==="capture") {capture=true;return;}
   if(id==="pause") {paused=!paused;return;}
@@ -23,7 +23,7 @@ document.addEventListener("click",e=>{
   if(id==="bgm") {mode="battle";return;}
   const strength={light:.5,medium:4,heavy:14,rapid:14}[id];
   if(strength===undefined)return;
-  peakSfx=musicAtPeak=peakMix=0;
+  peakSfx=musicAtPeak=peakMix=0;minDuck=1;
   for(let i=0;i<(id==="rapid"?30:1);i++){
     const hit={type:"hit",x:0,z:0,strength,player:0,time:1};
     arena.event(hit);sound.event(hit);
@@ -35,12 +35,17 @@ function frame(time){
  const dt=Math.min(.05,(time-last)/1000||0);last=time;
  if(!paused)battle.tops.forEach((t,i)=>t.rotation+=dt*(i?-18:18));
  arena.draw(paused?0:dt,battle);sound.update(null,false,mode);
- if(meters){const s=rms(meters[0]),m=rms(meters[1]);if(s.rms>peakSfx){peakSfx=s.rms;musicAtPeak=m.rms;}peakMix=Math.max(peakMix,rms(meters[2]).peak);}
+ minDuck=Math.min(minDuck,sound.musicDuck?.gain.value??1);
+ if(meters){const s=rms(meters[0]),m=rms(meters[1]);// 重疊12ms視窗覆蓋兩次繪圖之間的起音，避免RAF漏掉碰撞峰值。
+ for(let start=0;start<=s.data.length-512;start+=128){
+   let se=0,me=0;for(let j=start;j<start+512;j++){se+=s.data[j]**2;me+=m.data[j]**2;}
+   const level=Math.sqrt(se/512);if(level>peakSfx){peakSfx=level;musicAtPeak=Math.sqrt(me/512);}
+ }peakMix=Math.max(peakMix,rms(meters[2]).peak);}
  requestAnimationFrame(frame);
 }
 window.impactMetrics=()=>({particles:arena.particles.length,shake:arena.shake,reduced:arena.reduced,
  streaks:arena.sparkStreaks?.geometry.drawRange.count??0, flashes:arena.impactFlashes?.filter(f=>f.material.opacity>0).length??0,
  duck:sound.musicDuck?.gain.value??1,music:sound.music?.gain.value??0,playing:sound.playing?.mode,
- peakSfx,musicAtPeak,peakMix,quaternion:arena.camera.quaternion.toArray()});
+ peakSfx,musicAtPeak,peakMix,minDuck,quaternion:arena.camera.quaternion.toArray()});
 requestAnimationFrame(frame);
 </script></html>

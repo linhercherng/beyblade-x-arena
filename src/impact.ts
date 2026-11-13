@@ -7,7 +7,7 @@ export function impactProfile(strength: number) {
     gain: .36 + energy * 1.14,
     sparks: Math.round(4 + energy * 38),
     shake: Math.pow(energy, 1.5) * .007,
-    duck: .72 - energy * .42,
+    duck: .72 - energy * .48,
   };
 }
 export function impactSamples(tier: 0 | 1 | 2, sampleRate: number) {

@@ -8,10 +8,10 @@ export function highlightPrompt(kind:Finish,hold:"impact"|"finish"|null,finished
   if(hold==="finish")return `${FINISH[kind].label} · 決勝瞬間`;
   return finished?`${FINISH[kind].label} · 慢動作回看`:"精彩重播 · 最後一擊";
 }
-const FIELDS=["x","z","vx","vz","rpm","tilt","rotation","dashUntil"] as const;
+const FIELDS=["x","z","vx","vz","rpm","tilt","rotation","dashUntil","axisX","axisZ"] as const;
 type Pose=Pick<Top,typeof FIELDS[number]>;
 type Frame={time:number;tops:[Pose,Pose]};
-const pose=(top:Top|Pose)=>Object.fromEntries(FIELDS.map(k=>[k,top[k]])) as Pose;
+const pose=(top:Top|Pose)=>Object.fromEntries(FIELDS.map(k=>[k,top[k]??0])) as Pose;
 export class HighlightRecorder {
   private frames:Frame[]=[];
   private next=0;
@@ -30,7 +30,7 @@ export class HighlightRecorder {
     if(last&&b.time-last.time<1/30-1e-8&&!b.result)return;
     const frame=this.frames[this.next]??{time:0,tops:[pose(b.tops[0]),pose(b.tops[1])]};
     frame.time=b.time;
-    b.tops.forEach((t,i)=>{for(const k of FIELDS)frame.tops[i][k]=t[k];});
+    b.tops.forEach((t,i)=>{for(const k of FIELDS)frame.tops[i][k]=t[k]??0;});
     this.frames[this.next]=frame;this.next=(this.next+1)%HIGHLIGHT_CAPACITY;
   }
   clip(b:Battle){
@@ -88,7 +88,7 @@ export class HighlightReplay {
     while(this.frameCursor<this.frames.length-2&&this.frames[this.frameCursor+1].time<time)this.frameCursor++;
     const a=this.frames[this.frameCursor],b=this.frames[Math.min(this.frameCursor+1,this.frames.length-1)],alpha=Math.max(0,Math.min(1,(time-a.time)/Math.max(1e-8,b.time-a.time)));
     this.battle.time=time;
-    this.battle.tops.forEach((t,i)=>{for(const k of FIELDS)t[k]=a.tops[i][k]+(b.tops[i][k]-a.tops[i][k])*alpha;});
+    this.battle.tops.forEach((t,i)=>{for(const k of FIELDS)t[k]=(a.tops[i][k]??0)+((b.tops[i][k]??0)-(a.tops[i][k]??0))*alpha;});
     const events:BattleEvent[]=[];
     while(this.eventCursor<this.events.length&&this.events[this.eventCursor].time<=time)events.push(this.events[this.eventCursor++]);
     this.battle.result=phase==="finish"?this.result:null;

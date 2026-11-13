@@ -1,3 +1,4 @@
+import version4Match from "./fixtures/v4-match.json" with {type:"json"};
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import oldMatch from "./fixtures/v1-match.json" with { type: "json" };
@@ -14,7 +15,7 @@ import {
   exportProfile,
   validateMatch,
 } from "../src/storage.ts";
-for (const fixture of [version2Match, version3Match]) test(`v${fixture.rounds[0].engineVersion}備份通過驗證並保留原報告與結果，未知引擎拒絕匯入`, () => {
+for (const fixture of [version2Match, version3Match,version4Match]) test(`v${fixture.rounds[0].engineVersion}備份通過驗證並保留原報告與結果，未知引擎拒絕匯入`, () => {
   const m = validateMatch(fixture);
   for (const r of m.rounds) {
     const s = createBattle(BEYS.find(b => b.id === r.beys[0])!, BEYS.find(b => b.id === r.beys[1])!, r.inputs, r.seed, r.engineVersion);
@@ -110,6 +111,12 @@ test("拒絕惡意或損毀備份，驗證不修改既有狀態", () => {
   const d = structuredClone(p);
   d.recent[0].rounds[0].inputs = [];
   assert.throws(() => validateProfile(d));
+  const invalidTraits=structuredClone(p);
+  invalidTraits.recent[0].rounds[0].traitVersion=2;
+  assert.throws(()=>validateProfile(invalidTraits));
+  const invalidDirection=structuredClone(p);
+  invalidDirection.recent[0].rounds[0].inputs[0].direction=2 as never;
+  assert.throws(()=>validateProfile(invalidDirection));
   assert.equal(p.recent[0].teams[0][0], m.teams[0][0]);
 });
 test("保存的發射與呼喊可逐步重播，每場結果完全一致", () => {

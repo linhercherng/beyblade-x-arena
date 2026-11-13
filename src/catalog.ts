@@ -1,3 +1,4 @@
+import {combatProfile,profileStats} from "./combat-profiles.ts";
 import raw from "./catalog-data.json" with { type: "json" };
 import additions from "../scripts/catalog-expansion.json" with { type: "json" };
 export const NEW_BEY_IDS = new Set(additions.products.map(b => b.id));
@@ -62,7 +63,7 @@ export const STAT_LABEL: Record<keyof Stats, string> = {
   sta: "持久",
   dash: "衝刺",
   burst: "抗爆裂",
-  weight: "重量",
+  weight: "質量指數",
 };
 export interface Bit {
   name: string;
@@ -132,9 +133,6 @@ for (const [code, entry] of Object.entries({ ...verified.bits, ...additions.bits
     provisional: false,
   });
 }
-const hash = (s: string) =>
-  [...s].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 17);
-const clamp = (v: number) => Math.round(Math.min(100, Math.max(1, v)));
 export interface Blade {
   name: string;
   spin: SpinDirection;
@@ -181,29 +179,16 @@ export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
   const added = addedById.get(row.id);
   const bit = bits[row.bit];
   if (!bit) throw new Error(`缺少軸心：${row.bit}`);
-  const h = hash(row.blade);
-  const base = profiles[bit.type];
-  blades[row.blade] ??= {
-    name: row.name,
-    spin,
-    atk: clamp(base[0] + (h % 17) - 8),
-    def: clamp(base[1] + ((h >>> 4) % 17) - 8),
-    sta: clamp(base[2] + ((h >>> 8) % 17) - 8),
-    weight: clamp(
-      52 +
-        (h % 24) +
-        (bit.type === "defense" ? 12 : bit.type === "stamina" ? -5 : 4) +
-        (row.line === "UX" ? 10 : row.line === "CX" ? 5 : 0),
-    ),
-  };
   const [teeth, height] = row.ratchet.split("-");
   ratchets[row.ratchet] ??= {
     sides: teeth === "M" ? 6 : teeth === "integrated" ? 4 : Number(teeth),
     height: teeth === "integrated" ? 65 : Number(height),
     weight: teeth === "integrated" ? 8 : 5 + (Number(teeth) || 6) / 2,
   };
-  const blade = blades[row.blade],
-    ratchet = ratchets[row.ratchet];
+  const ratchet = ratchets[row.ratchet];
+  const combat = combatProfile(row.id,row.bit,ratchet.height,ratchet.sides,bit.type);
+  const stats=profileStats(combat,bit.type,bit.dash,bit.burst+5-ratchet.sides*.7+(70-ratchet.height)*.15);
+  blades[row.blade] ??= {name:row.name,spin,atk:stats.atk,def:stats.def,sta:stats.sta,weight:stats.weight-ratchet.weight};
   const release = (
     verified.releases as Record<string, { date: string; source: string }>
   )[row.code];
@@ -222,16 +207,7 @@ export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
         ? "blade"
         : "bit"
       : null,
-    stats: {
-      atk: clamp(blade.atk * 0.78 + bit.atk * 0.22),
-      def: clamp(blade.def * 0.78 + bit.def * 0.22),
-      sta: clamp(blade.sta * 0.78 + bit.sta * 0.22),
-      dash: bit.dash,
-      burst: clamp(
-        bit.burst + 5 - ratchet.sides * 0.7 + (70 - ratchet.height) * 0.15,
-      ),
-      weight: clamp(blade.weight + ratchet.weight),
-    },
+    stats,
     height: ratchet.height,
     color: TYPE[bit.type].color,
     cxParts: row.line === "CX" ? row.name.split(" ") : [],

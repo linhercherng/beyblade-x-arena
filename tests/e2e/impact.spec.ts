@@ -27,9 +27,10 @@ test("最大配樂音量時重擊仍在前景，短暫壓低配樂後恢復且�
   await page.waitForTimeout(600);
   await page.locator("#heavy").click();
   await expect.poll(async () => (await metrics(page)).peakSfx).toBeGreaterThan(.03);
+  await page.waitForTimeout(80);
   const hit = await metrics(page);
   expect(hit.peakSfx).toBeGreaterThan(hit.musicAtPeak * 1.5);
-  expect(hit.duck).toBeLessThan(.8);
+  expect(hit.minDuck).toBeLessThan(.8);
   expect(hit.music).toBeLessThanOrEqual(.43);
   expect(hit.peakMix).toBeLessThan(.95);
   await expect.poll(async () => (await metrics(page)).duck).toBeGreaterThan(.97);
@@ -44,6 +45,7 @@ test("減少動態效果不震動或閃光，手機火花數量受控", async ({
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/tests/fixtures/impact.html");
   await page.locator("#heavy").click();
+  await page.waitForTimeout(80);
   const hit = await metrics(page);
   expect(hit.shake).toBe(0);
   expect(hit.flashes).toBe(0);
