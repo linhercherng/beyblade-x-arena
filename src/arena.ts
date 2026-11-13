@@ -105,6 +105,8 @@ export class Arena {
   exploded = false;
   closeUp = true;
   highlightShot: "approach" | "finish" | null = null;
+  highlightImpact = new THREE.Vector3();
+  highlightImpactActive = false;
   dragging = false;
   lastX = 0;
   lastY = 0;
@@ -385,6 +387,7 @@ export class Arena {
     this.resetEffects();
   }
   private resetEffects() {
+    this.highlightImpactActive=false;
     this.finishRate=1;this.finishShock=this.finishZoom=0;
     this.hitPlayback.reset();this.hitRing.visible=false;
     (this.hitRing.material as THREE.MeshBasicMaterial).color.set("#b8f6ff");
@@ -409,16 +412,23 @@ export class Arena {
     if(!this.highlightShot)return;
     const focus=this.cameraFocus;
     let radius=0;
-    if(b.result&&["over","extreme"].includes(b.result.finish))radius=6.5+focus.length();
-    else poses.forEach((p,i)=>{
+    poses.forEach((p,i)=>{
       const margin=b.result?.finish==="burst"?1.62:.8;
-      radius=Math.max(radius,Math.hypot(p.x-focus.x,.385+(p.x*p.x+p.z*p.z)*.024-focus.y,p.z-focus.z)+margin);
+      const ground=.035+(p.x*p.x+p.z*p.z)*.024;
+      const flight=b.result?.winner!==null&&b.result?.winner!==i&&["over","extreme"].includes(b.result?.finish??"")
+        ?exitPose(b.result!.finish as "over"|"extreme",finishPlayback(this.time-this.finishTime,this.finishRate),{x:p.x,y:ground,z:p.z}):{x:p.x,y:ground,z:p.z};
+      radius=Math.max(radius,Math.hypot(flight.x-focus.x,flight.y+.35-focus.y,flight.z-focus.z)+margin);
       const state=this.dashStates[i];
       if(!b.result&&state?.grip&&dashVisual(this.time-state.at).latch>0)
         radius=Math.max(radius,Math.hypot(state.x-focus.x,.75-focus.y,state.z-focus.z)+.8);
     });
+    if(!this.closeUp)radius=Math.max(radius,6.5+focus.length());
     const distance=this.camera.position.distanceTo(focus),required=viewRange(radius,this.camera);
     if(distance<required)this.camera.position.sub(focus).multiplyScalar(required/Math.max(.001,distance)).add(focus);
+  }
+  trackHighlight(hold:"impact"|"finish"|null,impact:BattleEvent|null) {
+    this.highlightImpactActive=hold==="impact"&&!!impact;
+    if(impact)this.highlightImpact.set(impact.x,.45+(impact.x*impact.x+impact.z*impact.z)*.024,impact.z);
   }
   beginHighlight(b:Battle) {
     this.resetEffects();this.highlightShot="approach";this.frameHighlight(b);
@@ -533,6 +543,7 @@ export class Arena {
     previous: readonly TopPose[] = [],
     alpha = 1,
     openingSeconds: number | null = null,
+    cameraDt = dt,
   ) {
     this.time += dt;
     const finishAge=Math.max(0,this.time-this.finishTime),finishElapsed=finishPlayback(finishAge,this.finishRate);
@@ -603,7 +614,23 @@ export class Arena {
       look.y += entry.height * 0.25;
       base.y += entry.height * 0.18;
     }
-    const cameraBlend = damping(dt, 8);
+    if(this.highlightShot&&battle){
+      const oldX=look.x,oldY=look.y,oldZ=look.z;
+      let trackingRange:number|null=null;
+      if(this.highlightShot==="approach"){
+        look.x+=THREE.MathUtils.clamp((battle.tops[0].vx+battle.tops[1].vx)*.025,-.25,.25);
+        look.z+=THREE.MathUtils.clamp((battle.tops[0].vz+battle.tops[1].vz)*.025,-.25,.25);
+        if(this.highlightImpactActive)look.lerp(this.highlightImpact,.6);
+      } else if(battle.result?.winner!==null&&battle.result){
+        const loser=1-battle.result.winner,p=poses![loser],winner=poses![battle.result.winner],ground=.035+(p.x*p.x+p.z*p.z)*.024;
+        const flight=exitFinish?exitPose(battle.result.finish as "over"|"extreme",finishElapsed,{x:p.x,y:ground,z:p.z}):{x:p.x,y:ground,z:p.z};
+        look.set((winner.x+flight.x*2)/3,flight.y*.35+.2,(winner.z+flight.z*2)/3);
+        if(exitFinish&&this.closeUp)trackingRange=closeUpRange(Math.hypot(winner.x-flight.x,winner.z-flight.z)+.6,this.camera);
+      }
+      base.x+=look.x-oldX;base.y+=look.y-oldY;base.z+=look.z-oldZ;
+      if(trackingRange!==null)base.set(look.x+Math.sin(az+.4)*trackingRange,look.y+Math.max(3.2,trackingRange*.45),look.z+Math.cos(az+.4)*trackingRange);
+    }
+    const cameraBlend = damping(cameraDt, this.highlightShot?12:8);
     if(battle?.result && this.finishRate<1 && finishAge<.36) {
       const blend=THREE.MathUtils.smoothstep(finishAge,0,.36);
       this.camera.position.lerpVectors(this.finishCameraPosition,base,blend);
@@ -612,7 +639,7 @@ export class Arena {
       this.camera.position.lerp(base, cameraBlend);
       this.cameraFocus.lerp(look, cameraBlend);
     }
-    if(battle&&dt>0)this.fitHighlight(battle,poses!);
+    if(battle&&cameraDt>0)this.fitHighlight(battle,poses!);
     this.camera.lookAt(this.cameraFocus);
     this.shakeAge += dt;
     const kick = impactShake(this.shakeAge, this.shake, this.reduced);

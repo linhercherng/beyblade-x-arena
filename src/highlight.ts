@@ -1,6 +1,13 @@
 import type {Battle,BattleEvent,Top} from "./physics.ts";
+import {FINISH,type Finish} from "./physics.ts";
 export const HIGHLIGHT_CAPACITY=92;
 export const HIGHLIGHT_RATE=.55;
+export const IMPACT_HOLD=.12, FINISH_HOLD=.16;
+export function highlightPrompt(kind:Finish,hold:"impact"|"finish"|null,finished:boolean) {
+  if(hold==="impact")return "關鍵撞擊 · 定格回看";
+  if(hold==="finish")return `${FINISH[kind].label} · 決勝瞬間`;
+  return finished?`${FINISH[kind].label} · 慢動作回看`:"精彩重播 · 最後一擊";
+}
 const FIELDS=["x","z","vx","vz","rpm","tilt","rotation","dashUntil"] as const;
 type Pose=Pick<Top,typeof FIELDS[number]>;
 type Frame={time:number;tops:[Pose,Pose]};
@@ -40,6 +47,10 @@ export class HighlightReplay {
   readonly battle:Battle;
   readonly leadSeconds:number;
   readonly duration:number;
+  readonly impactAt:number|null;
+  readonly finishAt:number;
+  private keyImpact:BattleEvent|null;
+  private motionAge=0;
   private eventCursor=0;
   private frameCursor=0;
   get eventCount(){return this.events.length;}
@@ -50,21 +61,37 @@ export class HighlightReplay {
     this.frames=frames;this.events=events;this.start=start;
     this.battle={...source,tops:source.tops.map(t=>({...t})) as [Top,Top],result:null,events:[],shouts:[[],[]]};
     this.result={...source.result!};this.end=source.time;
-    this.leadSeconds=(this.end-start)/HIGHLIGHT_RATE;this.duration=this.leadSeconds+1.65/HIGHLIGHT_RATE;
+    this.keyImpact=events.filter(e=>e.type==="hit"&&e.strength>=3&&e.time<this.end-.1)
+      .reduce<BattleEvent|null>((best,e)=>!best||e.strength>=best.strength?e:best,null);
+    this.impactAt=this.keyImpact?(this.keyImpact.time-start)/HIGHLIGHT_RATE:null;
+    this.leadSeconds=(this.end-start)/HIGHLIGHT_RATE;
+    this.finishAt=this.leadSeconds+(this.keyImpact?IMPACT_HOLD:0);
+    this.duration=this.finishAt+FINISH_HOLD+1.65/HIGHLIGHT_RATE;
   }
   private result:NonNullable<Battle["result"]>;
   private end:number;
   advance(dt:number){
     this.age=Math.min(this.duration,this.age+Math.max(0,Number.isFinite(dt)?dt:0));
-    const time=Math.min(this.end,this.start+this.age*HIGHLIGHT_RATE);
+    let hold:"impact"|"finish"|null=null;
+    let motion=this.age;
+    if(this.impactAt!==null){
+      motion-=Math.min(IMPACT_HOLD,Math.max(0,this.age-this.impactAt));
+      if(this.age>=this.impactAt&&this.age<this.impactAt+IMPACT_HOLD){hold="impact";motion=this.impactAt;}
+    }
+    motion-=Math.min(FINISH_HOLD,Math.max(0,this.age-this.finishAt));
+    if(this.age>=this.finishAt&&this.age<this.finishAt+FINISH_HOLD){hold="finish";motion=this.leadSeconds;}
+    motion=Math.max(this.motionAge,motion);
+    const phase=this.age>=this.finishAt?"finish":"approach";
+    const motionDt=phase==="finish"?Math.max(0,motion-Math.max(this.motionAge,this.leadSeconds)):motion-this.motionAge;
+    this.motionAge=motion;
+    const time=phase==="finish"?this.end:hold==="impact"?this.keyImpact!.time:Math.min(this.end,this.start+motion*HIGHLIGHT_RATE);
     while(this.frameCursor<this.frames.length-2&&this.frames[this.frameCursor+1].time<time)this.frameCursor++;
     const a=this.frames[this.frameCursor],b=this.frames[Math.min(this.frameCursor+1,this.frames.length-1)],alpha=Math.max(0,Math.min(1,(time-a.time)/Math.max(1e-8,b.time-a.time)));
     this.battle.time=time;
     this.battle.tops.forEach((t,i)=>{for(const k of FIELDS)t[k]=a.tops[i][k]+(b.tops[i][k]-a.tops[i][k])*alpha;});
     const events:BattleEvent[]=[];
     while(this.eventCursor<this.events.length&&this.events[this.eventCursor].time<=time)events.push(this.events[this.eventCursor++]);
-    const phase=this.age>=this.leadSeconds?"finish":"approach";
     this.battle.result=phase==="finish"?this.result:null;
-    return{battle:this.battle,phase,events,progress:this.age/this.duration,done:this.age>=this.duration};
+    return{battle:this.battle,phase,hold,impact:this.keyImpact,motionDt,events,progress:this.age/this.duration,done:this.age>=this.duration};
   }
 }

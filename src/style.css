@@ -3244,6 +3244,9 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 .highlight-panel strong,.highlight-panel small {display:block;}
 .highlight-panel strong {font-size:18px;margin:4px 0;}
 .highlight-panel small {color:#a8c3d2;}
+.highlight-panel>div:first-child {min-width:0;}
+.highlight-type {display:inline-block;margin:4px 0 0;padding:2px 6px;border:1px solid currentColor;border-radius:3px;font-size:11px;color:var(--finish-color);}
+.highlight-panel[data-moment="impact"],.highlight-panel[data-moment="finish"] {border-left-color:var(--finish-color);background:#172736f5;}
 .highlight-panel .primary {flex-shrink:0;min-height:44px;}
 .highlight-progress {position:absolute;left:0;right:0;bottom:0;height:3px;background:#314451;overflow:hidden;}
 .highlight-progress i {display:block;height:100%;background:#b6f55b;transform:scaleX(0);transform-origin:left;}

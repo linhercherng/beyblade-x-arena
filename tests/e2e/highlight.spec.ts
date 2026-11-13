@@ -1,5 +1,16 @@
 import{test,expect,type Page}from'@playwright/test';import{writeFileSync}from'node:fs';
 const metrics=(p:Page)=>p.evaluate(()=>(window as any).highlightMetrics());
+test('全場視角追蹤時整段盤體與接盤均完整入框',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/highlight.html');await page.locator('#whole').click();
+ for(const kind of ['over','extreme','burst']){await page.locator('#'+kind).click();await page.locator('#sweep').click();const m=await metrics(page);expect(m.maxBoardExtent).toBeLessThan(1);expect(m.maxExtent).toBeLessThan(1);expect(m.sourceStable).toBe(true);}
+});
+test('撞擊與終結定格不推進動作，鏡頭可追蹤，手動暫停仍精確凍結',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/highlight.html');await page.locator('#extreme').click();await page.locator('#impact').click();const hit=await metrics(page);expect(hit.moment).toBe('impact');await expect(page.locator('#phase')).toHaveText('關鍵撞擊 · 定格回看');
+ await page.locator('#tiny').click();const tracked=await metrics(page);expect(tracked.motionDt).toBe(0);expect(tracked.positions).toEqual(hit.positions);expect(tracked.camera).not.toEqual(hit.camera);await page.waitForTimeout(120);expect((await metrics(page)).camera).toEqual(tracked.camera);
+ await page.screenshot({path:'artifacts/highlight-impact-hold-mobile-v0160.png'});
+ await page.locator('#terminal').click();const finish=await metrics(page);expect(finish.moment).toBe('finish');expect(finish.motionDt).toBe(0);await expect(page.locator('#phase')).toHaveText('極限終結 · 決勝瞬間');await page.locator('#tiny').click();expect((await metrics(page)).positions).toEqual(finish.positions);expect((await metrics(page)).sourceStable).toBe(true);
+ await page.screenshot({path:'artifacts/highlight-finish-hold-mobile-v0160.png'});
+});
 test('手機完整精彩重播的追擊與終結全段不裁切模型',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/highlight.html');
  for(const kind of ['over','burst','extreme']){await page.locator('#'+kind).click();await page.locator('#sweep').click();const m=await metrics(page);expect(m.maxExtent).toBeLessThan(1);expect(m.geometryStable).toBe(true);expect(m.sourceStable).toBe(true);}
@@ -7,7 +18,7 @@ test('手機完整精彩重播的追擊與終結全段不裁切模型',async({pa
 test('三種終結精彩重播具追擊與終結鏡位，插值與暫停連續且原結果不變',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:1200,height:800});await page.goto('/tests/fixtures/highlight.html');
  for(const kind of ['burst','over','extreme']){
-  await page.locator('#'+kind).click();await page.waitForTimeout(350);await page.locator('#pause').click();const frozen=await metrics(page);expect(frozen.shot).toBe('approach');expect(frozen.duration).toBeLessThanOrEqual(7.6);await page.waitForTimeout(100);expect((await metrics(page)).age).toBe(frozen.age);expect((await metrics(page)).camera).toEqual(frozen.camera);
+  await page.locator('#'+kind).click();await page.waitForTimeout(350);await page.locator('#pause').click();const frozen=await metrics(page);expect(frozen.shot).toBe('approach');expect(frozen.duration).toBeLessThanOrEqual(7.9);await page.waitForTimeout(100);expect((await metrics(page)).age).toBe(frozen.age);expect((await metrics(page)).camera).toEqual(frozen.camera);
   await page.screenshot({path:`artifacts/highlight-${kind}-approach-v0150.png`});await page.locator('#finish').click();const f=await metrics(page);expect(f.shot).toBe('finish');expect(f.geometryStable).toBe(true);expect(f.sourceStable).toBe(true);expect(f.bounds.every((v:number[])=>Math.abs(v[0])<1&&Math.abs(v[1])<1)).toBe(true);await page.screenshot({path:`artifacts/highlight-${kind}-finish-v0150.png`});
   await page.locator('#end').click();const done=await metrics(page);expect(done.sourceStable).toBe(true);expect(done.geometryStable).toBe(true);expect(done.size).toBeLessThanOrEqual(92);
  }
@@ -27,6 +38,7 @@ test('實際遊戲自動精彩重播可暫停並一鍵跳過，只結算原結�
   await page.keyboard.press('Space');await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:12000});while(await action('speed').textContent()!=='4×')await action('speed').click();
   await expect(page.locator('#highlight-panel,[data-action="next-round"],[data-action="rematch"]').first()).toBeVisible({timeout:45000});
   if(await page.locator('#highlight-panel').isVisible()){
+   await expect(page.locator('#highlight-type')).toContainText(/爆裂終結|越界終結|極限終結/);
    found=true;await action('pause').first().click();const progress=await page.locator('#highlight-progress').getAttribute('style');await page.waitForTimeout(120);expect(await page.locator('#highlight-progress').getAttribute('style')).toBe(progress);
    await page.screenshot({path:'artifacts/highlight-paused-mobile-v0150.png'});await action('pause').first().click();await page.screenshot({path:'artifacts/highlight-live-mobile-v0150.png'});await action('pause').first().click();await action('skip-highlight').click();await expect(page.locator('#highlight-panel')).toHaveCount(0);await expect(page.locator('.round-result,.result-hero')).toBeVisible();
    if(await page.locator('.round-result').isVisible())await expect(page.locator('.round-result .eyebrow')).toHaveText(`ROUND ${rounds} COMPLETE`);else await expect(page.locator('.report-panel table').first().locator('tbody tr')).toHaveCount(rounds);break;
