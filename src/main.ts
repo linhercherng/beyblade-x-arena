@@ -33,6 +33,7 @@ import {
   applyRound,
   roundSeed,
   selectCpu,
+  randomTeam,
   cpuLaunch,
   scoreMatch,
   DIFFICULTY,
@@ -185,7 +186,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.17.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.17.1</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -276,7 +277,7 @@ function lineup(player: number, editable = false) {
 function renderTeam() {
   screen = "team";
   shell(
-    `${title("BUILD YOUR DECK", `${teamPlayer === 0 ? "1P" : "2P"}，你的三顆王牌。`, "點選三顆不同戰刃，並以箭頭調整出場順序。", btn("快速組隊 ↗", "quick", "secondary"))}<div class="team-layout"><section>${filters()}<div id="catalog-list">${cards()}</div></section><aside class="team-panel panel"><div class="section-index">YOUR LINEUP <span>${teams[teamPlayer].length} / 3</span></div><h2>${teamPlayer === 0 ? "1P" : "2P"} 出場順序</h2><p class="muted">順序公開後即鎖定</p>${lineup(teamPlayer, true)}<div class="team-advice">↗ 攻擊剋持久 · 持久剋防禦 · 防禦剋攻擊<br>相性來自物理表現，沒有額外傷害倍率。</div>${btn("確認隊伍 →", "confirm-team", "primary", teams[teamPlayer].length !== 3 ? "disabled" : "")}</aside></div>`,
+    `${title("BUILD YOUR DECK", `${teamPlayer === 0 ? "1P" : "2P"}，你的三顆王牌。`, "點選三顆不同戰刃，並以箭頭調整出場順序。", btn("快速組隊 ↗", "quick", "secondary"))}<div class="team-layout"><section>${filters()}<div id="catalog-list">${cards()}</div></section><aside class="team-panel panel"><div class="section-index">YOUR LINEUP <span>${teams[teamPlayer].length} / 3</span></div><h2>${teamPlayer === 0 ? "1P" : "2P"} 出場順序</h2><p class="muted">順序公開後即鎖定</p>${btn("⚄ 隨機選陀螺", "random-team", "secondary", 'aria-label="隨機選擇三顆不同戰刃"')}${lineup(teamPlayer, true)}<div class="team-advice">↗ 攻擊剋持久 · 持久剋防禦 · 防禦剋攻擊<br>相性來自物理表現，沒有額外傷害倍率。</div>${btn("確認隊伍 →", "confirm-team", "primary", teams[teamPlayer].length !== 3 ? "disabled" : "")}</aside></div>`,
   );
 }
 function confirmTeam() {
@@ -344,11 +345,8 @@ function launchControls(player: 0 | 1) {
 function renderArena() {
   const launching = screen === "launch";
   shell(
-    `<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : `第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn(document.fullscreenElement ? "退出全螢幕" : "全螢幕", "fullscreen", "secondary")}${btn("近鏡", "close-up", "secondary", `aria-pressed="${arena?.closeUp ?? false}"`)}${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗時會自動暫停</p></div></div><div id="battle-controls">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">CPU READY</span><h3>電腦已就緒</h3><p>${DIFFICULTY[match!.difficulty]} · 等待你的完美發射</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? '<div class="replay-note">相同種子、發射輸入與呼喊時機，以固定步長重播。重播不寫入戰績。</div>' : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span class="battle-clock"><span id="battle-time">00.0 秒</span><small id="battle-phase">15–40 秒對決</small></span></div>`}</div>`,
+    `<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : `第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn(document.fullscreenElement ? "退出全螢幕" : "全螢幕", "fullscreen", "secondary")}${btn("近鏡", "close-up", "secondary", `aria-pressed="${arena?.closeUp ?? false}"`)}${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗時會自動暫停</p></div></div><div id="battle-controls">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">CPU READY</span><h3>電腦已就緒</h3><p>${DIFFICULTY[match!.difficulty]} · 等待你的完美發射</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? '<div class="replay-note">相同種子、發射輸入與呼喊時機，以固定步長重播。重播不寫入戰績。</div>' : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span class="battle-clock" role="timer" aria-label="對決經過時間" aria-live="off"><span id="battle-time">00.0 秒</span><small id="battle-phase">15–40 秒對決</small></span></div>`}</div>`,
   );
-  if (screen === "countdown")
-    byId("battle-message")!.innerHTML =
-      "<strong>3</strong><span>READY TO LAUNCH</span>";
   setPaused(paused);
 }
 function lock(player: 0 | 1) {
@@ -394,9 +392,6 @@ function startBattle() {
   renderArena();
   const msg = byId("battle-message")!;
   msg.innerHTML = '<strong class="shoot">GO SHOOT!</strong>';
-  setTimeout(() => {
-    if (screen === "battle" && !battle?.result) msg.innerHTML = "";
-  }, 850);
   sound.tone(440, 0.24, "sawtooth", 0.4, 1000);
 }
 function roundEnded() {
@@ -740,6 +735,11 @@ app.addEventListener("click", (e) => {
       );
       renderTeam();
       break;
+    case "random-team":
+      if(screen!=="team")break;
+      teams[teamPlayer]=randomTeam(crypto.getRandomValues(new Uint32Array(1))[0]);
+      renderTeam();
+      break;
     case "select": {
       const b = getBey(target.dataset.id!),
         t = teams[teamPlayer],
@@ -979,9 +979,11 @@ function updateHud() {
       bb.style.transform = `scaleX(${Math.max(0, Math.min(1, t.burst / t.bey.stats.burst))})`;
   });
   const timer = byId("battle-time");
-  if (timer) timer.textContent = battle.time.toFixed(1) + " 秒";
+  const timeText=battle.time.toFixed(1)+" 秒";
+  if (timer&&timer.textContent!==timeText) timer.textContent=timeText;
   const phase = byId("battle-phase");
-  if (phase) phase.textContent = (battle.version ?? 1) < 3 ? "舊版規則重播" : battle.time < 15 ? "開場穩定期 · 15 秒解除" : battle.time <= 30 ? "自由交戰" : "末段耗轉";
+  const phaseText=(battle.version ?? 1) < 3 ? "舊版規則重播" : battle.time < 15 ? "開場穩定期 · 15 秒解除" : battle.time <= 30 ? "自由交戰" : "末段耗轉";
+  if (phase&&phase.textContent!==phaseText) phase.textContent=phaseText;
 }
 function frame(time: number) {
   const realDt = Math.max(0, Math.min(0.25, (time - lastFrame) / 1000 || 0));
@@ -1041,6 +1043,7 @@ function frame(time: number) {
         accumulator -= DT;
       }
       if(!battle.result&&battle.time>=dashMessageUntil) byId("battle-message")?.querySelector(".dash-message")?.remove();
+      if(battle.time>=.85)byId("battle-message")?.querySelector(".shoot")?.remove();
       if (battle.result || time - lastHudTime >= 100) {
         updateHud();
         lastHudTime = time;

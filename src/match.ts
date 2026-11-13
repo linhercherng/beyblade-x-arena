@@ -95,6 +95,14 @@ export function applyRound(
   if (m.scores[result.winner] >= 4) m.winner = result.winner;
   else m.slot = (m.slot + 1) % 3;
 }
+export function randomTeam(seed:number):Bey[]{
+  const random=rng(seed),pool=[...BEYS],team:Bey[]=[];
+  while(team.length<3&&pool.length){
+    const [bey]=pool.splice(Math.floor(random()*pool.length),1);
+    if(!team.some(b=>b.blade===bey.blade))team.push(bey);
+  }
+  return team;
+}
 export function selectCpu(
   difficulty: Difficulty,
   seed: number,
