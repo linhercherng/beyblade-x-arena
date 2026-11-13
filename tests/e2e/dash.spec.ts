@@ -19,6 +19,8 @@ test('齒鳴與風切在最大配樂前景可辨，暫停及靜音會取消衝�
   await page.goto('/tests/fixtures/dash.html');await page.locator('#bgm').click();
   await expect.poll(async()=>(await metrics(page)).playing).toBe('battle');await page.waitForTimeout(650);
   await page.locator('#both').click();await expect.poll(async()=>(await metrics(page)).peakSfx).toBeGreaterThan(.01);
+  // 第一個FFT區塊可能仍含起音前的轉子與配樂，先涵蓋衝刺起音再比較前景。
+  await page.waitForTimeout(80);
   const m=await metrics(page);expect(m.peakSfx).toBeGreaterThan(m.musicAtPeak*1.5);expect(m.peakMix).toBeLessThan(.95);expect(m.duck).toBeLessThan(.8);
   await page.locator('#pause').click();await expect.poll(async()=>(await metrics(page)).voices).toBe(0);
   await page.waitForTimeout(150);await page.locator('#dash').click();await expect.poll(async()=>(await metrics(page)).voices).toBeGreaterThan(0);

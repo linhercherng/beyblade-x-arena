@@ -185,7 +185,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.16.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.17.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -433,8 +433,8 @@ function skipHighlight() {
 function beginHighlight() {
   if(!battle||!arena||arena.reduced)return false;
   highlight=highlightRecorder.clip(battle);if(!highlight)return false;
-  const first=highlight.advance(0);sound.stopEffects();arena.beginHighlight(first.battle);
-  for(const event of first.events){const dashHit=arena.event(event,first.battle);sound.event(event,dashHit);}
+  const first=highlight.advance(0);sound.beginReplay();arena.beginHighlight(first.battle);
+  for(const event of first.events){const dashHit=arena.event(event,first.battle);sound.event(event,dashHit,arena.soundPan(event.x,event.z));}
   const message=byId("battle-message")!;message.classList.remove("finish-overlay");message.innerHTML="";
   const kind=battle.result!.finish,hint=kind==="burst"?"三段分離":kind==="over"?"側盤出界":"前方出口";
   message.insertAdjacentHTML("afterend",`<section id="highlight-panel" class="highlight-panel" aria-label="終結精彩重播" style="--finish-color:${FINISH_COLORS[kind]}"><div><span class="eyebrow">HIGHLIGHT REPLAY</span><span id="highlight-type" class="highlight-type">${FINISH[kind].label} · ${hint}</span><strong id="highlight-moment" aria-live="polite">精彩重播 · 最後一擊</strong><small id="highlight-shot">追擊鏡位 · 0.55× 慢動作</small></div>${btn("跳過重播 →","skip-highlight","primary")}<div class="highlight-progress" aria-hidden="true"><i id="highlight-progress"></i></div></section>`);
@@ -1065,12 +1065,15 @@ function frame(time: number) {
       const frame=highlight.advance(realDt);
       highlightMotionDt=frame.motionDt;
       arena?.trackHighlight(frame.hold,frame.impact);
-      for(const event of frame.events){const dashHit=arena?.event(event,frame.battle)??false;sound.event(event,dashHit);}
+      const target=frame.phase==="finish"?arena?.models[1-battle.result!.winner!]?.position:frame.hold==="impact"?frame.impact:null;
+      const pan=arena&&target?arena.soundPan(target.x,target.z):0;
+      sound.setReplay(frame.hold==="impact"?"impact":frame.hold==="finish"?"decision":frame.phase==="finish"?"finish":"tracking",pan);
+      for(const event of frame.events){const dashHit=arena?.event(event,frame.battle)??false;sound.event(event,dashHit,arena?.soundPan(event.x,event.z));}
       if(frame.phase==="finish"&&!highlightFinishing){
         highlightFinishing=true;arena?.showHighlightFinish(frame.battle);
         const shot=byId("highlight-shot");if(shot)shot.textContent="終結追蹤鏡位 · 0.55× 慢動作";
       }
-      if(frame.phase==="finish"&&frame.hold!=="finish"&&!highlightFinishSound){highlightFinishSound=true;sound.finish(frame.battle.result!,HIGHLIGHT_RATE,true);}
+      if(frame.phase==="finish"&&frame.hold!=="finish"&&!highlightFinishSound){highlightFinishSound=true;sound.finish(frame.battle.result!,HIGHLIGHT_RATE,true,pan);}
       const moment=byId("highlight-moment"),label=highlightPrompt(battle.result!.finish,frame.hold,frame.phase==="finish");
       if(moment&&moment.textContent!==label)moment.textContent=label;
       const panel=byId("highlight-panel"),momentState=frame.hold??"";

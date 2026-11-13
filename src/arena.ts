@@ -437,6 +437,11 @@ export class Arena {
     this.highlightShot="finish";this.finish(b);this.finishRate=1;this.frameHighlight(b);
   }
   endHighlight() {this.highlightShot=null;this.resetEffects();}
+  soundPan(x:number,z:number) {
+    this.camera.updateMatrixWorld();
+    const basis=this.camera.matrixWorld.elements;
+    return THREE.MathUtils.clamp(((x-this.cameraFocus.x)*basis[0]+(z-this.cameraFocus.z)*basis[2])/3,-.8,.8);
+  }
   event(e: BattleEvent, battle?: Battle): boolean {
     const dashHit=battle ? this.hitPlayback.trigger(e,battle,this.time) : false;
     if (e.type === "hit") {

@@ -4,6 +4,7 @@ import tracks from "./music-tracks.json";
 import { musicVolume, type MusicMode } from "./music-state.ts";
 import { impactProfile, impactSamples, musicLevel } from "./impact.ts";
 import { dashSamples, hasRail } from "./dash.ts";
+import { replayMix, replayAccentSamples, type ReplayStage } from "./replay-audio.ts";
 
 type Playing = {
   mode: MusicMode;
@@ -22,6 +23,14 @@ export class Sound {
   sfx: GainNode | null = null;
   music: GainNode | null = null;
   musicDuck: GainNode | null = null;
+  private replayGain: GainNode | null = null;
+  private replayFilter: BiquadFilterNode | null = null;
+  private replayStage: ReplayStage | null = null;
+  private replayPan=0;
+  private replayAccents=new Map<"impact"|"decision",AudioBuffer>();
+  private replayPlayed=new Set<"impact"|"decision">();
+  private replayAccent:{source:AudioBufferSourceNode;gain:GainNode;pan:StereoPannerNode}|null=null;
+  private cuePans=new Map<AudioBufferSourceNode,StereoPannerNode>();
   volume = 0.6;
   requested: MusicMode | null = null;
   playing: Playing | null = null;
@@ -67,7 +76,9 @@ export class Sound {
       this.music = this.ctx.createGain();
       this.music.gain.value = musicLevel(this.volume, this.requested);
       this.musicDuck = this.ctx.createGain();
-      this.music.connect(this.musicDuck).connect(this.master);
+      this.replayGain=this.ctx.createGain();this.replayFilter=this.ctx.createBiquadFilter();
+      this.replayFilter.type="lowpass";this.replayFilter.Q.value=.5;this.replayFilter.frequency.value=Math.min(22000,this.ctx.sampleRate*.49);
+      this.music.connect(this.replayFilter).connect(this.replayGain).connect(this.musicDuck).connect(this.master);
       this.strikes = ([0, 1, 2] as const).map(tier => {
         const samples = impactSamples(tier, this.ctx!.sampleRate);
         const buffer = this.ctx!.createBuffer(1, samples.length, this.ctx!.sampleRate);
@@ -83,6 +94,10 @@ export class Sound {
       for(const kind of ["burst","over","extreme","spin","draw"] as const) {
         const samples=cueSamples(kind,this.ctx.sampleRate),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
         buffer.getChannelData(0).set(samples);this.cueBuffers.set(kind,buffer);
+      }
+      for(const kind of ["impact","decision"] as const){
+        const samples=replayAccentSamples(kind,this.ctx.sampleRate),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
+        buffer.getChannelData(0).set(samples);this.replayAccents.set(kind,buffer);
       }
       for (const pan of [-0.6, 0.6]) {
         const osc = this.ctx.createOscillator(),
@@ -104,7 +119,7 @@ export class Sound {
   }
   toggle() {
     this.muted = !this.muted;
-    if (this.muted) { this.stopCues(); this.stopDashes(); this.stopImpacts(); }
+    if (this.muted) this.stopEffects();
     try {
       localStorage.setItem("spinforge-muted", String(this.muted));
     } catch {
@@ -209,7 +224,7 @@ export class Sound {
     osc.start();
     osc.stop(now + duration);
   }
-  event(e: BattleEvent, dashHit=false) {
+  event(e: BattleEvent, dashHit=false, cameraPan?:number) {
     if (e.type === "hit") {
       if (!this.ctx || !this.sfx || !this.musicDuck || this.muted) return;
       const now = this.ctx.currentTime;
@@ -222,7 +237,7 @@ export class Sound {
       source.buffer = this.strikes[profile.tier];
       source.playbackRate.value = dashHit ? .8 : 1 + Math.sin(e.time * 17 + e.x) * .04;
       gain.gain.value = profile.gain*(dashHit?1.1:1);
-      pan.pan.value = Math.max(-.85, Math.min(.85, e.x / 5));
+      pan.pan.value = cameraPan ?? Math.max(-.85, Math.min(.85, e.x / 5));
       source.connect(gain).connect(pan).connect(this.sfx);
       this.impacts.set(source,gain);
       source.onended = () => { source.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source);this.impactTails.delete(source); };
@@ -232,7 +247,7 @@ export class Sound {
       duck.linearRampToValueAtTime(Math.min(duck.value, dashHit?.18:profile.duck), now + .004);
       duck.setTargetAtTime(1, now + (dashHit?.15:.08), .085);
     }
-    if (e.type === "dash") this.playDash(e);
+    if (e.type === "dash") this.playDash(e,cameraPan);
     if (e.type === "shout") {
       this.tone(330, 0.25, "triangle", 0.6, 990);
     }
@@ -260,7 +275,7 @@ export class Sound {
     }
     this.dashVoices.clear();
   }
-  private playDash(e:BattleEvent) {
+  private playDash(e:BattleEvent,cameraPan?:number) {
     if(!this.ctx||!this.sfx||this.muted||(e.player!==0&&e.player!==1))return;
     const now=this.ctx.currentTime;
     if(now-this.lastDash[e.player]<.12)return;
@@ -270,7 +285,7 @@ export class Sound {
     if(old) { old.gain.gain.cancelAndHoldAtTime(now);old.gain.gain.linearRampToValueAtTime(0,now+.015);old.source.stop(now+.015); }
     const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),pan=this.ctx.createStereoPanner();
     source.buffer=this.dashBuffers.get(grip)!;gain.gain.value=.95;
-    pan.pan.value=Math.max(-.8,Math.min(.8,e.x/5));
+    pan.pan.value=cameraPan??Math.max(-.8,Math.min(.8,e.x/5));
     source.connect(gain).connect(pan).connect(this.sfx);
     this.dashVoices.set(e.player,{source,gain});
     source.onended=()=>{source.disconnect();gain.disconnect();pan.disconnect();if(this.dashVoices.get(e.player)?.source===source)this.dashVoices.delete(e.player);};
@@ -290,10 +305,12 @@ export class Sound {
       source.stop(now + .015);
     });
     this.cues.clear();
+    this.cuePans.clear();
   }
-  private playCue(kind: Cue, initialRate=1, slowReplay=false) {
+  private playCue(kind: Cue, initialRate=1, slowReplay=false, cameraPan=0) {
     if (!this.ctx || !this.sfx || this.muted) return;
     this.stopImpacts(initialRate<1?.065:.015);
+    this.replayAccent=null;
     this.stopDashes();
     this.stopCues();
     if (!this.cueBuffers.has(kind)) {
@@ -307,11 +324,14 @@ export class Sound {
     const now=this.ctx.currentTime;
     source.playbackRate.setValueAtTime(initialRate,now);
     if(!slowReplay)source.playbackRate.linearRampToValueAtTime(1,now+FINISH_RECOVERY);
-    gain.gain.setValueAtTime(initialRate<1?0:1.2,now);
-    if(initialRate<1)gain.gain.linearRampToValueAtTime(1.2,now+.035);
-    source.connect(gain).connect(this.sfx);
+    const level=slowReplay?1.45:1.2;
+    gain.gain.setValueAtTime(initialRate<1?0:level,now);
+    if(initialRate<1)gain.gain.linearRampToValueAtTime(level,now+.035);
+    let pan:StereoPannerNode|null=null;
+    if(slowReplay){pan=this.ctx.createStereoPanner();pan.pan.value=cameraPan;source.connect(gain).connect(pan).connect(this.sfx);this.cuePans.set(source,pan);}
+    else source.connect(gain).connect(this.sfx);
     this.cues.set(source, gain);
-    source.onended = () => { source.disconnect(); gain.disconnect(); this.cues.delete(source); };
+    source.onended = () => { source.disconnect(); gain.disconnect();pan?.disconnect();this.cuePans.delete(source);this.cues.delete(source); };
     source.start();
     if (this.musicDuck) {
       const duck = this.musicDuck.gain;
@@ -320,8 +340,37 @@ export class Sound {
       duck.setTargetAtTime(1, now + (slowReplay?source.buffer.duration/initialRate:initialRate<1?1.45:.65), .12);
     }
   }
-  finish(result: Result, initialRate=1, slowReplay=false) { this.playCue(result.winner === null ? "draw" : result.finish,initialRate,slowReplay); }
-  stopEffects() {this.stopImpacts();this.stopDashes();this.stopCues();}
+  finish(result: Result, initialRate=1, slowReplay=false, cameraPan=0) { this.playCue(result.winner === null ? "draw" : result.finish,initialRate,slowReplay,cameraPan); }
+  private restoreDuck(){if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
+  stopEffects() {this.stopImpacts();this.stopDashes();this.stopCues();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  beginReplay(){this.stopEffects();this.replayPlayed.clear();this.setReplay("tracking");}
+  setReplay(stage:ReplayStage|null,cameraPan=0){
+    const accent=(stage==="impact"||stage==="decision")?stage:null;
+    const fresh=!!accent&&!this.replayPlayed.has(accent);
+    if(accent)this.replayPlayed.add(accent);
+    if(!this.ctx||!this.replayGain||!this.replayFilter)return;
+    const now=this.ctx.currentTime,pan=Math.max(-.8,Math.min(.8,Number.isFinite(cameraPan)?cameraPan:0));
+    if(Math.abs(pan-this.replayPan)>.02){
+      this.replayPan=pan;
+      if(this.replayAccent&&this.impacts.has(this.replayAccent.source))this.replayAccent.pan.pan.setTargetAtTime(pan,now,.045);
+      this.cuePans.forEach(p=>p.pan.setTargetAtTime(pan,now,.045));
+    }
+    if(this.muted)stage=null;
+    if(stage===this.replayStage)return;
+    this.replayStage=stage;
+    const mix=replayMix(stage);
+    this.replayGain.gain.cancelAndHoldAtTime(now);this.replayGain.gain.linearRampToValueAtTime(mix.gain,now+mix.seconds);
+    this.replayFilter.frequency.cancelAndHoldAtTime(now);this.replayFilter.frequency.exponentialRampToValueAtTime(Math.min(mix.cutoff,this.ctx.sampleRate*.49),now+mix.seconds);
+    if(this.replayAccent){const v=this.replayAccent;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.065);v.source.stop(now+.065);this.replayAccent=null;}
+    if(stage===null)this.restoreDuck();
+    if(fresh&&accent&&stage===accent&&!this.muted&&this.sfx&&this.impacts.size<6){
+      const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),stereo=this.ctx.createStereoPanner();
+      source.buffer=this.replayAccents.get(accent)!;gain.gain.value=accent==="decision"?1.1:.85;stereo.pan.value=pan;
+      source.connect(gain).connect(stereo).connect(this.sfx);this.impacts.set(source,gain);this.replayAccent={source,gain,pan:stereo};
+      source.onended=()=>{source.disconnect();gain.disconnect();stereo.disconnect();this.impacts.delete(source);this.impactTails.delete(source);if(this.replayAccent?.source===source)this.replayAccent=null;};
+      source.start(now+.008);
+    }
+  }
   victory(won: boolean) { this.playCue(won ? "victory" : "defeat"); }
   update(
     battle: Battle | null,
@@ -329,18 +378,19 @@ export class Sound {
     mode: MusicMode | null,
   ) {
     if (!this.ctx) return;
-    if(mode===null||mode==="menu") { this.stopDashes();this.stopImpacts(); }
+    if(mode===null||mode==="menu") { this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)
       this.music?.gain.setTargetAtTime(musicLevel(this.volume, mode), this.ctx.currentTime, .06);
     this.rotors.forEach((r, i) => {
+      const held=this.replayStage==="impact"||this.replayStage==="decision";
       r.osc.frequency.setTargetAtTime(
-        45 + (battle?.tops[i].rpm ?? 0) * 135 + (active && battle && battle.tops[i].dashUntil>battle.time ? 120 : 0),
+        (45 + (battle?.tops[i].rpm ?? 0) * 135 + (active && battle && battle.tops[i].dashUntil>battle.time ? 120 : 0))*(this.replayStage?(held?.65:.82):1),
         this.ctx!.currentTime,
         0.08,
       );
       r.gain.gain.setTargetAtTime(
-        active ? (battle?.tops[i].rpm ?? 0) * 0.08 : 0,
+        active ? (battle?.tops[i].rpm ?? 0) * 0.08*(this.replayStage?(held?.2:.65):1) : 0,
         this.ctx!.currentTime,
         0.08,
       );
