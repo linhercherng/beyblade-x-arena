@@ -16,12 +16,12 @@ for(const width of [320,390,844,1280,1440])test(`${width}px雙人發射及呼喊
   expect(boxes[0].right).toBeLessThanOrEqual(boxes[1].x);
   for(const b of boxes)for(const c of b.controls){expect(c.x).toBeGreaterThanOrEqual(b.x);expect(c.right).toBeLessThanOrEqual(b.right);}
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-  await page.getByLabel('2P 傾斜方向').selectOption('1');await expect(page.getByLabel('1P 傾斜方向')).toHaveValue('0');
+  await page.getByRole('group',{name:'2P 傾斜方向'}).getByRole('button',{name:'外切',exact:true}).click();await expect(page.getByRole('group',{name:'1P 傾斜方向'}).getByRole('button',{name:'沿旋',exact:true})).toHaveAttribute('aria-pressed','true');
   await panels.nth(1).locator('[data-action="lane"][data-value="2"]').click();
   await expect(panels.nth(0).locator('[data-action="lane"][data-value="1"]')).toHaveClass(/selected/);
   await page.screenshot({path:`artifacts/player-launch-${width}-v0201.png`,fullPage:true});
   await page.locator('h1').click();await page.keyboard.press('Space');
-  await expect(page.getByLabel('1P 傾斜方向')).toBeDisabled();await expect(page.getByLabel('2P 傾斜方向')).toBeEnabled();
+  await expect(page.getByRole('group',{name:'1P 傾斜方向'}).getByRole('button').first()).toBeDisabled();await expect(page.getByRole('group',{name:'2P 傾斜方向'}).getByRole('button').first()).toBeEnabled();
   await page.locator('[data-action="lock"][data-player="1"]').click();
   await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:12000});
   const shouts=await page.locator('#shout-0,#battle-time,#shout-1').evaluateAll(nodes=>nodes.map(n=>({id:n.id,...n.getBoundingClientRect().toJSON()})));

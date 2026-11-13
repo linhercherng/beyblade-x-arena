@@ -1,3 +1,4 @@
+import {bindPlayerTouch} from "./player-touch.ts";
 import {combatProfile,TRAIT_NOTE} from "./combat-profiles.ts";
 import "./style.css";
 import { modelSpec } from "./bey-model.ts";
@@ -115,6 +116,7 @@ let replay: Round | null = null,
   historyId: string | null = null,
   statsMode: Mode = "cpu";
 let toastTimer: ReturnType<typeof setTimeout>;
+const clearPlayerTouch=bindPlayerTouch(app,()=>match?.mode==="local"&&!paused&&(screen==="launch"||screen==="battle"),setLaunchAngle);
 const safe = (v: unknown) =>
   String(v).replace(
     /[&<>"']/g,
@@ -162,6 +164,7 @@ function radar(b: Bey) {
   return `<svg viewBox="0 0 220 220" class="radar" role="img" aria-label="${keys.map((k) => STAT_LABEL[k] + b.stats[k]).join("，")}">${[22, 44, 66].map((r) => `<polygon points="${keys.map((_, i) => point(i, r)).join(" ")}" fill="none" stroke="#334354"/>`).join("")}${keys.map((k, i) => `<line x1="110" y1="108" x2="${point(i, 66).split(",")[0]}" y2="${point(i, 66).split(",")[1]}" stroke="#334354"/><text x="${point(i, 88).split(",")[0]}" y="${Number(point(i, 88).split(",")[1]) + 4}" text-anchor="middle" fill="#bac5d0" font-size="11">${STAT_LABEL[k]}</text>`).join("")}<polygon points="${keys.map((k, i) => point(i, (b.stats[k] / 100) * 66)).join(" ")}" fill="${b.color}" fill-opacity=".22" stroke="${b.color}" stroke-width="2"/></svg>`;
 }
 function shell(content: string) {
+  clearPlayerTouch();
   app.dataset.screen = screen;
   app.classList.toggle(
     "arena-view",
@@ -190,7 +193,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.20.1</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.20.2</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -353,7 +356,7 @@ function hud(player: 0 | 1) {
 }
 function launchControls(player: 0 | 1) {
   const b = getBey(match!.teams[player][match!.slot]);
-  return `<section class="launch-controls panel ${locked[player] ? "locked" : ""}" data-player="${player}" aria-label="${player+1}P 發射操作"><div class="launch-heading"><span class="player-chip">${player === 0 ? "1P" : "2P"}</span><h3>${beyName(b)}</h3><span id="lock-status-${player}">${locked[player] ? "發射已鎖定 ✓" : "調整你的發射"}</span></div><div class="launch-options"><div><span class="field-label">落點 <small>${player === 0 ? "A / S / D" : "← / ↓ / →"}</small></span><div class="lane-options">${["內側", "中間", "外側"].map((l, i) => btn(l, "lane", inputs[player].lane === i ? "selected" : "", `data-player="${player}" data-value="${i}" ${locked[player] ? "disabled" : ""}`)).join("")}</div></div><label class="angle-label">傾角 <b id="angle-value-${player}">${inputs[player].angle}°</b><input type="range" min="0" max="30" value="${inputs[player].angle}" data-angle="${player}" aria-label="${player + 1}P 發射傾角" ${locked[player] ? "disabled" : ""}/><small>傾角越大，初始傾斜與橫移越明顯</small></label><label class="direction-label">傾斜方向<select data-direction="${player}" aria-label="${player+1}P 傾斜方向" ${locked[player]?"disabled":""}>${[[-1,"偏內切"],[0,"沿旋向"],[1,"偏外切"]].map(([v,label])=>`<option value="${v}" ${(inputs[player].direction??0)===v?"selected":""}>${label}</option>`).join("")}</select></label><div class="charge-block"><span class="field-label">蓄力 <small>黃綠區 = 完美發射</small></span><div class="charge-track"><span class="perfect-zone"></span><i id="charge-${player}"></i></div></div>${btn(locked[player] ? `已就緒 ${Math.round(inputs[player].power * 100)}%` : `鎖定發射 <small>${player === 0 ? "SPACE" : "ENTER"}</small>`, "lock", "primary", `data-player="${player}" ${locked[player] ? "disabled" : ""}`)}</div></section>`;
+  return `<section class="launch-controls panel ${locked[player] ? "locked" : ""}" data-player="${player}" aria-label="${player+1}P 發射操作"><div class="launch-heading"><span class="player-chip">${player === 0 ? "1P" : "2P"}</span><h3>${beyName(b)}</h3><span id="lock-status-${player}">${locked[player] ? "發射已鎖定 ✓" : "調整你的發射"}</span></div><div class="launch-options"><div><span class="field-label">落點 <small>${player === 0 ? "A / S / D" : "← / ↓ / →"}</small></span><div class="lane-options">${["內側", "中間", "外側"].map((l, i) => btn(l, "lane", inputs[player].lane === i ? "selected" : "", `data-player="${player}" data-value="${i}" ${locked[player] ? "disabled" : ""}`)).join("")}</div></div><label class="angle-label">傾角 <b id="angle-value-${player}">${inputs[player].angle}°</b><input type="range" min="0" max="30" value="${inputs[player].angle}" data-angle="${player}" aria-label="${player + 1}P 發射傾角" ${locked[player] ? "disabled" : ""}/><small>傾角越大，初始傾斜與橫移越明顯</small></label>${match!.mode==="local"?`<div class="direction-label"><span>傾斜方向</span><div class="direction-options" role="group" aria-label="${player+1}P 傾斜方向">${[[-1,"內切"],[0,"沿旋"],[1,"外切"]].map(([v,label])=>btn(String(label),"direction",(inputs[player].direction??0)===v?"selected":"",`data-player="${player}" data-value="${v}" aria-pressed="${(inputs[player].direction??0)===v}" ${locked[player]?"disabled":""}`)).join("")}</div></div>`:`<label class="direction-label">傾斜方向<select data-direction="${player}" aria-label="${player+1}P 傾斜方向" ${locked[player]?"disabled":""}>${[[-1,"偏內切"],[0,"沿旋向"],[1,"偏外切"]].map(([v,label])=>`<option value="${v}" ${(inputs[player].direction??0)===v?"selected":""}>${label}</option>`).join("")}</select></label>` }<div class="charge-block"><span class="field-label">蓄力 <small>黃綠區 = 完美發射</small></span><div class="charge-track"><span class="perfect-zone"></span><i id="charge-${player}"></i></div></div>${btn(locked[player] ? `已就緒 ${Math.round(inputs[player].power * 100)}%` : `鎖定發射 <small>${match!.mode==="local"?"按下即鎖定 · ":""}${player === 0 ? "SPACE" : "ENTER"}</small>`, "lock", "primary", `data-player="${player}" ${locked[player] ? "disabled" : ""}`)}</div></section>`;
 }
 function renderArena() {
   const launching = screen === "launch";
@@ -370,9 +373,21 @@ function lock(player: 0 | 1) {
   const host = document.querySelector(
     `.launch-controls:nth-child(${player + 1})`,
   );
-  if (host) host.outerHTML = launchControls(player);
+  if (host) {
+    host.classList.add("locked");
+    host.querySelectorAll<HTMLButtonElement|HTMLInputElement|HTMLSelectElement>("button,input,select").forEach(el=>el.disabled=true);
+    byId(`lock-status-${player}`)!.textContent="發射已鎖定 ✓";
+    host.querySelector('[data-action="lock"]')!.textContent=`已就緒 ${Math.round(inputs[player].power*100)}%`;
+  }
   sound.tone(660, 0.08);
   if (locked.every(Boolean)) startCountdown();
+}
+function setLaunchAngle(player:0|1,angle:number){
+  if(screen!=="launch"||paused||locked[player]||!Number.isFinite(angle))return;
+  inputs[player].angle=Math.max(0,Math.min(30,angle));
+  const input=app.querySelector<HTMLInputElement>(`[data-angle="${player}"]`);
+  if(input)input.value=String(inputs[player].angle);
+  const label=byId(`angle-value-${player}`);if(label)label.textContent=inputs[player].angle+"°";
 }
 function startCountdown(){
   battle = createBattle(
@@ -602,6 +617,7 @@ function askExit() {
   byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
 }
 function setPaused(value: boolean) {
+  if(value)clearPlayerTouch();
   if (value && !paused) pauseStarted = performance.now();
   if (!value && paused) {
     const elapsed = performance.now() - pauseStarted;
@@ -785,15 +801,18 @@ app.addEventListener("click", (e) => {
     case "begin-match":
       beginMatch();
       break;
+    case "direction":
     case "lane": {
       const p = Number(target.dataset.player);
-      if (locked[p] || screen !== "launch") break;
-      inputs[p].lane = Number(v);
+      if (locked[p] || paused || screen !== "launch") break;
+      if(a==="direction")inputs[p].direction=Number(v) as -1|0|1;
+      else inputs[p].lane=Number(v);
       const group = target.parentElement!;
       group
         .querySelectorAll("button")
-        .forEach((b) => b.classList.remove("selected"));
+        .forEach((b) => {b.classList.remove("selected");if(a==="direction")b.setAttribute("aria-pressed","false");});
       target.classList.add("selected");
+      if(a==="direction")target.setAttribute("aria-pressed","true");
       break;
     }
     case "lock":
@@ -874,17 +893,14 @@ app.addEventListener("input", (e) => {
   }
   if (el.dataset.angle !== undefined) {
     const p = Number(el.dataset.angle);
-    if (!locked[p]) {
-      inputs[p].angle = Number(el.value);
-      byId(`angle-value-${p}`)!.textContent = el.value + "°";
-    }
+    if(p===0||p===1)setLaunchAngle(p,Number(el.value));
   }
 });
 app.addEventListener("change", async (e) => {
   const el = e.target as HTMLInputElement;
   if(el.dataset.direction!==undefined){
     const p=Number(el.dataset.direction);
-    if(screen==="launch"&&!locked[p]&&[-1,0,1].includes(Number(el.value)))inputs[p].direction=Number(el.value) as -1|0|1;
+    if(screen==="launch"&&!paused&&!locked[p]&&[-1,0,1].includes(Number(el.value)))inputs[p].direction=Number(el.value) as -1|0|1;
   }
   if (el.id === "type-filter" || el.id === "sort") {
     if (el.id === "sort") filter.sort = el.value;
@@ -933,6 +949,7 @@ document.addEventListener("keydown", (e) => {
     }
     return;
   }
+  if((e.target as HTMLElement).closest('#battle-controls[data-mode="local"] button')&&(e.code==="Space"||e.key==="Enter"))return;
   if ((e.target as HTMLElement).matches("input,select,textarea") || e.repeat)
     return;
   if (e.key !== "Escape" && (e.target as HTMLElement).closest(".music-controls"))

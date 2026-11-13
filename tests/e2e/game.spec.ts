@@ -108,17 +108,18 @@ async function playMatch(page: Page, local = false) {
   let rounds = 0;
   while (rounds++ < 14) {
     await expect(action(page, "lock").first()).toBeVisible();
-    await page.getByLabel("1P 傾斜方向").selectOption("1");
+    if(local)await page.getByRole("group",{name:"1P 傾斜方向"}).getByRole("button",{name:"外切",exact:true}).click();
+    else await page.getByLabel("1P 傾斜方向").selectOption("1");
     await page.getByLabel("1P 發射傾角").press("End");
     await expect(page.getByLabel("1P 發射傾角")).toHaveValue("30");
     if(local){
-      await page.getByLabel("2P 傾斜方向").selectOption("-1");
+      await page.getByRole("group",{name:"2P 傾斜方向"}).getByRole("button",{name:"內切",exact:true}).click();
       await page.getByLabel("2P 發射傾角").press("Home");
     }
     await page.locator("h1").click();
     await page.keyboard.press("a");
     await page.keyboard.press("Space");
-    if(local)await expect(page.getByLabel("1P 傾斜方向")).toBeDisabled();
+    if(local)await expect(page.getByRole("group",{name:"1P 傾斜方向"}).getByRole("button").first()).toBeDisabled();
     if (local) {
       await page.keyboard.press("ArrowRight");
       await page.keyboard.press("Enter");

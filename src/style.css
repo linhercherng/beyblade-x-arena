@@ -3347,3 +3347,10 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
   #battle-controls[data-mode="local"] .battle-clock {font-size:16px;max-width:78px}
   #battle-controls[data-mode="local"] .battle-clock small {font-size:8px;white-space:normal}
 }
+
+.direction-options {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}
+.direction-options button {min-width:0;min-height:44px;padding:8px 3px;font-size:11px}
+.direction-options .selected {color:var(--accent);border-color:var(--accent);background:var(--surface)}
+#battle-controls[data-mode="local"] input[data-angle],
+#battle-controls[data-mode="local"] button {touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#battle-controls[data-mode="local"] input[data-angle] {height:36px;margin-top:0}
