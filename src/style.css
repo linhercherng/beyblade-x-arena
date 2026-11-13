@@ -3313,3 +3313,37 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 .new-bey-label { margin-left: 6px; padding: 2px 4px; font: 700 9px var(--mono); color: #caff53; border: 1px solid #526c32; vertical-align: middle; }
 
 .direction-label{display:flex;flex-direction:column;gap:8px;font-size:12px}.direction-label select{padding:8px;background:var(--panel,#152130);color:inherit;border:1px solid #405065;border-radius:6px}.angle-label small{font-size:10px;color:#a0afc1}.launch-options{grid-template-columns:1.1fr 1fr .8fr 1fr auto}@media(max-width:1100px){.launch-options{grid-template-columns:repeat(2,minmax(0,1fr))}.launch-options .primary{grid-column:1/-1}}
+
+/* 雙人操作始終與左／右名牌對齊，不沿用單人與CPU的寬窄欄位。 */
+#battle-controls[data-mode="local"] .launch-panels {grid-template-columns:repeat(2,minmax(0,1fr))}
+#battle-controls[data-mode="local"] .launch-controls {min-width:0;display:flex;flex-direction:column}
+#battle-controls[data-mode="local"] .launch-heading {flex-wrap:wrap;align-content:start;margin-bottom:12px}
+#battle-controls[data-mode="local"] .launch-heading h3 {min-width:0;flex:1;margin:0}
+#battle-controls[data-mode="local"] .launch-heading > span:last-child {flex-basis:100%;margin-left:0}
+#battle-controls[data-mode="local"] .launch-options {grid-template-columns:repeat(2,minmax(0,1fr));margin-top:auto;gap:12px}
+#battle-controls[data-mode="local"] .launch-options .primary {grid-column:1/-1;min-height:48px}
+#battle-controls[data-mode="local"] .launch-options input,
+#battle-controls[data-mode="local"] .launch-options select {min-width:0;width:100%}
+.launch-controls[data-player="1"] {--accent:#ffab89;border-color:#ad7058}
+.launch-controls[data-player="1"] .player-chip,
+.launch-controls[data-player="1"] .lane-options .selected {background:#33241e;border-color:#ad7058}
+.launch-controls[data-player="1"] .launch-heading > span:last-child {color:var(--accent)}
+.launch-controls[data-player="1"] .primary:hover:not(:disabled) {background:#ffc3a9;border-color:#ffc3a9}
+#battle-controls[data-mode="local"] .shout-controls {display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+#battle-controls[data-mode="local"] .shout-button {min-width:0;min-height:56px;width:100%}
+#battle-controls[data-mode="local"] #shout-0 {grid-column:1;grid-row:1}
+#battle-controls[data-mode="local"] #shout-1 {grid-column:3;grid-row:1}
+#battle-controls[data-mode="local"] .battle-clock {grid-column:2;grid-row:1;margin-left:0;text-align:center}
+@media(max-width:700px){
+  #battle-controls[data-mode="local"] .launch-panels {gap:8px}
+  #battle-controls[data-mode="local"] .launch-controls {padding:10px}
+  #battle-controls[data-mode="local"] .launch-heading {gap:6px}
+  #battle-controls[data-mode="local"] .launch-options {grid-template-columns:minmax(0,1fr);gap:10px}
+  #battle-controls[data-mode="local"] .lane-options button {min-width:0;padding:10px 4px}
+  #battle-controls[data-mode="local"] .direction-label {font-size:10px}
+  #battle-controls[data-mode="local"] .direction-label select {min-height:40px}
+  #battle-controls[data-mode="local"] .shout-controls {gap:6px}
+  #battle-controls[data-mode="local"] .shout-button {padding:10px 6px;font-size:11px}
+  #battle-controls[data-mode="local"] .battle-clock {font-size:16px;max-width:78px}
+  #battle-controls[data-mode="local"] .battle-clock small {font-size:8px;white-space:normal}
+}
