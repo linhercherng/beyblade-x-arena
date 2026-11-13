@@ -1,12 +1,12 @@
 <!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>低速旋轉渲染驗證</title>
 <style>body{margin:0;background:#101927;color:#e9edf2;font:16px sans-serif}header{position:absolute;top:16px;left:20px;z-index:2}button{padding:8px 20px;margin-left:20px}#stage{height:100vh}small{display:block;color:#b6c5d0;font-size:12px;margin-top:6px}</style>
-<header>低速旋轉：蒼龍神劍／幻影圓環 <button id="pause">暫停</button><small>隔離渲染驗證，不寫入戰績；左轉與右轉、12%轉速</small></header><div id="stage"></div>
+<header>低速旋轉：蒼龍神劍／蒼穹龍騎士 <button id="pause">暫停</button><small>隔離渲染驗證，不寫入戰績；左轉與右轉、12%轉速</small></header><div id="stage"></div>
 <script type="module">
 import {Arena} from '/src/arena.ts';
 import {BEYS} from '/src/catalog.ts';
 import {createBattle,DT} from '/src/physics.ts';
 import {capturePoses} from '/src/motion.ts';
-const arena=new Arena(),beys=[BEYS[0],BEYS.find(b=>b.code==='UX-12')];
+const arena=new Arena(),beys=[BEYS[0],BEYS.find(b=>b.id==='bx-34-cobalt-dragoon')];
 arena.setBeys(beys);arena.attach(document.querySelector('#stage'),'battle');
 const battle=createBattle(...beys,[{power:.95,lane:1,angle:0},{power:.95,lane:1,angle:0}],1);
 battle.tops.forEach((t,i)=>{t.x=i?.8:-.8;t.z=0;t.rpm=.12;t.tilt=.55;});
@@ -18,7 +18,7 @@ function frame(time){
   const dt=Math.min(.25,(time-last)/1000||0);last=time;
   if(!paused){
     accumulator+=dt;
-    while(accumulator>=DT){previous=capturePoses(battle);battle.tops.forEach((t,i)=>t.rotation+=(i?-1:1)*.12*65*DT);battle.time+=DT;battle.tick++;accumulator-=DT;}
+    while(accumulator>=DT){previous=capturePoses(battle);battle.tops.forEach(t=>t.rotation+=(t.bey.spin==='L'?-1:1)*.12*65*DT);battle.time+=DT;battle.tick++;accumulator-=DT;}
   }
   arena.draw(paused?0:dt,battle,previous,accumulator/DT);
   if(lastQuaternion&&!paused&&deltas.length<600){deltas.push(arena.models[0].quaternion.angleTo(lastQuaternion));frames.push(dt*1000);}

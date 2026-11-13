@@ -3199,6 +3199,12 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 .name-source {font-size:10px;color:var(--muted);margin:-4px 0 10px}
 .name-source a {text-decoration:underline;text-underline-offset:3px}
 .fighter-identity {display:flex;align-items:center;gap:10px;margin:10px 0}
+.fighter-tags {display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap}
+.spin-badge {display:inline-flex;align-items:center;gap:3px;white-space:nowrap;font:600 10px "Noto Sans TC",sans-serif;color:#ffdc98;border:1px solid #645439;border-radius:4px;padding:2px 5px;background:#2c241c}
+.spin-badge[data-spin="L"] {color:#a0e0ff;border-color:#3c657e;background:#152b39}
+.spin-badge i {font-style:normal;font-size:14px;line-height:1}
+.spin-badge small {font-size:8px;font-weight:400}
+.combo .spin-badge {padding:0 3px;font-size:9px}
 .fighter-identity h2 {margin:0;min-width:0}
 .fighter-identity em {display:block;font-style:normal;font-size:9px;font-weight:400;color:#9fb393;margin-top:5px}
 .arena-view .sidebar,.arena-view .footer {display:none}

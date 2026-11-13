@@ -10,6 +10,11 @@ export const CHINESE_NAMES = names as Record<
 >;
 
 export type BeyType = "attack" | "defense" | "stamina" | "balance";
+export const SPIN={
+  R:{label:"右迴旋",arrow:"↻",description:"由上方看：順時針"},
+  L:{label:"左迴旋",arrow:"↺",description:"由上方看：逆時針"},
+} as const;
+export type SpinDirection=keyof typeof SPIN;
 export type Stats = {
   atk: number;
   def: number;
@@ -132,7 +137,7 @@ const hash = (s: string) =>
 const clamp = (v: number) => Math.round(Math.min(100, Math.max(1, v)));
 export interface Blade {
   name: string;
-  spin: string;
+  spin: SpinDirection;
   atk: number;
   def: number;
   sta: number;
@@ -156,7 +161,7 @@ export interface Bey {
   blade: string;
   ratchet: string;
   bit: string;
-  spin: string;
+  spin: SpinDirection;
   feature: string;
   type: BeyType;
   provisional: boolean;
@@ -170,6 +175,8 @@ export interface Bey {
 }
 // 所有數值均為遊戲平衡參數；產品類型與日期另依官方來源覆寫。
 export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
+  const spin=row.spin;
+  if(spin!=="L"&&spin!=="R")throw new Error(`未定義旋向：${row.id}`);
   const added = addedById.get(row.id);
   const bit = bits[row.bit];
   if (!bit) throw new Error(`缺少軸心：${row.bit}`);
@@ -177,7 +184,7 @@ export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
   const base = profiles[bit.type];
   blades[row.blade] ??= {
     name: row.name,
-    spin: row.spin,
+    spin,
     atk: clamp(base[0] + (h % 17) - 8),
     def: clamp(base[1] + ((h >>> 4) % 17) - 8),
     sta: clamp(base[2] + ((h >>> 8) % 17) - 8),
@@ -201,6 +208,7 @@ export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
   )[row.code];
   return {
     ...row,
+    spin,
     zhName: CHINESE_NAMES[row.id].name,
     spinNote: added?.details.spinVerification.startsWith("inferred") ? `右旋依${row.line}相容規格推定，未經逐款官方明示。` : "",
     type: bit.type,

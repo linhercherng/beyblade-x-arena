@@ -1,0 +1,13 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>實際模型旋向驗證</title>
+<style>body{margin:0;background:#101927;color:white;font:14px sans-serif}header{position:absolute;top:10px;left:10px;z-index:2}button{padding:10px;margin:3px}#stage{height:100vh}</style>
+<header>由上方看：蒼龍神劍右迴旋／蒼穹龍騎士左迴旋 <button id="live">交戰</button><button id="opening">降下</button><button id="winner-0">右旋勝者</button><button id="winner-1">左旋勝者</button><button id="home">主畫面</button><button id="step">前進20ms</button></header><div id="stage"></div>
+<script type="module">
+import * as THREE from'three';import{Arena}from'/src/arena.ts';import{getBey}from'/src/catalog.ts';import{createBattle,DT}from'/src/physics.ts';
+const beys=[getBey('bx-01-dran-sword'),getBey('bx-34-cobalt-dragoon')],arena=new Arena();arena.setBeys(beys);arena.attach(document.querySelector('#stage'),'battle');
+const topCamera=new THREE.OrthographicCamera(-4,4,4,-4,.1,100);topCamera.position.set(0,10,0);topCamera.up.set(0,0,-1);topCamera.lookAt(0,0,0);topCamera.updateMatrixWorld();
+let mode='live',age=0,battle,stable=true;
+function reset(next){mode=next;age=mode==='opening'?2.8:0;battle=createBattle(...beys,[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],1);battle.tops.forEach((t,i)=>Object.assign(t,{x:i?1:-1,z:0,vx:0,vz:0,rpm:.08,tilt:0,rotation:0}));if(mode.startsWith('winner')){battle.result={winner:Number(mode.at(-1)),finish:'spin',points:1,time:20};arena.finish(battle);}draw(0);}
+function draw(dt){const before=JSON.stringify(battle);arena.draw(dt,mode==='home'?null:battle,[],1,mode==='opening'?age:null);stable&&=before===JSON.stringify(battle);}
+document.addEventListener('click',e=>{if(e.target.tagName!=='BUTTON')return;const id=e.target.id;if(id!=='step'){reset(id);return;}age+=.02;if(mode==='live')battle.tops.forEach(t=>t.rotation+=(t.bey.spin==='L'?-1:1)*t.rpm*65*.02);draw(.02);});
+window.spinMetrics=()=>({stable,mode,angles:arena.models.map(g=>{g.updateMatrixWorld(true);const center=g.getWorldPosition(new THREE.Vector3()).project(topCamera),tip=g.localToWorld(new THREE.Vector3(.4,0,0)).project(topCamera);return Math.atan2(tip.y-center.y,tip.x-center.x);})});reset('live');
+</script></html>

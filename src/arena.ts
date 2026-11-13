@@ -376,6 +376,7 @@ export class Arena {
     this.models = beys.map((b) => {
       const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src);
       const g = beyModel(b, texture);
+        g.userData.spin=b.spin;
       const parts = g.userData.parts as THREE.Group[], links = g.userData.partLinks as number[];
       g.userData.partFloors = [0, 1, 2].map(link => {
         const floors = parts.flatMap((part, i) => links[i] === link ? [new THREE.Box3().setFromObject(part).min.y] : []);
@@ -653,7 +654,7 @@ export class Arena {
     this.models.forEach((g, i) => {
       const t = battle?.tops[i];
       if (t) {
-        const pose = poses![i],
+        const pose = poses![i], rotation=-pose.rotation, spin=t.bey.spin==="L"?1:-1,
           lean = spinLean(pose.tilt, pose.rotation, i);
         const state=this.dashStates[i],dash=dashVisual(state?this.time-state.at:Infinity,this.reduced);
         const latch=state?.grip?dash.latch:0;
@@ -678,7 +679,8 @@ export class Arena {
           0,
           currentLean.z-t.vx/speed*dash.lean + (opening?.height ?? 0) * 0.025 * (i ? -1 : 1),
         );
-        g.rotateY(pose.rotation + (opening?.rotation ?? 0));
+        // Three.js正Y角從上方看為逆時針，顯示角與物理圈數反號。
+        g.rotateY(rotation - (opening?.rotation ?? 0));
         if (opening && opening.pulse > 0) {
           const pulse = this.landingRings[i];
           pulse.visible = true;
@@ -693,17 +695,17 @@ export class Arena {
           if (loser && result.finish === "burst") {
             const upright = this.reduced ? 0 : 1-Math.min(1,elapsed/1.25);
             g.rotation.set(currentLean.x*upright,0,currentLean.z*upright);
-            g.rotateY(pose.rotation);
+            g.rotateY(rotation);
             (g.userData.parts as THREE.Group[]).forEach((part, j) => {
               const link = (g.userData.partLinks as number[])[j];
               const offset = burstPose(elapsed, link, g.userData.partFloors[link], this.reduced);
-              const ax = offset.x*Math.cos(pose.rotation)+offset.z*Math.sin(pose.rotation);
-              const az = offset.z*Math.cos(pose.rotation)-offset.x*Math.sin(pose.rotation);
+              const ax = offset.x*Math.cos(rotation)+offset.z*Math.sin(rotation);
+              const az = offset.z*Math.cos(rotation)-offset.x*Math.sin(rotation);
               const travel = this.reduced ? 1 : 1-Math.pow(1-Math.min(1,elapsed/1.25),3);
               const surface = Math.min((pose.x+ax)**2+(pose.z+az)**2,RADIUS*RADIUS)*.024-.03;
               const slope = (surface-ground)*travel;
               part.position.set(offset.x, offset.y+slope, offset.z);
-              part.rotation.set(0, this.reduced ? 0 : Math.min(elapsed,1.25)*(link+1)*3, offset.tilt);
+              part.rotation.set(0, this.reduced ? 0 : spin*Math.min(elapsed,1.25)*(link+1)*3, offset.tilt);
             });
             settleBurstParts(g, this.finishBounds, this.finishLift, this.finishInverse);
           } else if (loser && result.finish === "spin") {
@@ -712,10 +714,10 @@ export class Arena {
             const flight = exitPose(result.finish as "over" | "extreme", elapsed, {x:pose.x,y:ground,z:pose.z}, this.reduced);
             g.position.set(flight.x, flight.y, flight.z);
             g.rotation.z = flight.tilt;
-            g.rotateY(this.reduced ? 0 : Math.min(elapsed,.95)*13);
+            g.rotateY(this.reduced ? 0 : spin*Math.min(elapsed,.95)*13);
             keepAboveFloor(g, .105, this.finishBounds);
           } else if (!this.reduced) {
-            g.rotateY((t.bey.spin === "L" ? -1 : 1)*20*(1-Math.exp(-elapsed*1.4))/1.4);
+            g.rotateY(spin*20*(1-Math.exp(-elapsed*1.4))/1.4);
           }
           if (result.winner !== null) {
             const pulse = this.landingRings[i], mat = pulse.material as THREE.MeshBasicMaterial;
@@ -766,7 +768,7 @@ export class Arena {
         );
         g.rotation.y = inspecting
           ? 0
-          : this.time * 16 * (i ? -1 : 1) + this.angle;
+          : this.time * 16 * (g.userData.spin==="L"?1:-1) + this.angle;
         g.rotation.z = 0;
         (g.userData.parts as THREE.Group[]).forEach((p, j) => {
           const linked = (g.userData.partLinks as number[])[j];
