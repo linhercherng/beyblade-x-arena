@@ -186,7 +186,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.17.1</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.18.0</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -224,7 +224,7 @@ function home() {
       )
       .join(
         "",
-      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>${BEYS.length} 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 實物參考與合成音效</small></div>`,
+      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}${btn("⚄ 隨機雙方・立即對戰", "quick-battle", "secondary quick-battle-button", !arena ? "disabled" : "")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>${BEYS.length} 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 實物參考與合成音效</small></div>`,
   );
 }
 function filters() {
@@ -314,6 +314,15 @@ function beginMatch() {
   );
   prepareRound();
 }
+function quickBattle(){
+  if(screen!=="home"||!arena)return;
+  teams=[randomTeam(crypto.getRandomValues(new Uint32Array(1))[0]),randomTeam(crypto.getRandomValues(new Uint32Array(1))[0])];
+  speed=1;
+  beginMatch();
+  if(mode==="local")inputs[1]={...inputs[0]};
+  locked=[true,true];
+  startCountdown();
+}
 function prepareRound() {
   if (!match) return;
   screen = "launch";
@@ -359,19 +368,20 @@ function lock(player: 0 | 1) {
   );
   if (host) host.outerHTML = launchControls(player);
   sound.tone(660, 0.08);
-  if (locked.every(Boolean)) {
-    battle = createBattle(
-      getBey(match!.teams[0][match!.slot]),
-      getBey(match!.teams[1][match!.slot]),
-      inputs,
-      roundSeed(match!),
-    );
-    previousPoses = capturePoses(battle, previousPoses);
-    screen = "countdown";
-    countdownStart = now;
-    renderArena();
-    updateHud();
-  }
+  if (locked.every(Boolean)) startCountdown();
+}
+function startCountdown(){
+  battle = createBattle(
+    getBey(match!.teams[0][match!.slot]),
+    getBey(match!.teams[1][match!.slot]),
+    inputs,
+    roundSeed(match!),
+  );
+  previousPoses = capturePoses(battle, previousPoses);
+  screen = "countdown";
+  countdownStart = now;
+  renderArena();
+  updateHud();
 }
 function chargePhase(p: number) {
   return 0.5 + 0.5 * Math.sin(now * 0.004 + p * 0.5);
@@ -664,6 +674,9 @@ app.addEventListener("click", (e) => {
       break;
     case "play":
       startTeam();
+      break;
+    case "quick-battle":
+      quickBattle();
       break;
     case "catalog":
       catalog();

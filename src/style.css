@@ -669,6 +669,10 @@ main {
   font-size: 21px;
   font-weight: 400;
 }
+.quick-battle-button {
+  width: 100%;
+  margin-top: 10px;
+}
 .controls-note {
   display: flex;
   justify-content: center;
