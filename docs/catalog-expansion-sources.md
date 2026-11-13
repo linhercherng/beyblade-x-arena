@@ -49,4 +49,6 @@ Storm Pegasus 官方詳解英字為 `STORMPEGASIS`。遊戲採 `Storm Pegasus`�
 
 本次已直接看過 `detail_BXG47.png` 與 `detail_BXG70.png` 的零件文字及旋向圖示。前五款限定商品的候選詳解圖回應 404；Spriggan 的候選詳解圖雖回應 200，內容為 0 bytes，不能當作已讀的圖片。前五款白底 gallery 沒有旋向圖示，商品文字亦未直接列旋向；Spriggan 本次已取得的商品文字也未直接明示旋向。
 
-因此這六款資料的 `spin: R` 是遊戲正規化推定，`details.spinVerification: inferred-right-spin` 清楚標示尚欠逐款官方直接證據；不冒稱已從各商品說明確認。只有 Pegasus、Tiga 標為 `official-detail-image`。這項不確定性不應被隱藏成官方產品規格。
+初次核對時，這六款的 `spin: R` 以遊戲正規化推定保存，沒有冒稱官方明示。
+
+**2026-11-13補充核對（v0.19.1）**：六個原廠商品頁均有啟用的產品圖示節點，經原廠CSS對應到明確標示 **R／ミギカイテン** 的背景圖。移除全部HTML註解後圖示節點仍存在；這是各商品本身的直接證據，不依賴同類零件推論。六款改標 `official-product-icon`，逐款 `spinProof` 保存商品頁、selector、CSS、圖示、雜湊及日期；Pegasus、Tiga仍沿用原本的 `official-detail-image`。詳見[逐款研究與來源](spin-cx-official-research-v0191.md)。四張原圖原樣保存在 `docs/evidence/spin-20261113/`。

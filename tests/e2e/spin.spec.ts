@@ -8,11 +8,11 @@ test('真實3D模型由頂視投影確認右順時針、左逆時針，開場及
   if(mode!=='winner-0')expect(delta(before.angles[1],after.angles[1])).toBeGreaterThan(0);
  }
 });
-for(const mobile of [false,true])test(`${mobile?'手機':'桌機'}對戰名牌顯示左／右迴旋與推定標示且不溢出`,async({page})=>{
+for(const mobile of [false,true])test(`${mobile?'手機':'桌機'}對戰名牌顯示左／右迴旋與原廠核對標示且不溢出`,async({page})=>{
  await page.setViewportSize(mobile?{width:390,height:844}:{width:1280,height:900});const action=(a:string)=>page.locator(`[data-action="${a}"]`);await page.goto('/');await page.locator('[data-action="mode"][data-value="local"]').click();await action('play').first().click();
  for(const id of ['bx-34-cobalt-dragoon','bx-52-luster-dragoon','ux-17-meteor-dragoon'])await page.locator(`[data-action="select"][data-id="${id}"]`).click();await action('confirm-team').click();await action('handoff').click();
  for(const id of ['cx-00-valkyrie-volt-slash','bx-01-dran-sword','bx-02-hells-scythe'])await page.locator(`[data-action="select"][data-id="${id}"]`).click();await action('confirm-team').click();await action('begin-match').click();
- const left=page.locator('.fighter-0 .spin-badge'),right=page.locator('.fighter-1 .spin-badge');await expect(left).toHaveText('↺ 左迴旋');await expect(left).toHaveAttribute('data-spin','L');await expect(right).toContainText('右迴旋');await expect(right).toContainText('推定');await expect(right).toHaveAttribute('data-spin','R');
+ const left=page.locator('.fighter-0 .spin-badge'),right=page.locator('.fighter-1 .spin-badge');await expect(left).toHaveText('↺ 左迴旋');await expect(left).toHaveAttribute('data-spin','L');await expect(right).toContainText('右迴旋');await expect(right).not.toContainText('推定');await expect(right).toHaveAttribute('data-spin','R');
  await page.keyboard.press('Space');await page.keyboard.press('Enter');await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:12000});await expect(left).toBeVisible();await expect(right).toBeVisible();
  for(const badge of [left,right])expect(await badge.evaluate(e=>{const r=e.getBoundingClientRect(),f=e.closest('.fighter')!.getBoundingClientRect();return r.width>0&&r.left>=f.left&&r.right<=f.right&&r.right<=innerWidth;})).toBe(true);
  await page.screenshot({path:`artifacts/spin-battle-${mobile?'mobile':'desktop'}-v0190.png`});

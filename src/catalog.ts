@@ -153,6 +153,7 @@ export const ratchets: Record<string, Ratchet> = {};
 export interface Bey {
   zhName: string;
   spinNote: string;
+  spinProof: {source:string;icon:string;label:string;checkedAt:string}|null;
   id: string;
   code: string;
   line: string;
@@ -210,6 +211,7 @@ export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
     ...row,
     spin,
     zhName: CHINESE_NAMES[row.id].name,
+    spinProof: added&&"spinProof" in added.details ? added.details.spinProof??null : null,
     spinNote: added?.details.spinVerification.startsWith("inferred") ? `右旋依${row.line}相容規格推定，未經逐款官方明示。` : "",
     type: bit.type,
     provisional: bit.provisional,

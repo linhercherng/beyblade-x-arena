@@ -19,8 +19,10 @@ test("限定同品號使用逐款日期與來源，中文譯名可搜尋且不�
   assert.equal(getBey(ids[0]).released,"2026-11-05");
   assert.equal(getBey(ids[5]).released,"2026-07-11");
   assert.equal(getBey(ids[6]).released,"2026-03-28");
-  assert.match(getBey(ids[0]).spinNote,/推定/);
-  assert.match(getBey(ids[6]).spinNote,/推定/);
+  assert.equal(getBey(ids[0]).spinNote,"");
+  assert.equal(getBey(ids[6]).spinNote,"");
+  assert.ok(getBey(ids[0]).spinProof);
+  assert.ok(getBey(ids[6]).spinProof);
   assert.equal(getBey(ids[5]).spinNote,"");
   for(const id of ids){
     const b=getBey(id);

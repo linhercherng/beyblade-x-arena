@@ -42,9 +42,9 @@
         "variant": "gunmetal",
         "releaseLabel": "発売予定",
         "typeVerification": "game-bit-type-mapping",
-        "spinVerification": "inferred-right-spin",
+        "spinVerification": "official-product-icon",
         "notes": [
-          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+          "旋向依本商品頁有效圖示與原廠CSS對應的R／ミギカイテン圖示確認，非依零件代碼判斷。"
         ],
         "lockChip": {
           "name": "Valkyrie",
@@ -59,6 +59,16 @@
           "name": "Slash",
           "originalName": "スラッシュ",
           "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX01.png"
+        },
+        "spinProof": {
+          "kind": "direct-product",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-vv.html",
+          "selector": "dl.detail dd .spec .icon .atack",
+          "stylesheet": "https://beyblade.takaratomy.co.jp/beyblade-x/css/pc.css",
+          "icon": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/icon_atack@2x.png",
+          "iconSha256": "55c47551d13e60b8b4f2260fe88c88d23cdd78eb6e0504850780449349ce3146",
+          "label": "R／ミギカイテン",
+          "checkedAt": "2026-11-13"
         }
       }
     },
@@ -84,9 +94,9 @@
         "variant": "metal-coat-orange",
         "releaseLabel": "発売予定",
         "typeVerification": "game-bit-type-mapping",
-        "spinVerification": "inferred-right-spin",
+        "spinVerification": "official-product-icon",
         "notes": [
-          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+          "旋向依本商品頁有效圖示與原廠CSS對應的R／ミギカイテン圖示確認，非依零件代碼判斷。"
         ],
         "lockChip": {
           "name": "Bucks",
@@ -101,6 +111,16 @@
           "name": "Bumper",
           "originalName": "バンパー",
           "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX03.png"
+        },
+        "spinProof": {
+          "kind": "direct-product",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-ba.html",
+          "selector": "dl.detail dd .spec .icon .defence",
+          "stylesheet": "https://beyblade.takaratomy.co.jp/beyblade-x/css/pc.css",
+          "icon": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/icon_defense@2x.png",
+          "iconSha256": "11986d29fe70569d6117bd5130e0770534b56ff7677141086605f9e4a4fbd15e",
+          "label": "R／ミギカイテン",
+          "checkedAt": "2026-11-13"
         }
       }
     },
@@ -126,9 +146,9 @@
         "variant": "metal-coat-blue",
         "releaseLabel": "発売予定",
         "typeVerification": "game-bit-type-mapping",
-        "spinVerification": "inferred-right-spin",
+        "spinVerification": "official-product-icon",
         "notes": [
-          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+          "旋向依本商品頁有效圖示與原廠CSS對應的R／ミギカイテン圖示確認，非依零件代碼判斷。"
         ],
         "lockChip": {
           "name": "Kraken",
@@ -143,6 +163,16 @@
           "name": "Slash",
           "originalName": "スラッシュ",
           "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX01.png"
+        },
+        "spinProof": {
+          "kind": "direct-product",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-kw.html",
+          "selector": "dl.detail dd .spec .icon .stamina",
+          "stylesheet": "https://beyblade.takaratomy.co.jp/beyblade-x/css/pc.css",
+          "icon": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/icon_stamina@2x.png",
+          "iconSha256": "60ba527ad58edd5e498169debd55942733774a7317dd4016315161f80c80e970",
+          "label": "R／ミギカイテン",
+          "checkedAt": "2026-11-13"
         }
       }
     },
@@ -168,9 +198,9 @@
         "variant": "metal-coat-yellow",
         "releaseLabel": "発売予定",
         "typeVerification": "game-bit-type-mapping",
-        "spinVerification": "inferred-right-spin",
+        "spinVerification": "official-product-icon",
         "notes": [
-          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。"
+          "旋向依本商品頁有效圖示與原廠CSS對應的R／ミギカイテン圖示確認，非依零件代碼判斷。"
         ],
         "lockChip": {
           "name": "Hornet",
@@ -185,6 +215,16 @@
           "name": "Round",
           "originalName": "ラウンド",
           "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX02.png"
+        },
+        "spinProof": {
+          "kind": "direct-product",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-hf.html",
+          "selector": "dl.detail dd .spec .icon .balance",
+          "stylesheet": "https://beyblade.takaratomy.co.jp/beyblade-x/css/pc.css",
+          "icon": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/icon_balance@2x.png",
+          "iconSha256": "89f376dee370a21887288e6924ce97aea8eedcb059b6a3296152f287bf1f6050",
+          "label": "R／ミギカイテン",
+          "checkedAt": "2026-11-13"
         }
       }
     },
@@ -210,10 +250,10 @@
         "variant": "metal-coat-blue",
         "releaseLabel": "発売予定",
         "typeVerification": "game-bit-type-mapping",
-        "spinVerification": "inferred-right-spin",
+        "spinVerification": "official-product-icon",
         "notes": [
-          "遊戲使用 R 正規化；本款官方產品文字與已取得白底照片未直接標示旋向，尚不可稱逐款官方確認。",
-          "官方明示 G=Gravity；不能與 Eclipse 主刃組合。"
+          "官方明示 G=Gravity；不能與 Eclipse 主刃組合。",
+          "旋向依本商品頁有效圖示與原廠CSS對應的R／ミギカイテン圖示確認，非依零件代碼判斷。"
         ],
         "lockChip": {
           "name": "Drake",
@@ -228,6 +268,16 @@
           "name": "Gravity",
           "originalName": "グラビティ",
           "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-drb.html"
+        },
+        "spinProof": {
+          "kind": "direct-product",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-drb.html",
+          "selector": "dl.detail dd .spec .icon .atack",
+          "stylesheet": "https://beyblade.takaratomy.co.jp/beyblade-x/css/pc.css",
+          "icon": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/icon_atack@2x.png",
+          "iconSha256": "55c47551d13e60b8b4f2260fe88c88d23cdd78eb6e0504850780449349ce3146",
+          "label": "R／ミギカイテン",
+          "checkedAt": "2026-11-13"
         }
       }
     },
@@ -284,14 +334,24 @@
         "variant": "original",
         "releaseLabel": "発売予定",
         "typeVerification": "game-bit-type-mapping",
-        "spinVerification": "inferred-right-spin",
+        "spinVerification": "official-product-icon",
         "notes": [
-          "遊戲使用 R 正規化；本次已取得官方商品文字未直接標示旋向，尚不可稱逐款官方確認。",
-          "官方說明書第1頁零件清單明示 M（マージ），配圖為白色橡膠外圈及紫紅色中央接觸軸尖，不能憑近似輪廓改為 U。"
+          "官方說明書第1頁零件清單明示 M（マージ），配圖為白色橡膠外圈及紫紅色中央接觸軸尖，不能憑近似輪廓改為 U。",
+          "旋向依本商品頁有效圖示與原廠CSS對應的R／ミギカイテン圖示確認，非依零件代碼判斷。"
         ],
         "assistBlade": null,
         "manualSource": "https://beyblade.takaratomy.co.jp/beyblade-x/manual/BXG-21_manual.pdf",
-        "bitVerification": "official-manual-page-1"
+        "bitVerification": "official-manual-page-1",
+        "spinProof": {
+          "kind": "direct-product",
+          "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ss.html",
+          "selector": "dl.detail dd .spec .icon .balance",
+          "stylesheet": "https://beyblade.takaratomy.co.jp/beyblade-x/css/pc.css",
+          "icon": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/icon_balance@2x.png",
+          "iconSha256": "89f376dee370a21887288e6924ce97aea8eedcb059b6a3296152f287bf1f6050",
+          "label": "R／ミギカイテン",
+          "checkedAt": "2026-11-13"
+        }
       }
     },
     {
