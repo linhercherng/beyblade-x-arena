@@ -4,6 +4,7 @@ import { PRODUCT_IMAGES, type ProductImage } from "./appearance.ts";
 import references from "./model-references.json" with { type: "json" };
 import shapes from "./part-shapes.json" with { type: "json" };
 import profiles from "./model-profiles.json" with { type: "json" };
+import { refineBeyVisuals } from "./bey-visual-refinements.ts";
 interface ModelProfile {
   bladeThickness: number;
   coreRadius: number;
@@ -661,6 +662,10 @@ export function beyModel(b: Bey, texture: THREE.Texture) {
       "blade-product-surface",
     ),
   );
+  refineBeyVisuals(b.id, blade, ratchet, bit, {
+    bladeBase, bladeThickness: thickness, bitHeight: spec.bitHeight,
+    ratchetHeight: rh, tipHeight,
+  });
   group.add(blade, ratchet, bit);
   group.userData.parts = [blade, ratchet, bit];
   group.userData.partLinks =
