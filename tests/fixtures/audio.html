@@ -1,5 +1,6 @@
 <!doctype html><meta charset="utf-8"><title>Audio integration fixture</title>
 <button id="menu">menu</button><button id="battle">battle</button><button id="clutch">clutch</button><button id="results">results</button><button id="pause">pause</button><button id="mute">mute</button>
+<button id="recover">recover</button>
 <input id="volume" type="range" min="0" max="1" step=".1" value=".6">
 <script type="module">
 import { Sound } from "/src/audio.ts";
@@ -13,8 +14,9 @@ AudioContext.prototype.createBufferSource=function(){
 const sound = new Sound();
 let mode = "menu", analyser;
 document.addEventListener("click", e => {
-  sound.unlock();
+  if(e.target.id!=="recover")sound.unlock();
   if (!analyser) { analyser = sound.ctx.createAnalyser(); sound.master.connect(analyser); }
+  if(e.target.id==="recover"){sound.recoverAudio();return;}
   if (e.target.id === "mute") sound.toggle();
   else if (e.target.tagName === "BUTTON") mode = e.target.id === "pause" ? null : e.target.id;
 });

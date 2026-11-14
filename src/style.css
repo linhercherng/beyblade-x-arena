@@ -3361,3 +3361,5 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
   .arena-view main {padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
   .arena-view .topbar {padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
 }
+
+.music-controls [data-action="audio-recover"] {display:block;width:100%;margin:12px 0 6px}

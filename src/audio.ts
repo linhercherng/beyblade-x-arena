@@ -49,15 +49,26 @@ export class Sound {
   private dashBuffers = new Map<boolean,AudioBuffer>();
   private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
   private lastDash = [-Infinity,-Infinity];
+  onInterruption:(()=>void)|null=null;
+  private session:(EventTarget&{readonly state?:string})|undefined;
+  private clockTime=-1;
+  private clockWall=0;
   private background=false;
   private recovering=true;
   private recovery=0;
   private lastResume=-Infinity;
   private sources=new Set<AudioScheduledSourceNode>();
-  private get ready(){return !!this.ctx&&this.ctx.state==="running"&&!this.background&&!this.recovering;}
+  private get ready(){return !!this.ctx&&this.ctx.state==="running"&&!this.background&&!this.recovering&&this.session?.state!=="interrupted";}
   private track<T extends AudioScheduledSourceNode>(source:T):T{
     this.sources.add(source);source.addEventListener("ended",()=>this.sources.delete(source),{once:true});return source;
   }
+  private interrupt(){
+    if(!this.ctx)return;
+    const notify=!this.recovering&&!this.muted;
+    this.silence();
+    if(notify)this.onInterruption?.();
+  }
+  recoverAudio(){this.silence();this.unlock();}
   private silence(){
     if(!this.ctx||!this.master)return;
     this.recovering=true;this.recovery++;this.lastResume=-Infinity;
@@ -70,8 +81,8 @@ export class Sound {
     this.lastImpact=-Infinity;this.lastDash=[-Infinity,-Infinity];
   }
   private restore(){
-    if(!this.ctx||!this.master||this.background||this.ctx.state!=="running"||!this.recovering)return;
-    this.recovering=false;
+    if(!this.ctx||!this.master||this.background||this.ctx.state!=="running"||!this.recovering||this.session?.state==="interrupted")return;
+    this.recovering=false;this.clockTime=this.ctx.currentTime;this.clockWall=performance.now();
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
     this.master.gain.linearRampToValueAtTime(this.muted?0:.65,now+.25);
@@ -83,6 +94,11 @@ export class Sound {
     // 回到前景保留靜音，下一次操作在使用者手勢內恢復。
   }
   constructor() {
+    if(typeof navigator!=="undefined"){
+      this.session=(navigator as Navigator&{audioSession?:EventTarget&{readonly state?:string}}).audioSession;
+      this.session?.addEventListener?.("statechange",()=>{if(this.session?.state==="interrupted")this.interrupt();});
+      navigator.mediaDevices?.addEventListener("devicechange",()=>this.interrupt());
+    }
     try {
       this.muted = localStorage.getItem("spinforge-muted") === "true";
       const saved = localStorage.getItem("spinforge-music-volume");
@@ -92,15 +108,16 @@ export class Sound {
     }
   }
   unlock() {
-    if(this.background||typeof AudioContext==="undefined")return;
+    if(this.background||this.session?.state==="interrupted"||typeof AudioContext==="undefined")return;
     if (!this.ctx) {
       this.ctx = new AudioContext();
       this.master = this.ctx.createGain();
       this.master.gain.value = 0;
       this.ctx.addEventListener("statechange",()=>{
-        if(this.ctx?.state!=="running"){if(!this.recovering)this.silence();}
+        if(this.ctx?.state!=="running"){if(!this.recovering)this.interrupt();}
         else if(this.lastResume!==-Infinity)this.restore();
       });
+      this.ctx.addEventListener("sinkchange",()=>this.interrupt());
       const limiter = this.ctx.createDynamicsCompressor();
       limiter.threshold.value = -4;
       limiter.knee.value = 6;
@@ -429,6 +446,10 @@ export class Sound {
     mode: MusicMode | null,
   ) {
     if (!this.ready || !this.ctx) return;
+    const wall=performance.now(),clock=this.ctx.currentTime;
+    if(clock!==this.clockTime){this.clockTime=clock;this.clockWall=wall;}
+    // 路由切換可能沒有事件且仍回報running；只在預期有聲音時檢查停住的時鐘。
+    else if(!this.muted&&(this.sources.size>0||active)&&wall-this.clockWall>1000){this.interrupt();return;}
     if(mode===null||mode==="menu") { this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)

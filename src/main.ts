@@ -116,6 +116,7 @@ let replay: Round | null = null,
   historyId: string | null = null,
   statsMode: Mode = "cpu";
 let toastTimer: ReturnType<typeof setTimeout>;
+sound.onInterruption=()=>{if(["launch","countdown","battle","replay"].includes(screen))setPaused(true);};
 const clearPlayerTouch=bindPlayerTouch(app,()=>match?.mode==="local"&&!paused&&(screen==="launch"||screen==="battle"),setLaunchAngle);
 const safe = (v: unknown) =>
   String(v).replace(
@@ -193,7 +194,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.20.4</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.20.5</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small>${btn("恢復音訊", "audio-recover", "secondary")}<small>切換耳機後無聲時可重試</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -361,7 +362,7 @@ function launchControls(player: 0 | 1) {
 function renderArena() {
   const launching = screen === "launch";
   shell(
-    `<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : `第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn(document.fullscreenElement ? "退出全螢幕" : "全螢幕", "fullscreen", "secondary")}${btn("近鏡", "close-up", "secondary", `aria-pressed="${arena?.closeUp ?? false}"`)}${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗時會自動暫停</p></div></div><div id="battle-controls" data-mode="${match!.mode}">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">CPU READY</span><h3>電腦已就緒</h3><p>${DIFFICULTY[match!.difficulty]} · 等待你的完美發射</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? `<div class="replay-note">第 ${battle?.version??1} 代引擎 · 相同種子、發射輸入與呼喊時機，以固定步長重播。重播不寫入戰績。</div>` : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span class="battle-clock" role="timer" aria-label="對決經過時間" aria-live="off"><span id="battle-time">00.0 秒</span><small id="battle-phase">15–40 秒對決</small></span></div>`}</div>`,
+    `<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : `第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn(document.fullscreenElement ? "退出全螢幕" : "全螢幕", "fullscreen", "secondary")}${btn("近鏡", "close-up", "secondary", `aria-pressed="${arena?.closeUp ?? false}"`)}${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗或音訊中斷時會自動暫停</p></div></div><div id="battle-controls" data-mode="${match!.mode}">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">CPU READY</span><h3>電腦已就緒</h3><p>${DIFFICULTY[match!.difficulty]} · 等待你的完美發射</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? `<div class="replay-note">第 ${battle?.version??1} 代引擎 · 相同種子、發射輸入與呼喊時機，以固定步長重播。重播不寫入戰績。</div>` : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span class="battle-clock" role="timer" aria-label="對決經過時間" aria-live="off"><span id="battle-time">00.0 秒</span><small id="battle-phase">15–40 秒對決</small></span></div>`}</div>`,
   );
   setPaused(paused);
 }
@@ -681,7 +682,7 @@ app.addEventListener("click", (e) => {
   if (!target || target.hasAttribute("disabled")) return;
   const a = target.dataset.action;
   const v = target.dataset.value;
-  sound.unlock();
+  if(a!=="audio-recover")sound.unlock();
   if (
     ["home", "play", "catalog", "stats"].includes(a ?? "") &&
     ["launch", "countdown", "battle"].includes(screen)
@@ -712,6 +713,9 @@ app.addEventListener("click", (e) => {
     case "difficulty":
       difficulty = v as Difficulty;
       home();
+      break;
+    case "audio-recover":
+      sound.recoverAudio();
       break;
     case "sound":
       sound.toggle();
