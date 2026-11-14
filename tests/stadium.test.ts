@@ -2,6 +2,16 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as THREE from "three";
 import { createStadium } from "../src/stadium.ts";
+import{stadiumSurface}from"../src/stadium-surface.ts";
+
+test('中央凹碗有至少0.6高度差，細齒增加且保留出口空隙',()=>{
+ const model=createStadium();model.updateMatrixWorld(true);const bowl=model.getObjectByName('bowl-surface')!;
+ const height=(r:number)=>new THREE.Raycaster(new THREE.Vector3(r,2,0),new THREE.Vector3(0,-1,0)).intersectObject(bowl)[0].point.y;
+ assert.ok(height(4.23)-height(.05)>.6,'中央與邊緣需明顯高低差');
+ const teeth=model.getObjectByName('x-rail-teeth') as THREE.InstancedMesh;assert.ok(teeth.count>=280);
+ const m=new THREE.Matrix4(),p=new THREE.Vector3();for(let i=0;i<teeth.count;i++){teeth.getMatrixAt(i,m);p.setFromMatrixPosition(m);const a=Math.atan2(p.z,p.x);assert.ok(Math.abs(a)>.23&&Math.abs(Math.PI-Math.abs(a))>.23&&Math.abs(a-Math.PI/2)>.28);}
+ assert.ok(model.getObjectByName('center-recess-bevel'));assert.ok(model.getObjectByName('rail-carrier-fasteners'));
+});
 
 test("盤面曲率符合現有落點，三個出口保持可穿過的護牆開口", () => {
   const model = createStadium();
@@ -14,7 +24,7 @@ test("盤面曲率符合現有落點，三個出口保持可穿過的護牆開�
     ).intersectObject(bowl)[0];
     assert.ok(hit);
     assert.ok(
-      Math.abs(hit.point.y - (r * r * 0.024 - 0.03)) < 0.002,
+      Math.abs(hit.point.y - stadiumSurface(r)) < 0.002,
       String(r),
     );
   }

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
+import{stadiumSurface}from"./stadium-surface.ts";
 import { impactProfile, impactShake } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
@@ -15,12 +16,17 @@ import {
   damping,
   type TopPose,
 } from "./motion.ts";
-import { type Battle, type BattleEvent, RADIUS } from "./physics.ts";
+import { type Battle, type BattleEvent } from "./physics.ts";
 
 export function keepAboveFloor(group: THREE.Object3D, floor: number, bounds = new THREE.Box3()) {
   group.updateMatrixWorld(true);
   bounds.setFromObject(group, true);
   group.position.y += Math.max(0, floor - bounds.min.y);
+}
+export function settleOnBowl(group:THREE.Object3D,bounds=new THREE.Box3()){
+  group.updateMatrixWorld(true);bounds.setFromObject(group,true);
+  const r=Math.hypot(Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x)),Math.max(Math.abs(bounds.min.z),Math.abs(bounds.max.z)));
+  group.position.y+=Math.max(0,stadiumSurface(r)+.012-bounds.min.y);
 }
 export function settleBurstParts(group: THREE.Group, bounds = new THREE.Box3(), lift = new THREE.Vector3(), inverse = new THREE.Quaternion()) {
   group.updateMatrixWorld(true);
@@ -30,7 +36,7 @@ export function settleBurstParts(group: THREE.Group, bounds = new THREE.Box3(), 
     bounds.makeEmpty();
     parts.forEach((part, i) => { if (links[i] === link) bounds.expandByObject(part, true); });
     const r2 = Math.max(bounds.min.x**2, bounds.max.x**2) + Math.max(bounds.min.z**2, bounds.max.z**2);
-    const amount = Math.max(0, Math.min(r2,RADIUS*RADIUS)*.024-.03+.012-bounds.min.y);
+    const amount = Math.max(0, stadiumSurface(Math.sqrt(r2))+.012-bounds.min.y);
     lift.set(0, amount, 0).applyQuaternion(inverse);
     parts.forEach((part, i) => { if (links[i] === link) { part.position.add(lift); part.updateMatrixWorld(true); } });
   }
@@ -399,7 +405,7 @@ export class Arena {
   }
   launch(b:Battle){
     this.launchAt=this.time;this.needsRender=true;
-    this.landingRings.forEach((ring,i)=>{const t=b.tops[i];ring.position.set(t.x,.05+(t.x*t.x+t.z*t.z)*.024,t.z);});
+    this.landingRings.forEach((ring,i)=>{const t=b.tops[i];ring.position.set(t.x,stadiumSurface(Math.hypot(t.x,t.z))+.08,t.z);});
   }
   private resetEffects() {
     this.launchAt=-Infinity;
@@ -430,7 +436,7 @@ export class Arena {
     let radius=0;
     poses.forEach((p,i)=>{
       const margin=b.result?.finish==="burst"?1.62:.8;
-      const ground=.035+(p.x*p.x+p.z*p.z)*.024;
+      const ground=stadiumSurface(Math.hypot(p.x,p.z))+.065;
       const flight=b.result?.winner!==null&&b.result?.winner!==i&&["over","extreme"].includes(b.result?.finish??"")
         ?exitPose(b.result!.finish as "over"|"extreme",finishPlayback(this.time-this.finishTime,this.finishRate),{x:p.x,y:ground,z:p.z}):{x:p.x,y:ground,z:p.z};
       radius=Math.max(radius,Math.hypot(flight.x-focus.x,flight.y+.35-focus.y,flight.z-focus.z)+margin);
@@ -444,7 +450,7 @@ export class Arena {
   }
   trackHighlight(hold:"impact"|"finish"|null,impact:BattleEvent|null) {
     this.highlightImpactActive=hold==="impact"&&!!impact;
-    if(impact)this.highlightImpact.set(impact.x,.45+(impact.x*impact.x+impact.z*impact.z)*.024,impact.z);
+    if(impact)this.highlightImpact.set(impact.x,stadiumSurface(Math.hypot(impact.x,impact.z))+.48,impact.z);
   }
   beginHighlight(b:Battle) {
     this.resetEffects();this.highlightShot="approach";this.frameHighlight(b);
@@ -465,13 +471,13 @@ export class Arena {
       if(dashHit) {
         profile.shake*=1.5;
         this.dashStates.forEach(s=>{if(s)s.grip=false;});
-        this.hitRing.position.set(e.x,.06+(e.x*e.x+e.z*e.z)*.024,e.z);
+        this.hitRing.position.set(e.x,stadiumSurface(Math.hypot(e.x,e.z))+.09,e.z);
       }
       if (!this.reduced && profile.shake > this.shake * Math.exp(-this.shakeAge * 20)) {
         this.shake = profile.shake;
         this.shakeAge = 0;
       }
-      const height = this.impactHeight + (e.x * e.x + e.z * e.z) * .024;
+      const height = this.impactHeight+stadiumSurface(Math.hypot(e.x,e.z))+.03;
       if (!this.reduced && profile.tier > 0) {
         const flare = this.impactFlashes.find(f => f.userData.life <= 0)
           ?? this.impactFlashes.reduce((a, b) => a.userData.life < b.userData.life ? a : b);
@@ -544,7 +550,7 @@ export class Arena {
       for (let i = start; i < this.particles.length; i++) this.particles[i].color.set(i % 3 ? FINISH_COLORS[kind] : "#fff7da");
       if ((result.finish === "over" || result.finish === "extreme") && result.winner !== null) {
         const positions = this.exitTrail.geometry.getAttribute("position") as THREE.BufferAttribute;
-        const origin = {x:top.x, y:.035 + (top.x*top.x+top.z*top.z)*.024, z:top.z};
+        const origin = {x:top.x, y:stadiumSurface(Math.hypot(top.x,top.z))+.065, z:top.z};
         for (let i=0; i<18; i++) {
           const pose = exitPose(result.finish, i/17*(result.finish === "over" ? .95 : .55), origin);
           positions.setXYZ(i, pose.x, pose.y+.16, pose.z);
@@ -645,7 +651,7 @@ export class Arena {
         look.z+=THREE.MathUtils.clamp((battle.tops[0].vz+battle.tops[1].vz)*.025,-.25,.25);
         if(this.highlightImpactActive)look.lerp(this.highlightImpact,.6);
       } else if(battle.result?.winner!==null&&battle.result){
-        const loser=1-battle.result.winner,p=poses![loser],winner=poses![battle.result.winner],ground=.035+(p.x*p.x+p.z*p.z)*.024;
+        const loser=1-battle.result.winner,p=poses![loser],winner=poses![battle.result.winner],ground=stadiumSurface(Math.hypot(p.x,p.z))+.065;
         const flight=exitFinish?exitPose(battle.result.finish as "over"|"extreme",finishElapsed,{x:p.x,y:ground,z:p.z}):{x:p.x,y:ground,z:p.z};
         look.set((winner.x+flight.x*2)/3,flight.y*.35+.2,(winner.z+flight.z*2)/3);
         if(exitFinish&&this.closeUp)trackingRange=closeUpRange(Math.hypot(winner.x-flight.x,winner.z-flight.z)+.6,this.camera);
@@ -693,7 +699,7 @@ export class Arena {
         const leanBlend = damping(dt, 12);
         currentLean.x += (lean.x - currentLean.x) * leanBlend;
         currentLean.z += (lean.z - currentLean.z) * leanBlend;
-        const ground = 0.035 + (x * x + z * z) * 0.024;
+        const ground = stadiumSurface(Math.hypot(x,z))+.065;
         g.position.set(x, ground + (opening?.height ?? 0), z);
         g.rotation.set(
           currentLean.x+t.vz/speed*dash.lean,
@@ -723,7 +729,7 @@ export class Arena {
               const ax = offset.x*Math.cos(rotation)+offset.z*Math.sin(rotation);
               const az = offset.z*Math.cos(rotation)-offset.x*Math.sin(rotation);
               const travel = this.reduced ? 1 : 1-Math.pow(1-Math.min(1,elapsed/1.25),3);
-              const surface = Math.min((pose.x+ax)**2+(pose.z+az)**2,RADIUS*RADIUS)*.024-.03;
+              const surface = stadiumSurface(Math.hypot(pose.x+ax,pose.z+az));
               const slope = (surface-ground)*travel;
               part.position.set(offset.x, offset.y+slope, offset.z);
               part.rotation.set(0, this.reduced ? 0 : spin*Math.min(elapsed,1.25)*(link+1)*3, offset.tilt);
@@ -731,6 +737,7 @@ export class Arena {
             settleBurstParts(g, this.finishBounds, this.finishLift, this.finishInverse);
           } else if (loser && result.finish === "spin") {
             g.rotation.z = Math.PI/2 * Math.min(1, this.reduced ? 1 : elapsed/1.1);
+            settleOnBowl(g,this.finishBounds);
           } else if (loser) {
             const flight = exitPose(result.finish as "over" | "extreme", elapsed, {x:pose.x,y:ground,z:pose.z}, this.reduced);
             g.position.set(flight.x, flight.y, flight.z);
@@ -745,7 +752,7 @@ export class Arena {
             pulse.visible = true;
             mat.color.set(loser ? FINISH_COLORS[result.finish] : i ? "#ff9a71" : "#b6f55b");
             mat.opacity = loser ? Math.max(0,.55-elapsed*.3) : .5;
-            pulse.position.set(g.position.x, loser && result.finish !== "burst" ? .115 : ground+.012, g.position.z);
+            pulse.position.set(g.position.x, loser && ["over","extreme"].includes(result.finish) ? .115 : ground+.012, g.position.z);
             pulse.scale.setScalar(loser ? 1+Math.min(1,elapsed)*1.2 : 1.18);
           }
         }
@@ -784,7 +791,7 @@ export class Arena {
         const r = inspecting ? 0 : 2.3;
         g.position.set(
           Math.cos(a) * r,
-          inspecting ? 0.04 : 0.2 + r * r * 0.024,
+          inspecting ? 0.04 : stadiumSurface(r)+.23,
           Math.sin(a) * r,
         );
         g.rotation.y = inspecting

@@ -19,3 +19,15 @@ for(const mobile of [false,true])test(`${mobile?'手機':'桌面'}盤體全景�
   writeFileSync(`artifacts/stadium-${mobile?'mobile':'desktop'}-metrics-v0110.json`,JSON.stringify(m,null,2));
   expect(errors).toEqual([]);
 });
+test('戰鬥模型在中心、斜坡與齒軌內緣皆貼合實際盤面',async({page})=>{
+ await page.setViewportSize({width:1440,height:1000});await page.goto('/tests/fixtures/stadium.html');
+ const clearances=await page.evaluate(async()=>{
+  const {createBattle}=await import('/src/physics.ts'),{BEYS}=await import('/src/catalog.ts'),THREE=(window as any).stadiumThree;
+  const a=(window as any).stadiumArena,b=createBattle(BEYS[0],BEYS[11],[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],7),clearances=[];
+  a.models.forEach((m:any)=>m.visible=true);
+  for(const r of [0,2.7,3.9]){b.tops[0].x=r;b.tops[1].x=-r;b.tops.forEach(t=>t.z=0);a.draw(0,b);a.stadium.updateMatrixWorld(true);const hit=new THREE.Raycaster(new THREE.Vector3(r,2,0),new THREE.Vector3(0,-1,0)).intersectObject(a.stadium.getObjectByName('bowl-surface'))[0];clearances.push(a.models[0].position.y-hit.point.y);}
+  return clearances;
+ });
+ for(const gap of clearances)expect(gap).toBeCloseTo(.065,2);
+ await page.locator('#wide').click();await page.screenshot({path:'artifacts/stadium-battle-contact-v0240.png'});
+});

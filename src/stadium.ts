@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { RADIUS, GATE_HALF_ANGLES } from "./physics.ts";
+import{stadiumSurface as surface}from'./stadium-surface.ts';
 
 type Placement = {
   x: number;
@@ -9,7 +10,6 @@ type Placement = {
   angle?: number;
   scale?: [number, number, number];
 };
-const surface = (r: number) => r * r * 0.024 - 0.03;
 const gates = [
   { angle: 0, half: GATE_HALF_ANGLES.over },
   { angle: Math.PI / 2, half: GATE_HALF_ANGLES.extreme },
@@ -48,7 +48,7 @@ function part(
 }
 function instances(
   geometry: THREE.BufferGeometry,
-  mat: THREE.Material,
+  mat: THREE.Material|THREE.Material[],
   name: string,
   placements: Placement[],
 ) {
@@ -80,7 +80,7 @@ function band(inner: number, outer: number, bottom: number, height: number) {
   return mergeGeometries(
     rimArcs.map(([start, end]) => {
       const points: THREE.Vector2[] = [],
-        steps = Math.ceil((end - start) * 22);
+        steps = Math.ceil((end - start) * 32);
       for (let i = 0; i <= steps; i++) {
         const a = start + ((end - start) * i) / steps;
         points.push(
@@ -132,17 +132,22 @@ function rimDeck() {
 }
 function railTooth() {
   const profile = new THREE.Shape();
-  profile.moveTo(-.11, -.014);
-  profile.lineTo(-.07, -.026);
-  profile.lineTo(.075, -.026);
-  profile.lineTo(.075, .026);
-  profile.lineTo(-.035, .026);
-  profile.lineTo(-.11, .014);
+  profile.moveTo(-.118, -.01);
+  profile.lineTo(-.08, -.021);
+  profile.lineTo(.05, -.024);
+  profile.lineTo(.09, -.017);
+  profile.lineTo(.09, .017);
+  profile.lineTo(.015, .024);
+  profile.lineTo(-.08, .021);
+  profile.lineTo(-.118, .01);
   profile.closePath();
-  return new THREE.ExtrudeGeometry(profile, {
+  const geometry=new THREE.ExtrudeGeometry(profile, {
     depth: .095, bevelEnabled: true, bevelSize: .005,
-    bevelThickness: .006, bevelSegments: 2, steps: 1,
+    bevelThickness: .006, bevelSegments: 1, steps: 1,
   }).rotateX(-Math.PI / 2);
+  const p=geometry.getAttribute('position');
+  for(let i=0;i<p.count;i++)if(p.getY(i)>.04)p.setY(i,p.getY(i)-.14*(p.getX(i)+.118));
+  geometry.computeVertexNormals();return geometry;
 }
 function ring(
   radius: number,
@@ -210,8 +215,8 @@ export function createStadium(): THREE.Group {
     steel = material("#9bb4bf", 0.72, 0.26),
     ink = material("#567b8d", 0, 0.75);
   const bowlMaterial = new THREE.MeshPhysicalMaterial({
-    color: "#d5dfe4", vertexColors: true, metalness: .06, roughness: .3,
-    clearcoat: .5, clearcoatRoughness: .24,
+    color: "#e0e8ec", vertexColors: true, metalness: .06, roughness: .36,
+    clearcoat: .55, clearcoatRoughness: .28,
   });
   const cyan = new THREE.MeshBasicMaterial({
     color: "#56dce6",
@@ -231,7 +236,8 @@ export function createStadium(): THREE.Group {
         new THREE.Vector2(0,-.68), new THREE.Vector2(5.05,-.68),
         new THREE.Vector2(5.38,-.61), new THREE.Vector2(5.48,-.5),
         new THREE.Vector2(5.48,-.42), new THREE.Vector2(5.32,-.31),
-        new THREE.Vector2(5.02,-.27), new THREE.Vector2(0,-.27),
+        new THREE.Vector2(5.02,-.27),new THREE.Vector2(4.25,-.27),
+        new THREE.Vector2(2.5,-.36),new THREE.Vector2(0,-.5),
       ], 128),
       chassis,
       "lower-chassis",
@@ -241,11 +247,11 @@ export function createStadium(): THREE.Group {
   );
   stadium.add(
     part(
-      new THREE.CylinderGeometry(4.94, 5.25, 0.22, 96),
+      new THREE.CylinderGeometry(4.94, 5.25, 0.1, 96),
       black,
       "under-bowl-support",
       0,
-      -0.28,
+      -0.5,
     ),
   );
   stadium.add(ring(5.4, 0.025, steel, "chassis-edge-bead", -0.56));
@@ -272,26 +278,29 @@ export function createStadium(): THREE.Group {
     ),
   );
 
-  const bowlProfile = [
-    new THREE.Vector2(0, -0.13),
-    new THREE.Vector2(4.34, 0.27),
-    new THREE.Vector2(4.34, 0.37),
-  ];
+  const bowlProfile:THREE.Vector2[]=[];
+  for(let i=0;i<=8;i++){const r=RADIUS*i/8;bowlProfile.push(new THREE.Vector2(r,surface(r)-.09));}
+  bowlProfile.push(new THREE.Vector2(4.34,.32),new THREE.Vector2(4.34,.37));
   for (let i = 48; i >= 0; i--) {
     const r = (RADIUS * i) / 48;
     bowlProfile.push(new THREE.Vector2(r, surface(r)));
   }
   const bowlGeometry = new THREE.LatheGeometry(bowlProfile, 160);
   const bowlPositions = bowlGeometry.getAttribute("position"), colors: number[] = [];
-  const centerColor = new THREE.Color("#e2ebef"), edgeColor = new THREE.Color("#91aebf");
+  const centerColor = new THREE.Color("#6f94ac"), shoulderColor=new THREE.Color('#e4ecf0'),edgeColor = new THREE.Color("#8aa8b8");
   for (let i=0;i<bowlPositions.count;i++) {
     const r = Math.hypot(bowlPositions.getX(i),bowlPositions.getZ(i));
-    const color = centerColor.clone().lerp(edgeColor,Math.pow(Math.min(1,r/4.34),3)*.72);
+    const color = centerColor.clone().lerp(shoulderColor,Math.min(1,r/3.5));
+    color.lerp(edgeColor,Math.max(0,Math.min(1,(r-3.65)/.69))*.65);
     if (bowlPositions.getY(i)<surface(r)-.04) color.multiplyScalar(.66);
     colors.push(color.r,color.g,color.b);
   }
   bowlGeometry.setAttribute("color",new THREE.Float32BufferAttribute(colors,3));
   stadium.add(part(bowlGeometry,bowlMaterial,"bowl-surface"));
+  const recess=part(new THREE.LatheGeometry([
+    [1.225,-.003],[1.238,.008],[1.255,.008],[1.275,-.003],
+  ].reverse().map(([r,h])=>new THREE.Vector2(r,surface(r)+h)),160),white,'center-recess-bevel');
+  recess.castShadow=false;stadium.add(recess);
   stadium.add(part(rimDeck(), white, "molded-rim-deck"));
   stadium.add(part(band(4.29, 4.53, 0.4, 0.066), blue, "rail-carrier"));
   stadium.add(part(band(4.28,4.4,.416,.092),chassis,"rail-root-channel"));
@@ -337,13 +346,15 @@ export function createStadium(): THREE.Group {
   );
   const teeth = instances(
     railTooth(),
-    steel,
+    [steel,material('#527b90',.55,.35)],
     "x-rail-teeth",
-    radial(320, 4.24, 0.43, true, .018),
+    radial(384, 4.24, 0.43, true, .018),
   );
   for (let i = 0; i < teeth.count; i++)
     teeth.setColorAt(i, new THREE.Color(i % 20 === 0 ? "#bcf66b" : "#b5d3df"));
   stadium.add(teeth);
+  const railBolts=instances(new THREE.CylinderGeometry(.027,.035,.012,8),steel,'rail-carrier-fasteners',radial(48,4.47,.477,true,.04));
+  railBolts.castShadow=false;stadium.add(railBolts);
   stadium.add(
     instances(
       new THREE.BoxGeometry(0.04, 0.017, 0.13),
@@ -353,7 +364,7 @@ export function createStadium(): THREE.Group {
     ),
   );
 
-  for (const r of [1.3, 2.5, 3.5])
+  for (const r of [2.5, 3.5])
     stadium.add(
       ring(r, 0.012, ink, "engraved-circle-" + r, surface(r) + 0.014),
     );

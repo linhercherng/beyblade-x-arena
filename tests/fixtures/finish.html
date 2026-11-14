@@ -22,6 +22,6 @@ document.addEventListener('click',e=>{
 });
 function frame(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;arena.draw(paused?0:dt,battle);sound.update(null,false,paused?null:'results');
  if(analyser){const a=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(a);const rms=Math.sqrt(a.reduce((s,v)=>s+v*v,0)/a.length);peak=Math.max(peak,rms);window.currentRms=rms;}requestAnimationFrame(frame);}
-window.finishMetrics=()=>({positions:arena.models.map(m=>m.position.toArray()),parts:arena.models.map(m=>m.userData.parts.map(p=>p.position.toArray())),links:arena.models.map(m=>m.userData.partLinks),
+window.finishMetrics=()=>({pulses:arena.landingRings.map(m=>m.position.toArray()),positions:arena.models.map(m=>m.position.toArray()),parts:arena.models.map(m=>m.userData.parts.map(p=>p.position.toArray())),links:arena.models.map(m=>m.userData.partLinks),
  trail:arena.exitTrail?.visible??false,partMin:arena.models.map(m=>m.userData.parts.map(p=>new THREE.Box3().setFromObject(p,true).min.y)),peak,rms:window.currentRms??0,cues:sound.cues?.size??0,reduced:arena.reduced,quaternion:arena.camera.quaternion.toArray()});requestAnimationFrame(frame);
 </script></html>

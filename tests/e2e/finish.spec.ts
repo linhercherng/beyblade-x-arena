@@ -20,6 +20,11 @@ test('爆裂分離、越界側盤、極限前盤有不同且有限的落點，�
  expect(wall.partMin[1][0]).toBeLessThan(.46);
  expect(wall.partMin[1][0]).toBeGreaterThan(.39);
 });
+test('凹碗上的停轉光環貼合盤面，接盤光環保留原高度',async({page})=>{
+ await page.goto('/tests/fixtures/finish.html');await page.locator('#capture').click();await page.locator('#spin').click();const spin=await metrics(page);expect(spin.pulses[1][1]).toBeLessThan(0);expect(spin.pulses[1][1]).toBeCloseTo(spin.pulses[0][1],2);
+ await page.locator('#capture').click();await page.locator('#over').click();expect((await metrics(page)).pulses[1][1]).toBeCloseTo(.115,3);
+});
+
 test('終結及勝負音效可播放，暫停及靜音取消尚未結束的演出音效',async({page})=>{
  await page.goto('/tests/fixtures/finish.html');
  for(const kind of ['burst','over','extreme','spin','draw','victory','defeat']){

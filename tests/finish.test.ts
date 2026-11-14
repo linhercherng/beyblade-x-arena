@@ -1,10 +1,11 @@
+import{stadiumSurface}from"../src/stadium-surface.ts";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { exitPose, burstPose, cueSamples, scorePreview } from "../src/finish.ts";
 import * as THREE from "three";
 import { BEYS } from "../src/catalog.ts";
 import { beyModel } from "../src/bey-model.ts";
-import { keepAboveFloor, settleBurstParts } from "../src/arena.ts";
+import { keepAboveFloor, settleBurstParts, settleOnBowl } from "../src/arena.ts";
 
 test("實際傾斜模型落地不穿接盤，爆裂連接件不穿碗面", () => {
   const g = beyModel(BEYS.find(b => b.name.includes("Phoenix Wing"))!, new THREE.Texture());
@@ -17,9 +18,13 @@ test("實際傾斜模型落地不穿接盤，爆裂連接件不穿碗面", () =>
   for(const part of g.userData.parts as THREE.Group[]){
     const box=new THREE.Box3().setFromObject(part,true);
     const r2=Math.max(box.min.x**2,box.max.x**2)+Math.max(box.min.z**2,box.max.z**2);
-    assert.ok(box.min.y >= Math.min(r2,4.25**2)*.024-.03,part.name);
+    assert.ok(box.min.y >= stadiumSurface(Math.sqrt(r2)),part.name);
   }
 });
+test('停轉側躺模型在凹碗中心與斜坡都不穿盤，零件不被拆開',()=>{
+ for(const radius of [0,2.7]){const g=beyModel(BEYS[0],new THREE.Texture()),parts=g.userData.parts as THREE.Group[],before=parts.map(p=>p.position.toArray());g.position.set(radius,stadiumSurface(radius)+.065,0);g.rotation.z=Math.PI/2;settleOnBowl(g);const box=new THREE.Box3().setFromObject(g,true),r=Math.hypot(Math.max(Math.abs(box.min.x),Math.abs(box.max.x)),Math.max(Math.abs(box.min.z),Math.abs(box.max.z)));assert.ok(box.min.y>=stadiumSurface(r));assert.deepEqual(parts.map(p=>p.position.toArray()),before);}
+});
+
 test("近牆爆裂不將碗面曲率外推至盤外而懸空", () => {
   const g=beyModel(BEYS[0],new THREE.Texture());
   const parts=g.userData.parts as THREE.Group[];
