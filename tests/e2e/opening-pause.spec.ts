@@ -2,7 +2,7 @@ import{test,expect}from'@playwright/test';
 test.setTimeout(45000);
 
 // 故障注入：RAF空窗後第一個回呼保留舊音訊時鐘，之後恢復原生時鐘。
-for(const mode of ['cpu','local'])test(`${mode}開場取樣空窗不誤觸暫停，恢復後直接進入對戰`,async({page})=>{
+for(const mode of ['cpu','local'])test(`${mode}開場取樣空窗不誤觸暫停，恢復後完成倒數再進入對戰`,async({page})=>{
  await page.addInitScript(()=>{
   const w=window as any,Original=AudioContext,request=window.requestAnimationFrame.bind(window);
   let held=false,releaseClock=false,prepareNext=false,prepared:()=>void,clock=0,ctx:AudioContext,pending:FrameRequestCallback[]=[];
@@ -27,6 +27,6 @@ for(const mode of ['cpu','local'])test(`${mode}開場取樣空窗不誤觸暫停
   const download=page.waitForEvent('download');await page.getByRole('button',{name:'匯出檢查紀錄',exact:true}).click();await(await download).saveAs(`artifacts/repro-opening-pause-${mode}.json`);
  }
  expect(paused).toBe(false);
- await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:8000});
+ await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:20000});
  await expect(page.locator('#pause-overlay')).toBeHidden();
 });
