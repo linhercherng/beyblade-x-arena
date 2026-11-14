@@ -49,6 +49,39 @@ export class Sound {
   private dashBuffers = new Map<boolean,AudioBuffer>();
   private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
   private lastDash = [-Infinity,-Infinity];
+  private background=false;
+  private recovering=true;
+  private recovery=0;
+  private lastResume=-Infinity;
+  private sources=new Set<AudioScheduledSourceNode>();
+  private get ready(){return !!this.ctx&&this.ctx.state==="running"&&!this.background&&!this.recovering;}
+  private track<T extends AudioScheduledSourceNode>(source:T):T{
+    this.sources.add(source);source.addEventListener("ended",()=>this.sources.delete(source),{once:true});return source;
+  }
+  private silence(){
+    if(!this.ctx||!this.master)return;
+    this.recovering=true;this.recovery++;this.lastResume=-Infinity;
+    const now=this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
+    this.revision++;this.pending=null;this.fadeOut(0);this.stopEffects();
+    // 包含交叉淡出中的配樂與短音效，避免凍結的聲源在恢復時一起響起。
+    for(const source of this.sources){source.stop(now);source.disconnect();}this.sources.clear();
+    for(const rotor of this.rotors){rotor.gain.gain.cancelScheduledValues(now);rotor.gain.gain.setValueAtTime(0,now);}
+    this.lastImpact=-Infinity;this.lastDash=[-Infinity,-Infinity];
+  }
+  private restore(){
+    if(!this.ctx||!this.master||this.background||this.ctx.state!=="running"||!this.recovering)return;
+    this.recovering=false;
+    const now=this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
+    this.master.gain.linearRampToValueAtTime(this.muted?0:.65,now+.25);
+  }
+  setBackground(hidden:boolean){
+    if(hidden===this.background)return;
+    this.background=hidden;
+    if(hidden){this.silence();if(this.ctx&&this.ctx.state!=="suspended"&&this.ctx.state!=="closed")void this.ctx.suspend().catch(()=>{});}
+    // 回到前景保留靜音，下一次操作在使用者手勢內恢復。
+  }
   constructor() {
     try {
       this.muted = localStorage.getItem("spinforge-muted") === "true";
@@ -59,11 +92,15 @@ export class Sound {
     }
   }
   unlock() {
-    if(typeof AudioContext==="undefined")return;
+    if(this.background||typeof AudioContext==="undefined")return;
     if (!this.ctx) {
       this.ctx = new AudioContext();
       this.master = this.ctx.createGain();
-      this.master.gain.value = this.muted ? 0 : 0.65;
+      this.master.gain.value = 0;
+      this.ctx.addEventListener("statechange",()=>{
+        if(this.ctx?.state!=="running"){if(!this.recovering)this.silence();}
+        else if(this.lastResume!==-Infinity)this.restore();
+      });
       const limiter = this.ctx.createDynamicsCompressor();
       limiter.threshold.value = -4;
       limiter.knee.value = 6;
@@ -116,7 +153,15 @@ export class Sound {
         this.rotors.push({ osc, gain });
       }
     }
-    void this.ctx.resume().catch(() => { /* 下一次操作可再次啟用音訊。 */ });
+    if(this.ctx.state==="running"&&this.recovery===0)this.restore();
+    if(this.ctx.state==="running"&&!this.recovering)return;
+    if(!this.recovering)this.silence();
+    if(performance.now()-this.lastResume<300)return;
+    this.lastResume=performance.now();const context=this.ctx,recovery=this.recovery;
+    // 不讓Safari未完成的resume Promise永久阻擋之後的新手勢重試。
+    // 中斷後即使Safari回報running也重新排入suspend/resume；兩者都在這次手勢內呼叫。
+    if(this.recovery>0&&context.state!=="suspended"&&context.state!=="closed")void context.suspend().catch(()=>{});
+    void context.resume().then(()=>{if(this.ctx===context&&this.recovery===recovery)this.restore();}).catch(()=>{});
   }
   toggle() {
     this.muted = !this.muted;
@@ -126,12 +171,14 @@ export class Sound {
     } catch {
       /* 音效偏好寫入失敗不阻止操作。 */
     }
-    if (this.master && this.ctx)
+    if (this.master && this.ctx) {
+      this.master.gain.cancelAndHoldAtTime(this.ctx.currentTime);
       this.master.gain.setTargetAtTime(
-        this.muted ? 0 : 0.65,
+        this.muted || !this.ready ? 0 : 0.65,
         this.ctx.currentTime,
         0.05,
       );
+    }
   }
   setMusicVolume(value: number) {
     this.volume = musicVolume(value);
@@ -146,6 +193,7 @@ export class Sound {
         return this.ctx!.decodeAudioData(await response.arrayBuffer());
       });
       this.buffers.set(mode, buffer);
+      void buffer.catch(()=>{if(this.buffers.get(mode)===buffer)this.buffers.delete(mode);});
       // shortcut: 快取兩首解碼音訊，更多曲目時再評估行動裝置記憶體。
       if (this.buffers.size > 2) this.buffers.delete(this.buffers.keys().next().value!);
     }
@@ -176,7 +224,7 @@ export class Sound {
     }
     try {
       const buffer = await this.buffer(mode);
-      if (revision !== this.revision) return;
+      if (revision !== this.revision || !this.ready) return;
       const now = this.ctx.currentTime;
       const duration = Math.min(buffer.duration, tracks[mode].duration);
       let offset = this.offsets.get(mode) ?? 0;
@@ -184,7 +232,7 @@ export class Sound {
       if (old && ["battle", "clutch"].includes(old.mode) && ["battle", "clutch"].includes(mode))
         offset = (old.offset + now - old.startedAt) % duration;
       this.fadeOut(0.5);
-      const source = this.ctx.createBufferSource();
+      const source = this.track(this.ctx.createBufferSource());
       const gain = this.ctx.createGain();
       source.buffer = buffer;
       source.loop = true;
@@ -196,6 +244,7 @@ export class Sound {
       source.start(now, offset % duration);
       this.playing = { mode, source, gain, startedAt: now, offset, duration };
     } catch (error) {
+      if(revision!==this.revision)return;
       this.failed.add(mode);
       if (revision === this.revision) this.fadeOut(0.18);
       console.warn(`無法載入配樂 ${mode}，仍可使用遊戲音效。`, error);
@@ -210,8 +259,8 @@ export class Sound {
     volume = 0.6,
     slide = 0,
   ) {
-    if (!this.ctx || !this.sfx) return;
-    const osc = this.ctx.createOscillator(),
+    if (!this.ready || !this.ctx || !this.sfx || this.muted) return;
+    const osc = this.track(this.ctx.createOscillator()),
       gain = this.ctx.createGain(),
       now = this.ctx.currentTime;
     osc.type = type;
@@ -227,14 +276,14 @@ export class Sound {
   }
   event(e: BattleEvent, dashHit=false, cameraPan?:number) {
     if (e.type === "hit") {
-      if (!this.ctx || !this.sfx || !this.musicDuck || this.muted) return;
+      if (!this.ready || !this.ctx || !this.sfx || !this.musicDuck || this.muted) return;
       const now = this.ctx.currentTime;
       // 為衝刺命中保留一聲部，普通擦撞的節流不應吞掉主撞擊聲。
       if (this.impacts.size >= (dashHit?6:5) || (!dashHit && now - this.lastImpact < .035 && e.strength <= this.lastStrength)) return;
       this.lastImpact = now;
       this.lastStrength = e.strength;
       const profile = impactProfile(dashHit ? Math.max(10,e.strength*1.35) : e.strength);
-      const source = this.ctx.createBufferSource(), gain = this.ctx.createGain(), pan = this.ctx.createStereoPanner();
+      const source = this.track(this.ctx.createBufferSource()), gain = this.ctx.createGain(), pan = this.ctx.createStereoPanner();
       source.buffer = this.strikes[profile.tier];
       source.playbackRate.value = dashHit ? .8 : 1 + Math.sin(e.time * 17 + e.x) * .04;
       gain.gain.value = profile.gain*(dashHit?1.1:1);
@@ -278,14 +327,14 @@ export class Sound {
     this.dashVoices.clear();
   }
   private playDash(e:BattleEvent,cameraPan?:number) {
-    if(!this.ctx||!this.sfx||this.muted||(e.player!==0&&e.player!==1))return;
+    if(!this.ready||!this.ctx||!this.sfx||this.muted||(e.player!==0&&e.player!==1))return;
     const now=this.ctx.currentTime;
     if(now-this.lastDash[e.player]<.12)return;
     this.lastDash[e.player]=now;
     const grip=hasRail(e.x,e.z);
     const old=this.dashVoices.get(e.player);
     if(old) { old.gain.gain.cancelAndHoldAtTime(now);old.gain.gain.linearRampToValueAtTime(0,now+.015);old.source.stop(now+.015); }
-    const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),pan=this.ctx.createStereoPanner();
+    const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),pan=this.ctx.createStereoPanner();
     source.buffer=this.dashBuffers.get(grip)!;gain.gain.value=.95;
     pan.pan.value=cameraPan??Math.max(-.8,Math.min(.8,e.x/5));
     source.connect(gain).connect(pan).connect(this.sfx);
@@ -310,7 +359,7 @@ export class Sound {
     this.cuePans.clear();
   }
   private playCue(kind: Cue, initialRate=1, slowReplay=false, cameraPan=0) {
-    if (!this.ctx || !this.sfx || this.muted) return;
+    if (!this.ready || !this.ctx || !this.sfx || this.muted) return;
     this.stopImpacts(initialRate<1?.065:.015);
     this.replayAccent=null;
     this.stopDashes();
@@ -321,7 +370,7 @@ export class Sound {
       buffer.getChannelData(0).set(samples);
       this.cueBuffers.set(kind, buffer);
     }
-    const source = this.ctx.createBufferSource(), gain = this.ctx.createGain();
+    const source = this.track(this.ctx.createBufferSource()), gain = this.ctx.createGain();
     source.buffer = this.cueBuffers.get(kind)!;
     const now=this.ctx.currentTime;
     source.playbackRate.setValueAtTime(initialRate,now);
@@ -365,8 +414,8 @@ export class Sound {
     this.replayFilter.frequency.cancelAndHoldAtTime(now);this.replayFilter.frequency.exponentialRampToValueAtTime(Math.min(mix.cutoff,this.ctx.sampleRate*.49),now+mix.seconds);
     if(this.replayAccent){const v=this.replayAccent;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.065);v.source.stop(now+.065);this.replayAccent=null;}
     if(stage===null)this.restoreDuck();
-    if(fresh&&accent&&stage===accent&&!this.muted&&this.sfx&&this.impacts.size<6){
-      const source=this.ctx.createBufferSource(),gain=this.ctx.createGain(),stereo=this.ctx.createStereoPanner();
+    if(this.ready&&fresh&&accent&&stage===accent&&!this.muted&&this.sfx&&this.impacts.size<6){
+      const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),stereo=this.ctx.createStereoPanner();
       source.buffer=this.replayAccents.get(accent)!;gain.gain.value=accent==="decision"?1.1:.85;stereo.pan.value=pan;
       source.connect(gain).connect(stereo).connect(this.sfx);this.impacts.set(source,gain);this.replayAccent={source,gain,pan:stereo};
       source.onended=()=>{source.disconnect();gain.disconnect();stereo.disconnect();this.impacts.delete(source);this.impactTails.delete(source);if(this.replayAccent?.source===source)this.replayAccent=null;};
@@ -379,7 +428,7 @@ export class Sound {
     active: boolean,
     mode: MusicMode | null,
   ) {
-    if (!this.ctx) return;
+    if (!this.ready || !this.ctx) return;
     if(mode===null||mode==="menu") { this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)
