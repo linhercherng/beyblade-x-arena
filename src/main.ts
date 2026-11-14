@@ -526,7 +526,7 @@ function roundTable(m: Match, playable = false) {
 }
 function results(m: Match) {
   screen = "results";
-  sound.victory(m.mode === "local" || m.winner === 0);
+  sound.victory(m.winner === 0,m.mode === "local" ? m.winner : null);
   match = m;
   battle = null;
   const points: Record<string, number> = {};

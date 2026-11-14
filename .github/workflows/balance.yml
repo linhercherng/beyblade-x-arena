@@ -20,7 +20,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test tests/e2e/opening-pause.spec.ts tests/e2e/p2.spec.ts tests/e2e/countdown-voice.spec.ts tests/e2e/launch-presentation.spec.ts
+      - run: npx playwright test tests/e2e/opening-pause.spec.ts tests/e2e/p2.spec.ts tests/e2e/countdown-voice.spec.ts tests/e2e/launch-presentation.spec.ts tests/e2e/finish-voice.spec.ts
       - run: npm run balance:check
       - run: npm run build
       - name: Preserve balance report

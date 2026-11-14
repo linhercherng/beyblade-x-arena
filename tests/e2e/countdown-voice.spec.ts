@@ -18,8 +18,8 @@ test('語音沿用靜音、暫停與背景清理，不在恢復時補播',async(
 
 test('舊語音ended回呼延遲時，清理已播完聲源不影響下一拍',async({page})=>{
  await page.goto('/tests/fixtures/audio.html');await page.locator('#battle').click();await expect.poll(()=>page.evaluate(()=>(window as any).audioSound.diagnostics().ready)).toBe(true);
- await page.evaluate(()=>{const w=window as any,s=w.audioSound;s.countdown(3);w.previousVoice=s.countdownVoice;w.previousCleanup=w.previousVoice.source.onended;w.previousVoice.source.onended=null;w.previousEnd=s.ctx.currentTime+.012+w.previousVoice.source.buffer.duration;});
+ await page.evaluate(()=>{const w=window as any,s=w.audioSound;s.countdown(3);w.previousVoice=s.voicePlayback;w.previousCleanup=w.previousVoice.source.onended;w.previousVoice.source.onended=null;w.previousEnd=s.ctx.currentTime+.012+w.previousVoice.source.buffer.duration;});
  await expect.poll(()=>page.evaluate(()=>(window as any).audioSound.ctx.currentTime>(window as any).previousEnd+.02)).toBe(true);
- const result=await page.evaluate(()=>{const w=window as any,s=w.audioSound;const old=w.previousVoice.source;s.countdown(2);const next=s.countdownVoice.source;w.secondEnded=0;next.addEventListener('ended',()=>w.secondEnded++);w.previousCleanup(new Event('ended'));return{newVoicePreserved:s.countdownVoice.source===next,oldAlreadyFinished:s.ctx.currentTime>w.previousEnd,buffers:s.countdownBuffers.size};});
+ const result=await page.evaluate(()=>{const w=window as any,s=w.audioSound;const old=w.previousVoice.source;s.countdown(2);const next=s.voicePlayback.source;w.secondEnded=0;next.addEventListener('ended',()=>w.secondEnded++);w.previousCleanup(new Event('ended'));return{newVoicePreserved:s.voicePlayback.source===next,oldAlreadyFinished:s.ctx.currentTime>w.previousEnd,buffers:s.countdownBuffers.size};});
  expect(result).toEqual({newVoicePreserved:true,oldAlreadyFinished:true,buffers:4});await expect.poll(()=>page.evaluate(()=>(window as any).secondEnded)).toBe(1);
 });

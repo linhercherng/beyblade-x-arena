@@ -5,7 +5,7 @@ import {Sound} from "../src/audio.ts";
 
 test("沒有WebAudio時啟用音效不會阻塞遊戲操作",()=>{
   const sound=new Sound();
-  assert.doesNotThrow(()=>{sound.unlock();sound.countdown(3);});
+  assert.doesNotThrow(()=>{sound.unlock();sound.countdown(3);sound.finish({winner:0,finish:"burst",points:2,time:20});sound.victory(false,1);});
   assert.equal(sound.ctx,null);
 });
 

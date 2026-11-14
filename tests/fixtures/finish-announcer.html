@@ -1,0 +1,7 @@
+<!doctype html><meta charset="utf-8"><title>終結與勝負語音驗收</title>
+<button data-kind="burst">Burst</button><button data-kind="over">Over</button><button data-kind="extreme">Xtreme</button><button data-kind="spin">Spin</button><button data-kind="draw">Draw</button><button data-kind="victory">Victory</button><button data-kind="defeat">Defeat</button><button data-kind="player1">1P Wins</button><button data-kind="player2">2P Wins</button><button id="highlight">Highlight finish</button><button id="pause">Pause</button><button id="mute">Mute</button><button id="stop">Skip / exit</button>
+<script type="module">
+import{Sound}from'/src/audio.ts';const s=new Sound();let paused=false;window.announcerSound=s;
+document.addEventListener('click',e=>{const el=e.target;if(el.tagName!=='BUTTON')return;s.unlock();if(el.id==='pause'){paused=!paused;if(paused)s.update(null,false,null);return;}if(el.id==='mute'){s.toggle();return;}if(el.id==='stop'){s.stopEffects();return;}if(el.id==='highlight'){s.beginReplay();s.finish({winner:0,finish:'burst',points:2,time:20},.55,true);return;}paused=false;const kind=el.dataset.kind;if(['victory','defeat','player1','player2'].includes(kind)){s.victory(kind==='victory'||kind==='player1',kind==='player1'?0:kind==='player2'?1:null);return;}s.finish({winner:kind==='draw'?null:0,finish:kind==='draw'?'burst':kind,points:kind==='draw'?0:kind==='extreme'?3:kind==='spin'?1:2,time:20});});
+function frame(){s.update(null,false,paused?null:'results');requestAnimationFrame(frame);}frame();
+</script>
