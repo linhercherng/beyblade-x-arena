@@ -1,4 +1,5 @@
 import{backupSummary}from'./backup-preview.ts';
+import{LaunchCountdown}from'./launch-countdown.ts';
 import{replayAt,replayMoments}from'./replay-navigation.ts';
 import {DeviceCheck,DEVICE_CASES,GAME_VERSION} from "./diagnostics.ts";
 import {bindPlayerTouch} from "./player-touch.ts";
@@ -108,10 +109,10 @@ let paused = false,
   accumulator = 0,
   lastFrame = 0,
   now = 0,
-  countdownStart = 0,
   finishStart = 0,
   dashMessageUntil = 0,
   processed = false;
+let launchCountdown=new LaunchCountdown();
 let detailId: string | null = null,
   modalReturnBeys: Bey[] = [];
 let previousPoses: TopPose[] = [];
@@ -446,7 +447,7 @@ function startCountdown(){
   );
   previousPoses = capturePoses(battle, previousPoses);
   screen = "countdown";
-  countdownStart = now;
+  launchCountdown=new LaunchCountdown();
   renderArena();
   updateHud();
 }
@@ -470,7 +471,6 @@ function startBattle() {
   const msg = byId("battle-message")!;
   msg.innerHTML = '<i class="launch-streaks" aria-hidden="true"></i><strong class="shoot launch-call">GO SHOOT!</strong>';
   arena?.launch(battle!);
-  sound.countdown(0);
 
 }
 function roundEnded() {
@@ -718,7 +718,7 @@ function setPaused(value: boolean) {
   if (value && !paused) pauseStarted = performance.now();
   if (!value && paused) {
     const elapsed = performance.now() - pauseStarted;
-    if (screen === "countdown") countdownStart += elapsed;
+    if (screen === "countdown" || launchCountdown.cue===0) launchCountdown.shift(elapsed);
     if (finishStart) finishStart += elapsed;
     lastFrame = performance.now();
   }
@@ -1159,7 +1159,7 @@ function frame(time: number) {
   const realDt = Math.max(0, Math.min(0.25, (time - lastFrame) / 1000 || 0));
   lastFrame = time;
   now = time;
-  const active = (screen === "battle" || screen === "replay") && !paused;
+  const active = (screen === "battle" || screen === "replay") && !paused && (screen!=="battle"||launchCountdown.cue!==0||launchCountdown.started);
   if (screen === "launch" && !paused)
     for (const p of [0, 1]) {
       if (!locked[p]) {
@@ -1167,19 +1167,11 @@ function frame(time: number) {
         if (bar) bar.style.left = chargePhase(p) * 100 + "%";
       }
     }
-  if (screen === "countdown") {
-    if (!paused) {
-      const remain = 3 - Math.floor((time - countdownStart) / 1000);
-      if (remain <= 0) startBattle();
-      else {
-        const msg = byId("battle-message")!;
-        if (msg.dataset.count !== String(remain)) {
-          msg.dataset.count = String(remain);
-          msg.innerHTML = `<i class="count-ring" aria-hidden="true"></i><strong class="count-beat">${remain}</strong><span>READY TO LAUNCH</span>`;
-          sound.countdown(remain as 1|2|3);
-
-        }
-      }
+  if (!paused && (screen === "countdown" || screen === "battle" && launchCountdown.cue===0)) {
+    const action=launchCountdown.step(time,cue=>sound.countdownReady?sound.countdown(cue):null);
+    if(action==='show'){
+      if(launchCountdown.cue===0)startBattle();
+      else{const msg=byId('battle-message')!,cue=launchCountdown.cue;msg.dataset.count=String(cue);msg.innerHTML=`<i class="count-ring" aria-hidden="true"></i><strong class="count-beat">${cue}</strong><span>READY TO LAUNCH</span>`;}
     }
   }
   if (active && battle) {
@@ -1214,7 +1206,7 @@ function frame(time: number) {
         accumulator -= DT;
       }
       if(!battle.result&&battle.time>=dashMessageUntil) byId("battle-message")?.querySelector(".dash-message")?.remove();
-      if(battle.time>=1.1)byId("battle-message")?.querySelectorAll(".shoot,.launch-streaks").forEach(el=>el.remove());
+      if(battle.time>=1.1&&launchCountdown.cue===null)byId("battle-message")?.querySelectorAll(".shoot,.launch-streaks").forEach(el=>el.remove());
       if (battle.result || time - lastHudTime >= 100) {
         updateHud();
         lastHudTime = time;
@@ -1282,7 +1274,7 @@ function frame(time: number) {
       highlight?[]:previousPoses,
       highlight||battle?.result ? 1 : accumulator / DT,
       screen === "countdown"
-        ? ((paused ? pauseStarted : time) - countdownStart) / 1000
+        ? launchCountdown.progress(paused ? pauseStarted : time)
         : null,
       paused?0:realDt,
     );
@@ -1292,6 +1284,7 @@ function frame(time: number) {
     musicFor({ screen, paused, hidden: document.hidden,
       finished: !!battle?.result,
       matchPoint: !!match && Math.max(...match.scores) >= 3 }),
+    !paused&&(screen==='countdown'||screen==='battle'&&launchCountdown.cue===0),
   );
   if(time-audioUiAt>=200){audioUiAt=time;updateAudioStatus();}
   deviceLog.frame(time,!paused&&!document.hidden&&!!arena&&(screen==="battle"||screen==="replay"));

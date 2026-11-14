@@ -1,4 +1,5 @@
 import{finishSamples,FINISH_VOICE_CUES,type FinishVoiceCue}from'./finish-voice.ts';
+import type{CountdownPlayback}from'./launch-countdown.ts';
 import {countdownSamples,launchSamples,COUNTDOWN_RATE,type CountdownCue} from './countdown-voice.ts';
 import {audioStatus} from "./audio-state.ts";
 import type { Battle, BattleEvent, Result } from "./physics.ts";
@@ -48,12 +49,14 @@ export class Sound {
   private lastImpact = -Infinity;
   private lastStrength = 0;
   private countdownBuffers=new Map<CountdownCue,AudioBuffer>();
-  private voicePlayback:{source:AudioBufferSourceNode;gain:GainNode;accent:{source:AudioBufferSourceNode;gain:GainNode}|null}|null=null;
+  private voicePlayback:(CountdownPlayback&{source:AudioBufferSourceNode;gain:GainNode;accent:{source:AudioBufferSourceNode;gain:GainNode}|null})|null=null;
   private announcementBuffers=new Map<FinishVoiceCue,AudioBuffer>();
   private launchBuffers=new Map<boolean,AudioBuffer>();
   private voiceMusicDuck:GainNode|null=null;
   private voiceSfxDuck:GainNode|null=null;
   private voiceDuckUntil=-Infinity;
+  private voiceReadyAt=0;
+  get countdownReady(){return this.muted||typeof AudioContext==='undefined'||this.ready&&!!this.ctx&&this.ctx.currentTime>=this.voiceReadyAt;}
   private cueBuffers = new Map<Cue, AudioBuffer>();
   private cues = new Map<AudioBufferSourceNode, GainNode>();
   private dashBuffers = new Map<boolean,AudioBuffer>();
@@ -110,6 +113,7 @@ export class Sound {
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
     this.master.gain.linearRampToValueAtTime(this.muted?0:.65,now+.25);
+    this.voiceReadyAt=now+.25;
   }
   setBackground(hidden:boolean){
     if(hidden===this.background)return;
@@ -450,28 +454,31 @@ export class Sound {
   private stopVoice(){
     if(!this.ctx)return;const now=this.ctx.currentTime,voice=this.voicePlayback;
     if(!voice&&now>this.voiceDuckUntil)return;
+    if(voice&&!voice.complete)voice.cancelled=true;
     this.voicePlayback=null;this.voiceDuckUntil=-Infinity;
     if(voice)for(const playing of [voice,voice.accent])if(playing){playing.gain.gain.cancelAndHoldAtTime(now);playing.gain.gain.linearRampToValueAtTime(0,now+.015);playing.source.stop(now+.015);}
     // Hold through the existing 180ms music fade so cancellation cannot cause a swell.
     for(const [node,release]of [[this.voiceMusicDuck,.06],[this.voiceSfxDuck,.18]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.setValueAtTime(p.value,now+.18);p.setTargetAtTime(1,now+.18,release);}
   }
   countdown(cue:CountdownCue){
-    this.speakVoice(this.countdownBuffers.get(cue),{buffer:this.launchBuffers.get(cue===0),rate:cue===0?1:1+(3-cue)*.12,gain:cue===0?1.1:.65});
+    if(this.muted||typeof AudioContext==='undefined')return{complete:true,cancelled:false};
+    return this.speakVoice(this.countdownBuffers.get(cue),{buffer:this.launchBuffers.get(cue===0),rate:cue===0?1:1+(3-cue)*.12,gain:cue===0?1.1:.65});
   }
   private speakVoice(buffer:AudioBuffer|undefined,accent?:{buffer:AudioBuffer|undefined;rate:number;gain:number}){
     this.stopVoice();
-    if(!this.ready||!this.ctx||!this.master||!this.sfx||this.muted||!buffer)return;
+    if(!this.ready||!this.ctx||!this.master||!this.sfx||this.muted||!buffer)return null;
     const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain();
     source.buffer=buffer;gain.gain.value=.52;source.connect(gain).connect(this.master);
     let accentVoice:{source:AudioBufferSourceNode;gain:GainNode}|null=null;
     if(accent?.buffer){const a=this.track(this.ctx.createBufferSource()),g=this.ctx.createGain();a.buffer=accent.buffer;a.playbackRate.value=accent.rate;g.gain.value=accent.gain;a.connect(g).connect(this.sfx);a.onended=()=>{a.disconnect();g.disconnect();};accentVoice={source:a,gain:g};}
-    this.voicePlayback={source,gain,accent:accentVoice};
-    source.onended=()=>{source.disconnect();gain.disconnect();if(this.voicePlayback?.source===source)this.voicePlayback=null;};
+    const playback={source,gain,accent:accentVoice,complete:false,cancelled:false};this.voicePlayback=playback;
+    source.onended=()=>{playback.complete=true;source.disconnect();gain.disconnect();if(this.voicePlayback?.source===source)this.voicePlayback=null;};
     const now=this.ctx.currentTime;
     // Independent priority gains keep hit/replay duck recovery from masking speech.
     this.voiceDuckUntil=now+buffer.duration+.23;
     for(const [node,level]of [[this.voiceMusicDuck,.1],[this.voiceSfxDuck,.32]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(level,now+.008);p.setValueAtTime(level,now+buffer.duration+.06);p.linearRampToValueAtTime(1,this.voiceDuckUntil);}
     accentVoice?.source.start(now+.008);source.start(now+.012);
+    return playback;
   }
   beginReplay(){this.stopEffects();this.replayPlayed.clear();this.setReplay("tracking");}
   setReplay(stage:ReplayStage|null,cameraPan=0){
@@ -510,6 +517,7 @@ export class Sound {
     battle: Battle | null,
     active: boolean,
     mode: MusicMode | null,
+    waitingForCountdown=false,
   ) {
     if (!this.ready || !this.ctx) return;
     const wall=performance.now(),clock=this.ctx.currentTime;
@@ -518,7 +526,7 @@ export class Sound {
     // 同一時鐘只寬限一次取樣空窗，避免開場誤判，也不讓低幀率掩蓋真停滯。
     else if(sampleGap>=1000&&!this.clockGapGrace){this.clockWall=wall;this.clockGapGrace=true;}
     // 路由切換可能沒有事件且仍回報running；只在預期有聲音時檢查停住的時鐘。
-    else if(!this.muted&&(this.sources.size>0||active)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
+    else if(!this.muted&&(this.sources.size>0||active||waitingForCountdown)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
     if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
     if(mode===null||mode==="menu") { this.stopVoice();this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
