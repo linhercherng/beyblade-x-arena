@@ -469,7 +469,8 @@ function startBattle() {
   renderArena();
   const msg = byId("battle-message")!;
   msg.innerHTML = '<strong class="shoot">GO SHOOT!</strong>';
-  sound.tone(440, 0.24, "sawtooth", 0.4, 1000);
+  sound.countdown(0);
+  sound.tone(440, 0.24, "sawtooth", 0.08, 1000);
 }
 function roundEnded() {
   if (!battle?.result || !match) return;
@@ -1174,7 +1175,8 @@ function frame(time: number) {
         if (msg.dataset.count !== String(remain)) {
           msg.dataset.count = String(remain);
           msg.innerHTML = `<strong>${remain}</strong><span>READY TO LAUNCH</span>`;
-          sound.tone(300 + remain * 100, 0.12, "sine", 0.25);
+          sound.countdown(remain as 1|2|3);
+          sound.tone(300 + remain * 100, 0.12, "sine", 0.08);
         }
       }
     }

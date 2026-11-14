@@ -1,3 +1,4 @@
+import {countdownSamples,COUNTDOWN_RATE,type CountdownCue} from './countdown-voice.ts';
 import {audioStatus} from "./audio-state.ts";
 import type { Battle, BattleEvent, Result } from "./physics.ts";
 import { cueSamples, FINISH_RECOVERY, type Cue } from "./finish.ts";
@@ -45,6 +46,8 @@ export class Sound {
   private impactTails = new Map<AudioBufferSourceNode,GainNode>();
   private lastImpact = -Infinity;
   private lastStrength = 0;
+  private countdownBuffers=new Map<CountdownCue,AudioBuffer>();
+  private countdownVoice:{source:AudioBufferSourceNode;gain:GainNode}|null=null;
   private cueBuffers = new Map<Cue, AudioBuffer>();
   private cues = new Map<AudioBufferSourceNode, GainNode>();
   private dashBuffers = new Map<boolean,AudioBuffer>();
@@ -150,6 +153,9 @@ export class Sound {
       this.replayGain=this.ctx.createGain();this.replayFilter=this.ctx.createBiquadFilter();
       this.replayFilter.type="lowpass";this.replayFilter.Q.value=.5;this.replayFilter.frequency.value=Math.min(22000,this.ctx.sampleRate*.49);
       this.music.connect(this.replayFilter).connect(this.replayGain).connect(this.musicDuck).connect(this.master);
+      for(const cue of [3,2,1,0]as const){
+        const samples=countdownSamples(cue),buffer=this.ctx.createBuffer(1,samples.length,COUNTDOWN_RATE);buffer.getChannelData(0).set(samples);this.countdownBuffers.set(cue,buffer);
+      }
       this.strikes = ([0, 1, 2] as const).map(tier => {
         const samples = impactSamples(tier, this.ctx!.sampleRate);
         const buffer = this.ctx!.createBuffer(1, samples.length, this.ctx!.sampleRate);
@@ -427,7 +433,21 @@ export class Sound {
   }
   finish(result: Result, initialRate=1, slowReplay=false, cameraPan=0) { this.playCue(result.winner === null ? "draw" : result.finish,initialRate,slowReplay,cameraPan); }
   private restoreDuck(){if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
-  stopEffects() {this.stopImpacts();this.stopDashes();this.stopCues();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  stopEffects() {this.stopCountdown();this.stopImpacts();this.stopDashes();this.stopCues();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  private stopCountdown(){
+    const voice=this.countdownVoice;if(!voice||!this.ctx)return;this.countdownVoice=null;
+    const now=this.ctx.currentTime;voice.gain.gain.cancelAndHoldAtTime(now);voice.gain.gain.linearRampToValueAtTime(0,now+.015);voice.source.stop(now+.015);this.restoreDuck();
+  }
+  countdown(cue:CountdownCue){
+    this.stopCountdown();
+    if(!this.ready||!this.ctx||!this.sfx||this.muted)return;
+    const buffer=this.countdownBuffers.get(cue);if(!buffer)return;
+    const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),now=this.ctx.currentTime;
+    source.buffer=buffer;gain.gain.value=1.6;source.connect(gain).connect(this.sfx);this.countdownVoice={source,gain};
+    source.onended=()=>{source.disconnect();gain.disconnect();if(this.countdownVoice?.source===source)this.countdownVoice=null;};
+    if(this.musicDuck){const duck=this.musicDuck.gain;duck.cancelAndHoldAtTime(now);duck.linearRampToValueAtTime(.25,now+.008);duck.setTargetAtTime(1,now+buffer.duration+.012,.1);}
+    source.start(now+.012);
+  }
   beginReplay(){this.stopEffects();this.replayPlayed.clear();this.setReplay("tracking");}
   setReplay(stage:ReplayStage|null,cameraPan=0){
     const accent=(stage==="impact"||stage==="decision")?stage:null;
@@ -471,7 +491,7 @@ export class Sound {
     // 路由切換可能沒有事件且仍回報running；只在預期有聲音時檢查停住的時鐘。
     else if(!this.muted&&(this.sources.size>0||active)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
     if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
-    if(mode===null||mode==="menu") { this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
+    if(mode===null||mode==="menu") { this.stopCountdown();this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)
       this.music?.gain.setTargetAtTime(musicLevel(this.volume, mode), this.ctx.currentTime, .06);
