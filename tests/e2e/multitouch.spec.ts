@@ -96,3 +96,21 @@ test('雙方保持滑桿拖曳時另指點方向；同玩家多指碰滑桿不�
   expect(Number(await page.getByLabel('2P 發射傾角').inputValue())).toBeLessThan(23);
   await touch(cdp,'touchEnd',[]);await cdp.detach();
 });
+
+test('旋轉時清理雙指，橫直向切換後雙方可重新拖曳與鎖定',async({page})=>{
+  const cdp=await setup(page);
+  for(const size of [{width:844,height:390},{width:390,height:1080}]){
+    const held=await Promise.all([point(page,'[data-angle="0"]',1,.2),point(page,'[data-angle="1"]',2,.8)]);
+    await touch(cdp,'touchStart',held);await page.setViewportSize(size);
+    const frozen=await page.locator('[data-angle]').evaluateAll(ns=>ns.map(n=>(n as HTMLInputElement).value));
+    const moved=await Promise.all([point(page,'[data-angle="0"]',1,.8),point(page,'[data-angle="1"]',2,.2)]);
+    await touch(cdp,'touchMove',moved);
+    for(const p of [0,1])await expect(page.locator(`[data-angle="${p}"]`)).toHaveValue(frozen[p]);
+    await touch(cdp,'touchEnd',[]);await touch(cdp,'touchStart',moved);
+    await expect(page.getByLabel('1P 發射傾角')).toHaveValue('24');await expect(page.getByLabel('2P 發射傾角')).toHaveValue('6');
+    await touch(cdp,'touchEnd',[]);
+  }
+  const locks=await Promise.all([0,1].map(p=>point(page,`[data-action="lock"][data-player="${p}"]`,p+3)));
+  await touch(cdp,'touchStart',locks);await expect(page.locator('#app')).toHaveAttribute('data-screen','countdown');
+  await touch(cdp,'touchEnd',[]);await cdp.detach();
+});

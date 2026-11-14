@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { musicFor, musicVolume } from "../src/music-state.ts";
+import {Sound} from "../src/audio.ts";
+
+test("沒有WebAudio時啟用音效不會阻塞遊戲操作",()=>{
+  const sound=new Sound();
+  assert.doesNotThrow(()=>sound.unlock());
+  assert.equal(sound.ctx,null);
+});
 
 test("配樂依場景切換，暫停及背景分頁優先靜音", () => {
   const scene = { screen: "home", paused: false, hidden: false, finished: false, matchPoint: false };

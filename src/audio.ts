@@ -1,6 +1,6 @@
 import type { Battle, BattleEvent, Result } from "./physics.ts";
 import { cueSamples, FINISH_RECOVERY, type Cue } from "./finish.ts";
-import tracks from "./music-tracks.json";
+import tracks from "./music-tracks.json" with {type:"json"};
 import { musicVolume, type MusicMode } from "./music-state.ts";
 import { impactProfile, impactSamples, musicLevel } from "./impact.ts";
 import { dashSamples, hasRail } from "./dash.ts";
@@ -59,6 +59,7 @@ export class Sound {
     }
   }
   unlock() {
+    if(typeof AudioContext==="undefined")return;
     if (!this.ctx) {
       this.ctx = new AudioContext();
       this.master = this.ctx.createGain();
