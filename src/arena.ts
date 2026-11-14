@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
-import{stadiumSurface}from"./stadium-surface.ts";
+import{stadiumSurface,stadiumNormal}from"./stadium-surface.ts";
+import{BowlContact}from"./bey-contact.ts";
 import { impactProfile, impactShake } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
@@ -132,6 +133,10 @@ export class Arena {
   finishBounds = new THREE.Box3();
   finishLift = new THREE.Vector3();
   finishInverse = new THREE.Quaternion();
+  floorNormal = new THREE.Vector3();
+  floorUp = new THREE.Vector3(0,1,0);
+  floorRotation = new THREE.Quaternion();
+  ringRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2);
   trails: THREE.Line[] = [];
   trailPositions: number[][] = [[], []];
   trailTimes: number[][] = [[], []];
@@ -393,6 +398,7 @@ export class Arena {
       const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src,()=>{this.needsRender=true;});
       const g = beyModel(b, texture);
         g.userData.spin=b.spin;
+      g.userData.contact=new BowlContact(g);
       const parts = g.userData.parts as THREE.Group[], links = g.userData.partLinks as number[];
       g.userData.partFloors = [0, 1, 2].map(link => {
         const floors = parts.flatMap((part, i) => links[i] === link ? [new THREE.Box3().setFromObject(part).min.y] : []);
@@ -403,9 +409,14 @@ export class Arena {
     });
     this.resetEffects();
   }
+  private placeFloorRing(ring:THREE.Object3D,x:number,z:number){
+    stadiumNormal(x,z,this.floorNormal);
+    ring.quaternion.setFromUnitVectors(this.floorUp,this.floorNormal).multiply(this.ringRotation);
+    ring.position.set(x,stadiumSurface(Math.hypot(x,z))+.035,z);
+  }
   launch(b:Battle){
     this.launchAt=this.time;this.needsRender=true;
-    this.landingRings.forEach((ring,i)=>{const t=b.tops[i];ring.position.set(t.x,stadiumSurface(Math.hypot(t.x,t.z))+.08,t.z);});
+    this.landingRings.forEach((ring,i)=>{const t=b.tops[i];this.placeFloorRing(ring,t.x,t.z);});
   }
   private resetEffects() {
     this.launchAt=-Infinity;
@@ -413,7 +424,7 @@ export class Arena {
     this.finishRate=1;this.finishShock=this.finishZoom=0;
     this.hitPlayback.reset();this.hitRing.visible=false;
     (this.hitRing.material as THREE.MeshBasicMaterial).color.set("#b8f6ff");
-    this.models.forEach(g=>{g.userData.lean={x:0,z:0};(g.userData.parts as THREE.Group[]).forEach(p=>{p.position.set(0,0,0);p.rotation.set(0,0,0);});});
+    this.models.forEach(g=>{g.userData.lean={x:0,z:0};g.userData.contact.reset();(g.userData.parts as THREE.Group[]).forEach(p=>{p.position.set(0,0,0);p.rotation.set(0,0,0);});});
     this.trailPositions = [[], []];
     this.trailTimes = [[], []];
     this.dashStates = [null,null];
@@ -509,7 +520,7 @@ export class Arena {
       const r=Math.max(.01,Math.hypot(e.x,e.z)),nx=e.x/r,nz=e.z/r;
       const grip=hasRail(e.x,e.z);
       // shortcut: 貼軌位置依現有齒軌與模型外緣近似，盤體尺寸改動時需同步校準。
-      this.dashStates[e.player]={at:this.time,x:nx*3.84,z:nz*3.84,grip};
+      this.dashStates[e.player]={at:this.time,x:nx*4,z:nz*4,grip};
       this.trailPositions[e.player]=[];this.trailTimes[e.player]=[];
       if(!grip)return false;
       const x=nx*4.13,z=nz*4.13;
@@ -686,7 +697,6 @@ export class Arena {
         const state=this.dashStates[i],dash=dashVisual(state?this.time-state.at:Infinity,this.reduced);
         const latch=state?.grip?dash.latch:0;
         const speed=Math.max(.01,Math.hypot(t.vx,t.vz));
-        const x=pose.x+(state?state.x-pose.x:0)*latch,z=pose.z+(state?state.z-pose.z:0)*latch;
         const opening =
           openingSeconds === null
             ? null
@@ -699,19 +709,18 @@ export class Arena {
         const leanBlend = damping(dt, 12);
         currentLean.x += (lean.x - currentLean.x) * leanBlend;
         currentLean.z += (lean.z - currentLean.z) * leanBlend;
-        const ground = stadiumSurface(Math.hypot(x,z))+.065;
-        g.position.set(x, ground + (opening?.height ?? 0), z);
-        g.rotation.set(
-          currentLean.x+t.vz/speed*dash.lean,
-          0,
-          currentLean.z-t.vx/speed*dash.lean + (opening?.height ?? 0) * 0.025 * (i ? -1 : 1),
-        );
-        // Three.js正Y角從上方看為逆時針，顯示角與物理圈數反號。
-        g.rotateY(rotation - (opening?.rotation ?? 0));
+        const contact=g.userData.contact as BowlContact;
+        const grip=state?.grip?{x:state.x,z:state.z,weight:latch}:undefined;
+        // Three.js 正 Y 角從上方看為逆時針，顯示角與物理圈數反號。
+        contact.place(pose.x,pose.z,currentLean.x+t.vz/speed*dash.lean,
+          currentLean.z-t.vx/speed*dash.lean+(opening?.height??0)*.025*(i?-1:1),
+          rotation-(opening?.rotation??0),dt,grip);
+        if(grip&&state){state.x=grip.x;state.z=grip.z;}
+        const ground=g.position.y;g.position.y+=opening?.height??0;
         if (opening && opening.pulse > 0) {
           const pulse = this.landingRings[i];
           pulse.visible = true;
-          pulse.position.set(pose.x, ground + 0.01, pose.z);
+          this.placeFloorRing(pulse,contact.contact.x,contact.contact.z);
           pulse.scale.setScalar(1 + (1 - opening.pulse) * 0.9);
           (pulse.material as THREE.MeshBasicMaterial).opacity =
             opening.pulse * 0.45;
@@ -736,7 +745,8 @@ export class Arena {
             });
             settleBurstParts(g, this.finishBounds, this.finishLift, this.finishInverse);
           } else if (loser && result.finish === "spin") {
-            g.rotation.z = Math.PI/2 * Math.min(1, this.reduced ? 1 : elapsed/1.1);
+            this.floorRotation.setFromAxisAngle(this.floorUp.set(0,0,1),Math.PI/2*Math.min(1,this.reduced?1:elapsed/1.1));
+            g.quaternion.premultiply(this.floorRotation);this.floorUp.set(0,1,0);
             settleOnBowl(g,this.finishBounds);
           } else if (loser) {
             const flight = exitPose(result.finish as "over" | "extreme", elapsed, {x:pose.x,y:ground,z:pose.z}, this.reduced);
@@ -752,7 +762,8 @@ export class Arena {
             pulse.visible = true;
             mat.color.set(loser ? FINISH_COLORS[result.finish] : i ? "#ff9a71" : "#b6f55b");
             mat.opacity = loser ? Math.max(0,.55-elapsed*.3) : .5;
-            pulse.position.set(g.position.x, loser && ["over","extreme"].includes(result.finish) ? .115 : ground+.012, g.position.z);
+            if(loser&&["over","extreme"].includes(result.finish)){pulse.position.set(g.position.x,.115,g.position.z);pulse.quaternion.copy(this.ringRotation);}
+            else this.placeFloorRing(pulse,g.position.x,g.position.z);
             pulse.scale.setScalar(loser ? 1+Math.min(1,elapsed)*1.2 : 1.18);
           }
         }

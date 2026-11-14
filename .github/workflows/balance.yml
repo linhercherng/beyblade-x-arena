@@ -22,6 +22,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test tests/e2e/opening-pause.spec.ts tests/e2e/p2.spec.ts tests/e2e/countdown-voice.spec.ts tests/e2e/launch-presentation.spec.ts tests/e2e/finish-voice.spec.ts tests/e2e/countdown-load.spec.ts
       - run: npx playwright test tests/e2e/stadium.spec.ts --grep 戰鬥模型
+      - run: npx playwright test tests/e2e/dash.spec.ts --grep 齒軌咬合亮點
       - run: npm run balance:check
       - run: npm run build
       - name: Preserve balance report

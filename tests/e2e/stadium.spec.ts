@@ -25,9 +25,11 @@ test('戰鬥模型在中心、斜坡與齒軌內緣皆貼合實際盤面',async(
   const {createBattle}=await import('/src/physics.ts'),{BEYS}=await import('/src/catalog.ts'),THREE=(window as any).stadiumThree;
   const a=(window as any).stadiumArena,b=createBattle(BEYS[0],BEYS[11],[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],7),clearances=[];
   a.models.forEach((m:any)=>m.visible=true);
-  for(const r of [0,2.7,3.9]){b.tops[0].x=r;b.tops[1].x=-r;b.tops.forEach(t=>t.z=0);a.draw(0,b);a.stadium.updateMatrixWorld(true);const hit=new THREE.Raycaster(new THREE.Vector3(r,2,0),new THREE.Vector3(0,-1,0)).intersectObject(a.stadium.getObjectByName('bowl-surface'))[0];clearances.push(a.models[0].position.y-hit.point.y);}
+  for(const r of [0,2.7,3.9]){b.tops[0].x=r;b.tops[1].x=-r;b.tops.forEach(t=>t.z=0);a.draw(0,b);a.stadium.updateMatrixWorld(true);const hit=new THREE.Raycaster(new THREE.Vector3(r,2,0),new THREE.Vector3(0,-1,0)).intersectObject(a.stadium.getObjectByName('bowl-surface'))[0];const model=a.models[0],contact=model.userData.contact;let gap=Infinity;
+    for(const p of contact.vertices){const w=p.clone().applyQuaternion(model.quaternion).add(model.position);const ray=new THREE.Raycaster(new THREE.Vector3(w.x,2,w.z),new THREE.Vector3(0,-1,0));const h=ray.intersectObject(a.stadium.getObjectByName('bowl-surface'))[0];if(h)gap=Math.min(gap,w.y-h.point.y);}
+    clearances.push(gap);}
   return clearances;
  });
- for(const gap of clearances)expect(gap).toBeCloseTo(.065,2);
- await page.locator('#wide').click();await page.screenshot({path:'artifacts/stadium-battle-contact-v0240.png'});
+ for(const gap of clearances){expect(gap).toBeGreaterThanOrEqual(-.002);expect(gap).toBeLessThan(.015);}
+ await page.locator('#wide').click();await page.screenshot({path:'artifacts/stadium-battle-contact-v0250.png'});
 });

@@ -5,6 +5,8 @@ test('齒軌咬合亮點、釋放拖尾、暫停精確且不改動物理狀態',
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.setViewportSize({width:1200,height:800});await page.goto('/tests/fixtures/dash.html');
   await page.locator('#latch').click();const latch=await metrics(page);
+  expect(latch.rail[0][0]*Math.cos(.55)+latch.rail[0][2]*Math.sin(.55)).toBeCloseTo(4.13,3);
+  expect(latch.rail[0][1]).toBeGreaterThanOrEqual(.43);expect(latch.rail[0][1]).toBeLessThan(.532);
   expect(latch.flashes).toBeGreaterThan(0);expect(Math.hypot(latch.model[0][0],latch.model[0][2])).toBeGreaterThan(3.7);
   await page.screenshot({path:'artifacts/dash-latch-v0120.png'});
   await page.reload();await page.locator('#capture').click();await page.locator('#dash').click();

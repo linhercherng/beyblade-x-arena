@@ -6,7 +6,8 @@ test("三個出口不偽造咬合火花，實際齒段可顯示接觸",()=>{
   assert.equal(hasRail(3.5,2),true);assert.equal(hasRail(0,-3.5),true);assert.equal(hasRail(NaN,0),false);
 });
 test("咬合短暫貼軌後平滑釋放、衝刺拖尾收束，減少動態不偏移模型",()=>{
-  assert.equal(dashVisual(0).latch,1);
+  assert.equal(dashVisual(0).latch,0);
+  assert.equal(dashVisual(.025).latch,1);
   assert.ok(dashVisual(.05).latch>dashVisual(.1).latch);
   assert.equal(dashVisual(.13).latch,0);
   assert.ok(dashVisual(.16).intensity>.8);

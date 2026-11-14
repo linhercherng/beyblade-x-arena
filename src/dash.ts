@@ -2,7 +2,7 @@ const smooth = (x: number) => { const t=Math.max(0,Math.min(1,x));return t*t*(3-
 export function dashVisual(age: number, reduced = false) {
   if(reduced || !Number.isFinite(age) || age<0)return {latch:0,intensity:0,lean:0};
   const intensity=smooth(age/.035)*(1-smooth((age-.38)/.36));
-  return {latch:1-smooth((age-.035)/.085),intensity,lean:intensity*.13};
+  return {latch:smooth(age/.025)*(1-smooth((age-.035)/.085)),intensity,lean:intensity*.13};
 }
 export function dashSamples(sampleRate: number, grip = true) {
   const duration=.62, samples=new Float32Array(Math.ceil(duration*sampleRate));
