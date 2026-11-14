@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>P0 合成交戰壓力測試</title><style>body{margin:0;background:#101923;color:white;font:14px sans-serif}header{position:absolute;z-index:2;padding:8px}button{padding:12px}#stage{height:100vh}</style><header><button id="start">開始壓測</button><button id="recover">恢復音訊</button><small>合成特效與資源壓測，不寫戰績</small></header><div id="stage"></div>
+<script type="module">
+import{Arena}from'/src/arena.ts';import{Sound}from'/src/audio.ts';import{BEYS}from'/src/catalog.ts';import{createBattle}from'/src/physics.ts';import{DeviceCheck}from'/src/diagnostics.ts';
+const arena=new Arena(),sound=new Sound(),log=new DeviceCheck(),pair=[BEYS[0],BEYS[11]];arena.attach(document.querySelector('#stage'),'battle');
+let battle,last=0,started=0,roundStart=0,rounds=0,nextEvent=0,running=false;
+function reset(){arena.setBeys(pair);battle=createBattle(...pair,[{power:.9,lane:1,angle:5},{power:.9,lane:2,angle:10}],10+rounds++);roundStart=performance.now();nextEvent=0;sound.stopEffects();}
+reset();
+document.querySelector('#start').onclick=()=>{sound.unlock();sound.setMusicVolume(.2);running=true;started=performance.now();roundStart=started;log.start(started);};
+document.querySelector('#recover').onclick=()=>sound.recoverAudio();
+function frame(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;if(running){let age=(now-roundStart)/1000;if(age>=6){reset();age=0;}
+if(!battle.result){battle.time+=dt;for(const[p,t]of battle.tops.entries()){t.rotation+=(p?-1:1)*50*dt;t.x=Math.cos(age*(p?-.8:1)+p*Math.PI)*3;t.z=Math.sin(age*(p?-.8:1)+p*Math.PI)*3;}
+if(age>=nextEvent){nextEvent=age+.4;const e={type:age<1?'dash':'hit',player:rounds%2,x:2.5,z:1.3,strength:14,time:battle.time};if(e.type==='dash')battle.tops[e.player].dashUntil=battle.time+.8;arena.event(e,battle);sound.event(e);}
+if(age>2){const finish=['burst','over','extreme','spin'][rounds%4];battle.result={winner:0,finish,points:finish==='spin'?1:finish==='extreme'?3:2,time:20};sound.finish(battle.result,arena.finish(battle));}}
+}
+arena.draw(running?dt:0,battle);sound.update(battle,running&&!battle.result,running?(battle.result?'results':'battle'):null);log.frame(now,running);requestAnimationFrame(frame);}
+window.soak={reset,snapshot:()=>{const info=arena.renderer.info,canvas=arena.renderer.domElement;log.sample({geometries:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,drawCalls:info.render.calls,triangles:info.render.triangles,pixels:canvas.width*canvas.height},performance.memory?.usedJSHeapSize??null);return {rounds,elapsedMs:started?performance.now()-started:0,geometry:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,particles:arena.particles.length,audio:sound.diagnostics(),performance:log.report(performance.now())};}};requestAnimationFrame(frame);
+</script></html>

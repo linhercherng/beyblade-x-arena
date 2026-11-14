@@ -88,6 +88,7 @@ export function renderPixelRatio(
   );
 }
 export class Arena {
+  needsRender=true;
   renderer: THREE.WebGLRenderer;
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(39, 1, 0.1, 100);
@@ -152,6 +153,7 @@ export class Arena {
       alpha: true,
       powerPreference: "high-performance",
     });
+    this.renderer.domElement.addEventListener("webglcontextrestored",()=>{this.needsRender=true;});
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -326,6 +328,7 @@ export class Arena {
     this.stadium.visible = mode !== "inspect";
   }
   resize() {
+    this.needsRender=true;
     if (!this.host) return;
     const w = this.host.clientWidth,
       h = this.host.clientHeight;
@@ -343,6 +346,7 @@ export class Arena {
     this.renderer.domElement.style.height = h + "px";
   }
   setBeys(beys: Bey[]) {
+    this.needsRender=true;
     this.highlightShot=null;
     this.impactHeight = Math.max(...beys.map(b => {
       const spec = modelSpec(b);
@@ -374,7 +378,7 @@ export class Arena {
       });
     });
     this.models = beys.map((b) => {
-      const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src);
+      const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src,()=>{this.needsRender=true;});
       const g = beyModel(b, texture);
         g.userData.spin=b.spin;
       const parts = g.userData.parts as THREE.Group[], links = g.userData.partLinks as number[];
@@ -821,5 +825,6 @@ export class Arena {
     }
     this.eventFlash = Math.max(0, this.eventFlash - dt);
     this.renderer.render(this.scene, this.camera);
+    this.needsRender=false;
   }
 }

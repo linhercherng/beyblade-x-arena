@@ -1,3 +1,4 @@
+import {DeviceCheck,DEVICE_CASES,GAME_VERSION} from "./diagnostics.ts";
 import {bindPlayerTouch} from "./player-touch.ts";
 import {combatProfile,TRAIT_NOTE} from "./combat-profiles.ts";
 import "./style.css";
@@ -59,6 +60,8 @@ import {
 
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const sound = new Sound();
+const deviceLog=new DeviceCheck();
+let deviceSampleAt=0;
 let pausedFinishAnimations: Animation[] = [];
 let arena: Arena | null = null;
 try {
@@ -194,7 +197,7 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 0.20.5</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small>${btn("恢復音訊", "audio-recover", "secondary")}<small>切換耳機後無聲時可重試</small></div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 ${GAME_VERSION}</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small>${btn("恢復音訊", "audio-recover", "secondary")}<small>切換耳機後無聲時可重試</small>${btn("裝置檢查", "device-check", "text-button")}</div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
 }
@@ -597,9 +600,20 @@ function closeModal() {
   if (modalReturnBeys.length) arena?.setBeys(modalReturnBeys);
   attachStage();
 }
+function deviceCheck(){
+  if(["launch","countdown","battle","replay"].includes(screen))setPaused(true);
+  byId("modal-root")!.innerHTML=`<div class="modal-backdrop"><section class="help-modal device-check" role="dialog" aria-modal="true" aria-labelledby="device-title">${btn("×","close-modal","close-button",'aria-label="關閉裝置檢查"')}<div class="eyebrow">DEVICE CHECK</div><h2 id="device-title">手機與音訊檢查</h2><p>先開始紀錄，再繼續對戰。僅統計前景中未暫停的對戰；每分鐘保留幀率摘要，方便比較長時間表現。</p><pre id="device-check-summary"></pre><div class="device-actions">${btn(deviceLog.running?"停止紀錄":"開始新紀錄","device-record","primary")}${btn("匯出檢查紀錄","device-export","secondary")}${btn("恢復音訊","audio-recover","secondary")}${btn("測試聲音","device-tone","secondary")}</div><output id="device-tone-status" aria-live="polite"></output><p>實機項目請依實際聽感與操作勾選，不會自動判定通過。發熱請在連玩15分鐘後檢查。</p><div class="device-cases">${Object.entries(DEVICE_CASES).map(([key,label])=>`<label>${label}<select data-device-case="${key}" aria-label="${label}">${[["untested","未測試"],["pass","通過"],["fail","異常"]].map(([value,text])=>`<option value="${value}" ${deviceLog.checks[key as keyof typeof DEVICE_CASES]===value?"selected":""}>${text}</option>`).join("")}</select></label>`).join("")}</div><p class="muted">紀錄僅保留本次頁面，請匯出保存。內容含瀏覽器、資源數與最近音訊事件，不含戰績或錄音。瀏覽器無法量測手機溫度。</p></section></div>`;
+  document.body.classList.add("modal-open");updateDeviceCheck();byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
+}
+function updateDeviceCheck(){
+  const panel=byId("device-check-summary");if(!panel)return;
+  const r=deviceLog.report(performance.now()),audio=sound.diagnostics(),seconds=(ms:number)=>Math.floor(ms/1000)+"秒";
+  const audioState=({running:audio.ready?"運作中":"等待恢復",suspended:"已暫停",interrupted:"中斷中",closed:"已關閉",unavailable:"此瀏覽器未提供",["not-started"]:"尚未啟用"} as Record<string,string>)[audio.state]??audio.state;
+  panel.textContent=`${r.running?"紀錄中":r.elapsedMs?"已停止":"尚未紀錄"} · 經過 ${seconds(r.elapsedMs)}\n有效對戰 ${seconds(r.activeMs)} · ${r.frames} 幀\n平均 ${r.fps?.toFixed(1)??"—"} FPS · 近期 ${r.recentFps?.toFixed(1)??"—"} FPS\n95% 幀間隔 ${r.p95AtLeast1000Ms?"≥ 1000":"≤ "+(r.p95FrameMs??"—")} ms\n幾何 ${r.gpu?.geometries??"—"} · 貼圖 ${r.gpu?.textures??"—"} · 程式 ${r.gpu?.programs??"—"}\nJS記憶體 ${r.heapBytes===null?"此瀏覽器未提供":"約 "+(r.heapBytes/1048576).toFixed(1)+" MB"}\n音訊 ${audioState} · 聲源 ${audio.sources} · 配樂 ${Math.round(audio.musicVolume*100)}%${audio.muted?" · 靜音":""}`;
+}
 function help() {
   byId("modal-root")!.innerHTML =
-    `<div class="modal-backdrop"><section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">${btn("×", "close-modal", "close-button", 'aria-label="關閉規則"')}<div class="eyebrow">HOW TO PLAY</div><h2 id="help-title">三顆王牌，先搶四分。</h2><ol><li>各選三顆不同戰刃，排定先鋒、中堅、大將。</li><li>設定落點、傾角與內外切方向，在黃綠最佳區鎖定蓄力。1P 用 A / S / D 與空白鍵；2P 用方向鍵與 Enter。</li><li>發射後自動碰撞。每場可呼喊一次，兩秒內提高齒軌衝刺能力。呼喊不補充轉速。</li><li>單場以 1× 模擬時間計算，維持 15–40 秒。前 15 秒保留最低 3% 轉速、40% 鎖扣與盤緣保護，碰撞仍會削弱狀態；30 秒後增加雙方耗轉，由場上狀態決勝。舊重播沿用原規則。</li><li>攻擊型擅長外圈追擊；防禦型守中反擊；持久型低速巡航與傳能；平衡型依傾角與軸心接觸改變攻守路徑。出口與畫面護牆開口一致，重擊與齒軌衝刺能將對手送出盤外。</li><li>旋轉終結 1 分、越界與爆裂 2 分、極限終結 3 分。雙方同時終結重打。</li><li>三場後依原順序循環，先得 4 分獲勝。戰績可備份並重播。</li></ol><p>發射力量決定初始能量；傾角與內外切方向改變姿態和路徑。運氣只小幅影響效率（±3%）、方向（±2°）和摩擦（±2%），相同種子可重現，不抽籤決勝。數值是遊戲平衡設定；相性由模擬表現產生。Beyblade 與型號名稱屬原權利人；本作為非官方粉絲作品，產品圖片來自 BeyGear 與 Takara Tomy，3D 側面為近似模型，聲音為原創合成。</p>${btn("準備好了 →", "close-modal", "primary")}</section></div>`;
+    `<div class="modal-backdrop"><section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">${btn("×", "close-modal", "close-button", 'aria-label="關閉規則"')}<div class="eyebrow">HOW TO PLAY</div><h2 id="help-title">三顆王牌，先搶四分。</h2><ol><li>各選三顆不同戰刃，排定先鋒、中堅、大將。</li><li>設定落點、傾角與內外切方向，在黃綠最佳區鎖定蓄力。1P 用 A / S / D 與空白鍵；2P 用方向鍵與 Enter。</li><li>發射後自動碰撞。每場可呼喊一次，兩秒內提高齒軌衝刺能力。呼喊不補充轉速。</li><li>單場以 1× 模擬時間計算，維持 15–40 秒。前 15 秒保留最低 3% 轉速、40% 鎖扣與盤緣保護，碰撞仍會削弱狀態；30 秒後增加雙方耗轉，由場上狀態決勝。舊重播沿用原規則。</li><li>攻擊型擅長外圈追擊；防禦型守中反擊；持久型低速巡航與傳能；平衡型依傾角與軸心接觸改變攻守路徑。出口與畫面護牆開口一致，重擊與齒軌衝刺能將對手送出盤外。</li><li>旋轉終結 1 分、越界與爆裂 2 分、極限終結 3 分。雙方同時終結重打。</li><li>三場後依原順序循環，先得 4 分獲勝。戰績可備份並重播。</li></ol><p>發射力量決定初始能量；傾角與內外切方向改變姿態和路徑。運氣只小幅影響效率（±3%）、方向（±2°）和摩擦（±2%），相同種子可重現，不抽籤決勝。數值是遊戲平衡設定；相性由模擬表現產生。Beyblade 與型號名稱屬原權利人；本作為非官方粉絲作品，產品圖片來自 BeyGear 與 Takara Tomy，3D 側面為近似模型，聲音為原創合成。</p>${btn("裝置檢查", "device-check", "secondary")}${btn("準備好了 →", "close-modal", "primary")}</section></div>`;
   document.body.classList.add("modal-open");
   byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
 }
@@ -618,7 +632,7 @@ function askExit() {
   byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
 }
 function setPaused(value: boolean) {
-  if(value)clearPlayerTouch();
+  if(value){deviceLog.frame(performance.now(),false);clearPlayerTouch();sound.update(battle,false,null);}
   if (value && !paused) pauseStarted = performance.now();
   if (!value && paused) {
     const elapsed = performance.now() - pauseStarted;
@@ -714,6 +728,21 @@ app.addEventListener("click", (e) => {
       difficulty = v as Difficulty;
       home();
       break;
+    case "device-check":deviceCheck();break;
+    case "device-record":
+      if(deviceLog.running){deviceLog.stop(performance.now());target.textContent="開始新紀錄";updateDeviceCheck();}
+      else{deviceLog.start(performance.now());deviceSampleAt=0;closeModal();}
+      break;
+    case "device-tone":{
+      const audio=sound.diagnostics(),status=byId("device-tone-status");
+      if(audio.ready&&!audio.muted)sound.tone(440,.15,"sine",.15);
+      if(status)status.textContent=audio.muted?"目前靜音，請先開啟音效。":audio.ready?"已送出短測試音，請依實際聽感勾選。":"音訊尚未恢復，請按恢復音訊後再試。";
+      break;
+    }
+    case "device-export":{
+      const report={...deviceLog.report(performance.now()),exportedAt:new Date().toISOString(),userAgent:navigator.userAgent,viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},audio:sound.diagnostics()};
+      const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:"application/json"})),link=document.createElement("a");link.href=url;link.download=`spinforge-device-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);break;
+    }
     case "audio-recover":
       sound.recoverAudio();
       break;
@@ -902,6 +931,7 @@ app.addEventListener("input", (e) => {
 });
 app.addEventListener("change", async (e) => {
   const el = e.target as HTMLInputElement;
+  if(el.dataset.deviceCase){deviceLog.setCheck(el.dataset.deviceCase,el.value);return;}
   if(el.dataset.direction!==undefined){
     const p=Number(el.dataset.direction);
     if(screen==="launch"&&!paused&&!locked[p]&&[-1,0,1].includes(Number(el.value)))inputs[p].direction=Number(el.value) as -1|0|1;
@@ -996,6 +1026,7 @@ document.addEventListener("keydown", (e) => {
     setPaused(!paused);
 });
 function pauseForBackground(){
+  deviceLog.frame(performance.now(),false);
   sound.setBackground(true);
   if(["battle","launch","countdown","replay"].includes(screen))setPaused(true);
 }
@@ -1146,7 +1177,7 @@ function frame(time: number) {
       } else roundEnded();
     }
   }
-  if ((arena && byId("stage")?.isConnected) || detailId)
+  if (!document.hidden&&(!paused||arena?.needsRender)&&((arena && byId("stage")?.isConnected) || detailId))
     arena?.draw(
       paused ? 0 : highlight?highlightMotionDt*HIGHLIGHT_RATE:realDt,
       detailId
@@ -1168,6 +1199,15 @@ function frame(time: number) {
       finished: !!battle?.result,
       matchPoint: !!match && Math.max(...match.scores) >= 3 }),
   );
+  deviceLog.frame(time,!paused&&!document.hidden&&!!arena&&(screen==="battle"||screen==="replay"));
+  if(time-deviceSampleAt>=1000){
+    deviceSampleAt=time;
+    if(deviceLog.running){
+      const info=arena?.renderer.info,canvas=arena?.renderer.domElement,heap=(performance as Performance&{memory?:{usedJSHeapSize:number}}).memory;
+      deviceLog.sample(info&&canvas?{geometries:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,drawCalls:info.render.calls,triangles:info.render.triangles,pixels:canvas.width*canvas.height}:null,heap?.usedJSHeapSize??null);
+    }
+    updateDeviceCheck();
+  }
   requestAnimationFrame(frame);
 }
 home();

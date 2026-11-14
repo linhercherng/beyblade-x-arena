@@ -49,6 +49,11 @@ export class Sound {
   private dashBuffers = new Map<boolean,AudioBuffer>();
   private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
   private lastDash = [-Infinity,-Infinity];
+  private events:{atMs:number;kind:string}[]=[];
+  private note(kind:string){this.events.push({atMs:Math.round(performance.now()),kind});if(this.events.length>60)this.events.shift();}
+  diagnostics(){return {state:this.ctx?.state??(typeof AudioContext==="undefined"?"unavailable":"not-started"),ready:this.ready,session:this.session?.state??null,
+    muted:this.muted,musicVolume:this.volume,contextTime:this.ctx?.currentTime??null,sampleRate:this.ctx?.sampleRate??null,sources:this.sources.size,
+    music:this.playing?.mode??null,buffers:this.buffers.size,rotors:this.rotors.length,events:this.events.map(e=>({...e}))};}
   onInterruption:(()=>void)|null=null;
   private session:(EventTarget&{readonly state?:string})|undefined;
   private clockTime=-1;
@@ -62,13 +67,14 @@ export class Sound {
   private track<T extends AudioScheduledSourceNode>(source:T):T{
     this.sources.add(source);source.addEventListener("ended",()=>this.sources.delete(source),{once:true});return source;
   }
-  private interrupt(){
+  private interrupt(reason="context-interrupted"){
+    this.note(reason);
     if(!this.ctx)return;
     const notify=!this.recovering&&!this.muted;
     this.silence();
     if(notify)this.onInterruption?.();
   }
-  recoverAudio(){this.silence();this.unlock();}
+  recoverAudio(){this.note("manual-recovery");this.silence();this.unlock();}
   private silence(){
     if(!this.ctx||!this.master)return;
     this.recovering=true;this.recovery++;this.lastResume=-Infinity;
@@ -82,6 +88,7 @@ export class Sound {
   }
   private restore(){
     if(!this.ctx||!this.master||this.background||this.ctx.state!=="running"||!this.recovering||this.session?.state==="interrupted")return;
+    this.note("restored");
     this.recovering=false;this.clockTime=this.ctx.currentTime;this.clockWall=performance.now();
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
@@ -89,15 +96,15 @@ export class Sound {
   }
   setBackground(hidden:boolean){
     if(hidden===this.background)return;
-    this.background=hidden;
+    this.background=hidden;this.note(hidden?"background":"foreground");
     if(hidden){this.silence();if(this.ctx&&this.ctx.state!=="suspended"&&this.ctx.state!=="closed")void this.ctx.suspend().catch(()=>{});}
     // 回到前景保留靜音，下一次操作在使用者手勢內恢復。
   }
   constructor() {
     if(typeof navigator!=="undefined"){
       this.session=(navigator as Navigator&{audioSession?:EventTarget&{readonly state?:string}}).audioSession;
-      this.session?.addEventListener?.("statechange",()=>{if(this.session?.state==="interrupted")this.interrupt();});
-      navigator.mediaDevices?.addEventListener("devicechange",()=>this.interrupt());
+      this.session?.addEventListener?.("statechange",()=>{if(this.session?.state==="interrupted")this.interrupt("session-interrupted");});
+      navigator.mediaDevices?.addEventListener("devicechange",()=>this.interrupt("device-change"));
     }
     try {
       this.muted = localStorage.getItem("spinforge-muted") === "true";
@@ -114,10 +121,11 @@ export class Sound {
       this.master = this.ctx.createGain();
       this.master.gain.value = 0;
       this.ctx.addEventListener("statechange",()=>{
+        this.note("state-"+this.ctx?.state);
         if(this.ctx?.state!=="running"){if(!this.recovering)this.interrupt();}
         else if(this.lastResume!==-Infinity)this.restore();
       });
-      this.ctx.addEventListener("sinkchange",()=>this.interrupt());
+      this.ctx.addEventListener("sinkchange",()=>this.interrupt("sink-change"));
       const limiter = this.ctx.createDynamicsCompressor();
       limiter.threshold.value = -4;
       limiter.knee.value = 6;
@@ -174,11 +182,12 @@ export class Sound {
     if(this.ctx.state==="running"&&!this.recovering)return;
     if(!this.recovering)this.silence();
     if(performance.now()-this.lastResume<300)return;
+    this.note("resume-attempt");
     this.lastResume=performance.now();const context=this.ctx,recovery=this.recovery;
     // 不讓Safari未完成的resume Promise永久阻擋之後的新手勢重試。
     // 中斷後即使Safari回報running也重新排入suspend/resume；兩者都在這次手勢內呼叫。
     if(this.recovery>0&&context.state!=="suspended"&&context.state!=="closed")void context.suspend().catch(()=>{});
-    void context.resume().then(()=>{if(this.ctx===context&&this.recovery===recovery)this.restore();}).catch(()=>{});
+    void context.resume().then(()=>{if(this.ctx===context&&this.recovery===recovery)this.restore();}).catch(()=>{this.note("resume-rejected");});
   }
   toggle() {
     this.muted = !this.muted;
@@ -449,7 +458,8 @@ export class Sound {
     const wall=performance.now(),clock=this.ctx.currentTime;
     if(clock!==this.clockTime){this.clockTime=clock;this.clockWall=wall;}
     // 路由切換可能沒有事件且仍回報running；只在預期有聲音時檢查停住的時鐘。
-    else if(!this.muted&&(this.sources.size>0||active)&&wall-this.clockWall>1000){this.interrupt();return;}
+    else if(!this.muted&&(this.sources.size>0||active)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
+    if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
     if(mode===null||mode==="menu") { this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if (mode !== this.requested)
