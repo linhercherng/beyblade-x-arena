@@ -468,9 +468,10 @@ function startBattle() {
   finishStart = 0;
   renderArena();
   const msg = byId("battle-message")!;
-  msg.innerHTML = '<strong class="shoot">GO SHOOT!</strong>';
+  msg.innerHTML = '<i class="launch-streaks" aria-hidden="true"></i><strong class="shoot launch-call">GO SHOOT!</strong>';
+  arena?.launch(battle!);
   sound.countdown(0);
-  sound.tone(440, 0.24, "sawtooth", 0.08, 1000);
+
 }
 function roundEnded() {
   if (!battle?.result || !match) return;
@@ -1174,9 +1175,9 @@ function frame(time: number) {
         const msg = byId("battle-message")!;
         if (msg.dataset.count !== String(remain)) {
           msg.dataset.count = String(remain);
-          msg.innerHTML = `<strong>${remain}</strong><span>READY TO LAUNCH</span>`;
+          msg.innerHTML = `<i class="count-ring" aria-hidden="true"></i><strong class="count-beat">${remain}</strong><span>READY TO LAUNCH</span>`;
           sound.countdown(remain as 1|2|3);
-          sound.tone(300 + remain * 100, 0.12, "sine", 0.08);
+
         }
       }
     }
@@ -1213,7 +1214,7 @@ function frame(time: number) {
         accumulator -= DT;
       }
       if(!battle.result&&battle.time>=dashMessageUntil) byId("battle-message")?.querySelector(".dash-message")?.remove();
-      if(battle.time>=.85)byId("battle-message")?.querySelector(".shoot")?.remove();
+      if(battle.time>=1.1)byId("battle-message")?.querySelectorAll(".shoot,.launch-streaks").forEach(el=>el.remove());
       if (battle.result || time - lastHudTime >= 100) {
         updateHud();
         lastHudTime = time;

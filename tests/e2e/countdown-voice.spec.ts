@@ -9,7 +9,8 @@ for(const mode of ['cpu','local'])test(`${mode}開場英文語音依3、2、1、
 });
 test('語音沿用靜音、暫停與背景清理，不在恢復時補播',async({page})=>{
  await page.goto('/tests/fixtures/audio.html');await page.locator('#battle').click();await expect.poll(()=>page.evaluate(()=>(window as any).audioSound.diagnostics().ready)).toBe(true);
- const result=await page.evaluate(()=>{const s=(window as any).audioSound,ctx=s.ctx,create=ctx.createBufferSource.bind(ctx),voices:any[]=[];ctx.createBufferSource=()=>{const source=create(),stop=source.stop.bind(source);const entry={stopped:false};voices.push(entry);source.stop=(...args:any[])=>{entry.stopped=true;stop(...args);};return source;};
+ await page.evaluate(lengths=>(window as any).voiceLengths=lengths,lengths);
+ const result=await page.evaluate(()=>{const s=(window as any).audioSound,ctx=s.ctx,create=ctx.createBufferSource.bind(ctx),voices:any[]=[];ctx.createBufferSource=()=>{const source=create(),start=source.start.bind(source),stop=source.stop.bind(source);const entry={stopped:false};source.start=(...args:any[])=>{if(source.buffer?.sampleRate===16000&&source.buffer.length in (window as any).voiceLengths)voices.push(entry);start(...args);};source.stop=(...args:any[])=>{entry.stopped=true;stop(...args);};return source;};
  s.countdown(3);s.update(null,false,null);const paused=voices[0].stopped;s.countdown(2);s.toggle();const muted=voices[1].stopped;s.countdown(1);const mutedCount=voices.length;s.toggle();s.countdown(0);s.setBackground(true);const background=voices[2].stopped;s.setBackground(false);return{paused,muted,mutedCount,background,count:voices.length};});
  expect(result).toEqual({paused:true,muted:true,mutedCount:2,background:true,count:3});
  await page.waitForTimeout(250);await expect.poll(()=>page.evaluate(()=>(window as any).audioSound.diagnostics().sources)).toBe(0);

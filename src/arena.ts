@@ -96,6 +96,7 @@ export class Arena {
   cameraBase = new THREE.Vector3();
   cameraTarget = new THREE.Vector3();
   landingRings: THREE.Mesh[] = [];
+  private launchAt=-Infinity;
   stadium = createStadium();
   models: THREE.Group[] = [];
   host: HTMLElement | null = null;
@@ -396,7 +397,12 @@ export class Arena {
     });
     this.resetEffects();
   }
+  launch(b:Battle){
+    this.launchAt=this.time;this.needsRender=true;
+    this.landingRings.forEach((ring,i)=>{const t=b.tops[i];ring.position.set(t.x,.05+(t.x*t.x+t.z*t.z)*.024,t.z);});
+  }
   private resetEffects() {
+    this.launchAt=-Infinity;
     this.highlightImpactActive=false;
     this.finishRate=1;this.finishShock=this.finishZoom=0;
     this.hitPlayback.reset();this.hitRing.visible=false;
@@ -578,7 +584,9 @@ export class Arena {
     const openingPhase = entry?.phase ?? "none";
     if (this.renderer.domElement.dataset.opening !== openingPhase)
       this.renderer.domElement.dataset.opening = openingPhase;
-    this.landingRings.forEach((r) => (r.visible = false));
+    const launchAge=this.time-this.launchAt,launchPulse=!this.reduced&&battle&&!entry?Math.max(0,1-launchAge/.55):0;
+    const launchPhase=launchPulse>0?'burst':'none';if(this.renderer.domElement.dataset.launch!==launchPhase)this.renderer.domElement.dataset.launch=launchPhase;
+    this.landingRings.forEach(r=>{r.visible=launchPulse>0;if(launchPulse>0){r.scale.setScalar(1+(1-launchPulse)*3);(r.material as THREE.MeshBasicMaterial).opacity=launchPulse*.7;}});
     const az = inspecting ? this.angle : this.angle * 0.3+(this.highlightShot==="approach"?.75:this.highlightShot==="finish"?-.45:0);
     const previewDistance = this.exploded ? 2.4 : 1.9;
     const base = inspecting

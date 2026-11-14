@@ -3420,3 +3420,14 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
   #battle-controls[data-mode="local"] .launch-options {gap:6px}
   #battle-controls[data-mode="local"] .field-label {margin-top:0}
 }
+
+/* Launch feedback uses compositor motion; pause follows battle-message animations. */
+.battle-message {--launch-ease:cubic-bezier(.23,1,.32,1)}
+.count-beat,.launch-call {position:relative;animation:launch-call .25s var(--launch-ease) both}
+.count-ring {display:block;position:absolute;left:50%;top:35px;width:150px;height:150px;margin:-75px;border:2px solid #caff5380;border-radius:50%;animation:count-ring .3s var(--launch-ease) both}
+.launch-streaks {display:block;position:absolute;left:0;top:-160px;width:100%;height:400px;background:repeating-conic-gradient(from 10deg,transparent 0deg 19deg,#caff5370 20deg,transparent 21deg 40deg);mask-image:radial-gradient(ellipse,transparent 32%,#000 75%);-webkit-mask-image:radial-gradient(ellipse,transparent 32%,#000 75%);animation:launch-streaks .5s var(--launch-ease) both}
+.battle-message .launch-call {color:#e9ffb4;text-shadow:0 2px 4px #101927,0 0 22px #aee94b80}
+@keyframes launch-call {from{transform:scale(1.18);opacity:.5}to{transform:scale(1);opacity:1}}
+@keyframes count-ring {from{transform:scale(.8);opacity:.65}to{transform:scale(1.8);opacity:0}}
+@keyframes launch-streaks {from{transform:scale(.85);opacity:.6}to{transform:scale(1.25);opacity:0}}
+@media(prefers-reduced-motion:reduce){.count-ring,.launch-streaks{display:none}.count-beat,.launch-call{animation:none}}

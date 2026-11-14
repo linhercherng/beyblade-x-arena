@@ -1,0 +1,2 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{launchSamples}from'../src/countdown-voice.ts';
+test('倒數與發射重音有界、短促且可重現',()=>{for(const rate of [16000,48000])for(const go of [false,true]){const a=launchSamples(go,rate);assert.deepEqual(a,launchSamples(go,rate));assert.equal(a.length,Math.round(rate*(go?.36:.12)));assert.ok(a.every(Number.isFinite));assert.ok(a.reduce((p,x)=>Math.max(p,Math.abs(x)),0)<.8);assert.ok(a.some(x=>Math.abs(x)>.1));assert.equal(Math.abs(a[0]),0);assert.ok(Math.abs(a.at(-1)!)<.001);}});

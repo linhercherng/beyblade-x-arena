@@ -1,4 +1,4 @@
-import {countdownSamples,COUNTDOWN_RATE,type CountdownCue} from './countdown-voice.ts';
+import {countdownSamples,launchSamples,COUNTDOWN_RATE,type CountdownCue} from './countdown-voice.ts';
 import {audioStatus} from "./audio-state.ts";
 import type { Battle, BattleEvent, Result } from "./physics.ts";
 import { cueSamples, FINISH_RECOVERY, type Cue } from "./finish.ts";
@@ -47,7 +47,11 @@ export class Sound {
   private lastImpact = -Infinity;
   private lastStrength = 0;
   private countdownBuffers=new Map<CountdownCue,AudioBuffer>();
-  private countdownVoice:{source:AudioBufferSourceNode;gain:GainNode}|null=null;
+  private countdownVoice:{source:AudioBufferSourceNode;gain:GainNode;accent:AudioBufferSourceNode;accentGain:GainNode}|null=null;
+  private launchBuffers=new Map<boolean,AudioBuffer>();
+  private voiceMusicDuck:GainNode|null=null;
+  private voiceSfxDuck:GainNode|null=null;
+  private voiceDuckUntil=-Infinity;
   private cueBuffers = new Map<Cue, AudioBuffer>();
   private cues = new Map<AudioBufferSourceNode, GainNode>();
   private dashBuffers = new Map<boolean,AudioBuffer>();
@@ -146,16 +150,18 @@ export class Sound {
       this.master.connect(limiter).connect(this.ctx.destination);
       this.sfx = this.ctx.createGain();
       this.sfx.gain.value = 0.27;
-      this.sfx.connect(this.master);
+      this.voiceSfxDuck=this.ctx.createGain();this.sfx.connect(this.voiceSfxDuck).connect(this.master);
       this.music = this.ctx.createGain();
       this.music.gain.value = musicLevel(this.volume, this.requested);
       this.musicDuck = this.ctx.createGain();
       this.replayGain=this.ctx.createGain();this.replayFilter=this.ctx.createBiquadFilter();
       this.replayFilter.type="lowpass";this.replayFilter.Q.value=.5;this.replayFilter.frequency.value=Math.min(22000,this.ctx.sampleRate*.49);
-      this.music.connect(this.replayFilter).connect(this.replayGain).connect(this.musicDuck).connect(this.master);
+      this.voiceMusicDuck=this.ctx.createGain();
+      this.music.connect(this.replayFilter).connect(this.replayGain).connect(this.musicDuck).connect(this.voiceMusicDuck).connect(this.master);
       for(const cue of [3,2,1,0]as const){
         const samples=countdownSamples(cue),buffer=this.ctx.createBuffer(1,samples.length,COUNTDOWN_RATE);buffer.getChannelData(0).set(samples);this.countdownBuffers.set(cue,buffer);
       }
+      for(const go of [false,true]){const samples=launchSamples(go,this.ctx.sampleRate),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);buffer.getChannelData(0).set(samples);this.launchBuffers.set(go,buffer);}
       this.strikes = ([0, 1, 2] as const).map(tier => {
         const samples = impactSamples(tier, this.ctx!.sampleRate);
         const buffer = this.ctx!.createBuffer(1, samples.length, this.ctx!.sampleRate);
@@ -435,18 +441,26 @@ export class Sound {
   private restoreDuck(){if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
   stopEffects() {this.stopCountdown();this.stopImpacts();this.stopDashes();this.stopCues();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
   private stopCountdown(){
-    const voice=this.countdownVoice;if(!voice||!this.ctx)return;this.countdownVoice=null;
-    const now=this.ctx.currentTime;voice.gain.gain.cancelAndHoldAtTime(now);voice.gain.gain.linearRampToValueAtTime(0,now+.015);voice.source.stop(now+.015);this.restoreDuck();
+    if(!this.ctx)return;const now=this.ctx.currentTime,voice=this.countdownVoice;
+    if(!voice&&now>this.voiceDuckUntil)return;
+    this.countdownVoice=null;this.voiceDuckUntil=-Infinity;
+    if(voice)for(const [source,gain]of [[voice.source,voice.gain],[voice.accent,voice.accentGain]]as const){gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);source.stop(now+.015);}
+    for(const node of [this.voiceMusicDuck,this.voiceSfxDuck])if(node){node.gain.cancelAndHoldAtTime(now);node.gain.linearRampToValueAtTime(1,now+.04);}
   }
   countdown(cue:CountdownCue){
     this.stopCountdown();
-    if(!this.ready||!this.ctx||!this.sfx||this.muted)return;
+    if(!this.ready||!this.ctx||!this.master||!this.sfx||this.muted)return;
     const buffer=this.countdownBuffers.get(cue);if(!buffer)return;
     const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),now=this.ctx.currentTime;
-    source.buffer=buffer;gain.gain.value=1.6;source.connect(gain).connect(this.sfx);this.countdownVoice={source,gain};
+    source.buffer=buffer;gain.gain.value=.52;source.connect(gain).connect(this.master);
+    const accent=this.track(this.ctx.createBufferSource()),accentGain=this.ctx.createGain();accent.buffer=this.launchBuffers.get(cue===0)!;accent.playbackRate.value=cue===0?1:1+(3-cue)*.12;accentGain.gain.value=cue===0?1.1:.65;accent.connect(accentGain).connect(this.sfx);
+    this.countdownVoice={source,gain,accent,accentGain};
     source.onended=()=>{source.disconnect();gain.disconnect();if(this.countdownVoice?.source===source)this.countdownVoice=null;};
-    if(this.musicDuck){const duck=this.musicDuck.gain;duck.cancelAndHoldAtTime(now);duck.linearRampToValueAtTime(.25,now+.008);duck.setTargetAtTime(1,now+buffer.duration+.012,.1);}
-    source.start(now+.012);
+    accent.onended=()=>{accent.disconnect();accentGain.disconnect();};
+    // Independent priority gains keep hit/replay duck recovery from masking a spoken word.
+    this.voiceDuckUntil=now+buffer.duration+.23;
+    for(const [node,level]of [[this.voiceMusicDuck,.1],[this.voiceSfxDuck,.32]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(level,now+.008);p.setValueAtTime(level,now+buffer.duration+.06);p.linearRampToValueAtTime(1,this.voiceDuckUntil);}
+    accent.start(now+.008);source.start(now+.012);
   }
   beginReplay(){this.stopEffects();this.replayPlayed.clear();this.setReplay("tracking");}
   setReplay(stage:ReplayStage|null,cameraPan=0){
