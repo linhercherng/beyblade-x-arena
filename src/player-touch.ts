@@ -2,7 +2,7 @@ type Player=0|1;
 type Drag={player:Player;input:HTMLInputElement;pointerId?:number};
 export function bindPlayerTouch(root:HTMLElement,enabled:()=>boolean,setAngle:(player:Player,angle:number)=>void){
   const local='#battle-controls[data-mode="local"]';
-  const actions='button[data-action="lane"],button[data-action="direction"],button[data-action="lock"],button[data-action="shout"]';
+  const actions='button[data-action="angle-step"],button[data-action="lane"],button[data-action="direction"],button[data-action="lock"],button[data-action="shout"]';
   const nativeTouches='ontouchstart' in window;
   const drags=new Map<string,Drag>();
   const touchClicks=new WeakMap<HTMLButtonElement,{x:number;y:number;until:number}>();

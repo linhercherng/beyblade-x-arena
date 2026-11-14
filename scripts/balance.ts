@@ -1,5 +1,5 @@
-import { writeFileSync } from "node:fs";
-import assert from "node:assert/strict";
+import { mkdirSync, writeFileSync } from "node:fs";
+import {assertBalance} from "./balance-gates.ts";
 import { runSuite, runEdges, runAllPairs } from "./balance-suite.ts";
 import { ENGINE_VERSION, TUNING, PACING, COMBAT_STYLE } from "../src/physics.ts";
 const calibration = runSuite(256, 1);
@@ -18,8 +18,10 @@ const report = {
   edges,
   allPairs,
 };
+const output=new URL(process.argv.includes("--check")?"../artifacts/balance-check.json":"../docs/balance-report.json",import.meta.url);
+mkdirSync(new URL("./",output),{recursive:true});
 writeFileSync(
-  new URL("../docs/balance-report.json", import.meta.url),
+  output,
   JSON.stringify(report, null, 2) + "\n",
 );
 console.log(
@@ -39,18 +41,4 @@ console.log(
     2,
   ),
 );
-for (const suite of [calibration, validation]) {
-  for (const [type, result] of Object.entries(suite.types))
-    assert.ok(
-      result.winRate >= 40 && result.winRate <= 60,
-      `${type}: ${result.winRate}%`,
-    );
-  assert.equal(suite.outsideTarget, 0, `有${suite.outsideTarget}場超出15–40秒`);
-  assert.ok(suite.finishes.spin / suite.battles <= .5, "停轉仍占多數");
-  for (const [finish, minimum] of [["burst", .1], ["over", .1], ["extreme", .05]] as const)
-    assert.ok(suite.finishes[finish] / suite.battles >= minimum, `${finish}不足${minimum * 100}%`);
-  const draws = Object.values(suite.types).reduce((n, t) => n + t.draws, 0) / 2;
-  assert.ok(draws / suite.battles <= .05, "平手超過5%");
-}
-assert.equal(edges.outsideTarget, 0, "邊界輸入超出15–40秒");
-assert.equal(allPairs.outsideTarget, 0, "全91×91配對超出15–40秒");
+assertBalance(report);

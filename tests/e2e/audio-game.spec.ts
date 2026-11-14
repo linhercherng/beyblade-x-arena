@@ -1,4 +1,14 @@
 import {test,expect} from '@playwright/test';
+import {writeFileSync} from 'node:fs';
+test.afterEach(async({page},info)=>{
+ if(info.status===info.expectedStatus)return;
+ const state=await page.evaluate(()=>({screen:document.querySelector('#app')?.getAttribute('data-screen'),notice:document.querySelector('#audio-notice')?.textContent,paused:!document.querySelector<HTMLElement>('#pause-overlay')?.hidden,hidden:document.hidden,metrics:(window as any).audioProbe?.metrics()}));
+ writeFileSync(`artifacts/p1-audio-game-failure-${info.line}.json`,JSON.stringify(state,null,2));
+ await page.locator('.music-controls').evaluate((n:HTMLDetailsElement)=>n.open=true);
+ await page.getByRole('button',{name:'裝置檢查',exact:true}).click();
+ const pending=page.waitForEvent('download');await page.getByRole('button',{name:'匯出檢查紀錄',exact:true}).click();
+ await (await pending).saveAs(`artifacts/p1-audio-game-events-${info.line}.json`);
+});
 test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:1080}});
 async function installProbe(page:import('@playwright/test').Page){
   await page.addInitScript(()=>{
@@ -51,7 +61,7 @@ test('正式遊戲耳機切換與來電暫停，恢復按鈕不改音量或重�
   await recover.tap();expect((await metrics()).loops).toBe(0);await expect(page.locator('#pause-overlay')).toBeVisible();
   await page.locator('#pause-overlay [data-action="pause"]').tap();await expect.poll(async()=>(await metrics()).loops).toBe(1);
   await page.evaluate(()=>{const s=(navigator as any).audioSession;s.state='interrupted';s.dispatchEvent(new Event('statechange'));});
-  await expect(page.locator('#pause-overlay')).toBeVisible();await recover.tap();expect((await metrics()).loops).toBe(0);
+  await expect(page.locator('#pause-overlay')).toBeVisible();await expect(recover).toBeDisabled();expect((await metrics()).loops).toBe(0);
   await page.evaluate(()=>{const s=(navigator as any).audioSession;s.state='active';s.dispatchEvent(new Event('statechange'));});
   await page.waitForTimeout(100);expect((await metrics()).loops).toBe(0);
   await page.locator('#pause-overlay [data-action="pause"]').tap();await expect.poll(async()=>(await metrics()).loops).toBe(1);

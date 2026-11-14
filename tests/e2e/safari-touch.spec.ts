@@ -76,6 +76,9 @@ test('TouchEvent取消只清理該手指，旋轉與背景恢復需重新觸控'
 
 test('WebKit原生單點tap與鍵盤可各自鎖定，無重複動作',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await setup(page);
+  const initial=Number(await page.getByLabel('2P 發射傾角').inputValue());
+  await page.getByLabel('2P 傾角增加1度').tap();await expect(page.getByLabel('2P 發射傾角')).toHaveValue(String(initial+1));
+  await page.getByLabel('1P 傾角減少1度').tap();await expect(page.getByLabel('1P 發射傾角')).toHaveValue('9');
   const lock=await point(page,'[data-action="lock"][data-player="1"]',1);
   await page.touchscreen.tap(lock.x,lock.y);
   await expect(page.locator('[data-action="lock"][data-player="1"]')).toBeDisabled();

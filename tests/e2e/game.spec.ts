@@ -79,7 +79,10 @@ for (const version of [1, 2, 3, 4]) test(`已發布v${version}戰績匯入後仍
     buffer: Buffer.from(JSON.stringify(profile)),
   });
   await expect(page.locator("#toast")).toContainText("已匯入");
-  await page.locator(".history-row summary").click();
+  await page.locator(".history-row > summary").click();
+  const insight=page.locator('.round-insight').first();await insight.locator('summary').click();
+  await expect(insight).toContainText('發射力量');await expect(insight).toContainText('因果占比');
+  await expect(insight.locator('tbody tr').first()).toContainText(Math.round(m.rounds[0].inputs[0].power*100)+'%');
   await action(page, "replay").first().click();
   await expect(page.locator("#toast")).toContainText("結果與原對戰一致", {
     timeout: 60000,
@@ -170,6 +173,8 @@ async function playMatch(page: Page, local = false) {
     await expect(
       page.locator('[data-action="next-round"], [data-action="rematch"]'),
     ).toBeVisible({ timeout: 45000 });
+    const analysis=page.locator('.round-insight').first();await analysis.locator('summary').click();
+    await expect(analysis).toContainText('最大單次衝量');await expect(analysis).toContainText('數據取自本場保存紀錄');
     if (await action(page, "rematch").isVisible()) {
       await expect(page.locator(".victory-podium")).toBeVisible();
       await expect(page.locator(".winning-team .product-photo")).toHaveCount(3);
@@ -217,7 +222,7 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   await page.reload();
   await action(page, "stats").click();
   await expect(page.locator(".history-row")).toHaveCount(1);
-  await page.locator(".history-row summary").click();
+  await page.locator(".history-row > summary").click();
   await action(page, "replay").first().click();
   await expect(page.locator("h1")).toHaveText("對戰重播");
   await action(page, "speed").click();

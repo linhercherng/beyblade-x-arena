@@ -1,4 +1,10 @@
 import {test,expect} from '@playwright/test';
+import {writeFileSync} from 'node:fs';
+test.afterEach(async({page},info)=>{
+ if(info.status===info.expectedStatus)return;
+ const state=await page.evaluate(()=>({audio:(window as any).audioSound?.diagnostics(),resumeCalls:(window as any).resumeCalls,metrics:(window as any).audioMetrics?.()}));
+ writeFileSync(`artifacts/p1-audio-lifecycle-failure-${info.line}.json`,JSON.stringify(state,null,2));
+});
 const metrics=(page:import('@playwright/test').Page)=>page.evaluate(()=>(window as any).audioMetrics());
 test('音訊裝置中斷立即丟棄舊聲源，恢復手勢只建立一份配樂並淡入',async({page})=>{
   await page.goto('/tests/fixtures/audio.html');await page.locator('#battle').click();

@@ -1,3 +1,4 @@
+import {audioStatus} from "./audio-state.ts";
 import type { Battle, BattleEvent, Result } from "./physics.ts";
 import { cueSamples, FINISH_RECOVERY, type Cue } from "./finish.ts";
 import tracks from "./music-tracks.json" with {type:"json"};
@@ -49,9 +50,11 @@ export class Sound {
   private dashBuffers = new Map<boolean,AudioBuffer>();
   private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
   private lastDash = [-Infinity,-Infinity];
+  private resumeRejected=false;
+  get status(){return audioStatus({available:typeof AudioContext!=="undefined",muted:this.muted,context:this.ctx?.state??null,sessionInterrupted:this.session?.state==="interrupted",background:this.background,recovering:this.recovering,resumeAge:this.lastResume===-Infinity?null:performance.now()-this.lastResume,rejected:this.resumeRejected,musicFailed:!!this.requested&&this.volume>0&&this.failed.has(this.requested)});}
   private events:{atMs:number;kind:string}[]=[];
   private note(kind:string){this.events.push({atMs:Math.round(performance.now()),kind});if(this.events.length>60)this.events.shift();}
-  diagnostics(){return {state:this.ctx?.state??(typeof AudioContext==="undefined"?"unavailable":"not-started"),ready:this.ready,session:this.session?.state??null,
+  diagnostics(){return {status:this.status,state:this.ctx?.state??(typeof AudioContext==="undefined"?"unavailable":"not-started"),ready:this.ready,session:this.session?.state??null,
     muted:this.muted,musicVolume:this.volume,contextTime:this.ctx?.currentTime??null,sampleRate:this.ctx?.sampleRate??null,sources:this.sources.size,
     music:this.playing?.mode??null,buffers:this.buffers.size,rotors:this.rotors.length,events:this.events.map(e=>({...e}))};}
   onInterruption:(()=>void)|null=null;
@@ -74,10 +77,13 @@ export class Sound {
     this.silence();
     if(notify)this.onInterruption?.();
   }
-  recoverAudio(){this.note("manual-recovery");this.silence();this.unlock();}
+  recoverAudio(){
+    if(this.session?.state==="interrupted"||this.ctx?.state==="closed"||(this.recovering&&!this.resumeRejected&&performance.now()-this.lastResume<1500))return;
+    this.note("manual-recovery");this.failed.clear();this.silence();this.unlock();
+  }
   private silence(){
     if(!this.ctx||!this.master)return;
-    this.recovering=true;this.recovery++;this.lastResume=-Infinity;
+    this.recovering=true;this.resumeRejected=false;this.recovery++;this.lastResume=-Infinity;
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
     this.revision++;this.pending=null;this.fadeOut(0);this.stopEffects();
@@ -88,7 +94,7 @@ export class Sound {
   }
   private restore(){
     if(!this.ctx||!this.master||this.background||this.ctx.state!=="running"||!this.recovering||this.session?.state==="interrupted")return;
-    this.note("restored");
+    this.resumeRejected=false;this.note("restored");
     this.recovering=false;this.clockTime=this.ctx.currentTime;this.clockWall=performance.now();
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
@@ -182,12 +188,12 @@ export class Sound {
     if(this.ctx.state==="running"&&!this.recovering)return;
     if(!this.recovering)this.silence();
     if(performance.now()-this.lastResume<300)return;
-    this.note("resume-attempt");
+    this.resumeRejected=false;this.note("resume-attempt");
     this.lastResume=performance.now();const context=this.ctx,recovery=this.recovery;
     // 不讓Safari未完成的resume Promise永久阻擋之後的新手勢重試。
     // 中斷後即使Safari回報running也重新排入suspend/resume；兩者都在這次手勢內呼叫。
     if(this.recovery>0&&context.state!=="suspended"&&context.state!=="closed")void context.suspend().catch(()=>{});
-    void context.resume().then(()=>{if(this.ctx===context&&this.recovery===recovery)this.restore();}).catch(()=>{this.note("resume-rejected");});
+    void context.resume().then(()=>{if(this.ctx===context&&this.recovery===recovery)this.restore();}).catch(()=>{if(this.ctx===context&&this.recovery===recovery)this.resumeRejected=true;this.note("resume-rejected");});
   }
   toggle() {
     this.muted = !this.muted;

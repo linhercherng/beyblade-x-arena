@@ -20,6 +20,8 @@ import {
 import { Arena } from "./arena.ts";
 import { capturePoses, type TopPose } from "./motion.ts";
 import { Sound } from "./audio.ts";
+import {AUDIO_STATUS} from './audio-state.ts';
+import {roundInsight} from './round-insight.ts';
 import { musicFor } from "./music-state.ts";
 import { FINISH_COLORS, scorePreview } from "./finish.ts";
 import { HighlightRecorder, HIGHLIGHT_RATE, highlightPrompt, type HighlightReplay } from "./highlight.ts";
@@ -62,6 +64,7 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 const sound = new Sound();
 const deviceLog=new DeviceCheck();
 let deviceSampleAt=0;
+let audioUiAt=0;
 let pausedFinishAnimations: Animation[] = [];
 let arena: Arena | null = null;
 try {
@@ -197,9 +200,25 @@ function shell(content: string) {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 ${GAME_VERSION}</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small>${btn("恢復音訊", "audio-recover", "secondary")}<small>切換耳機後無聲時可重試</small>${btn("裝置檢查", "device-check", "text-button")}</div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="connection"><i></i> 本機紀錄 · ${persisted ? "自動保存" : "暫存模式"}</div><p>實物參考・粉絲遊戲<br>版本 ${GAME_VERSION}</p>${btn("遊戲規則 ↗", "help", "text-button")}</div></aside><div class="workspace"><header class="topbar"><div class="breadcrumb">競技場 <span>/</span> <strong>${({ home: "作戰基地", catalog: "陀螺圖鑑", team: "隊伍編成", privacy: "交接玩家", reveal: "出場順序", launch: "準備發射", countdown: "準備發射", battle: "即時對戰", round: "對決結果", results: "賽後結算", stats: "戰績中心", replay: "對戰重播" } as Record<Screen, string>)[screen]}</strong></div><div class="top-actions"><span class="local-badge">LOCAL ARENA</span><details class="music-controls"><summary data-action="music-unlock" aria-label="配樂設定">♫ 配樂</summary><div><label for="music-volume">配樂音量 <output id="music-volume-label">${Math.round(sound.volume * 100)}%</output></label><input id="music-volume" type="range" min="0" max="100" step="5" value="${Math.round(sound.volume * 100)}" aria-label="背景音樂音量"><small>原創配樂・隨對戰切換<br>音量調至 0 可只保留音效</small>${btn("恢復音訊", "audio-recover", "secondary")}<small id="audio-status-text"></small>${btn("裝置檢查", "device-check", "text-button")}</div></details>${btn(sound.muted ? "音效 關" : "音效 開", "sound", "icon-button", 'aria-label="切換音效"')}${btn("?", "help", "help-button", 'aria-label="遊戲規則"')}<span class="avatar">P1</span></div></header><div id="audio-notice" class="audio-notice" hidden><span role="status" aria-live="polite" aria-atomic="true" id="audio-notice-text"></span>${btn("重試音訊","audio-recover","secondary")}</div><main id="main">${content}</main><footer class="footer"><span>SPINFORGE X <b>·</b> 挑戰你的極限</span><span>3 ON 3 <b>／</b> FIRST TO 4 POINTS</span></footer></div><div id="modal-root"></div>`;
   window.scrollTo(0, 0);
   attachStage();
+  updateAudioStatus();
+}
+function updateAudioStatus(){
+  const state=sound.status,info=AUDIO_STATUS[state],notice=byId("audio-notice");
+  if(!notice)return;
+  const text=info.label+" · "+info.hint;
+  if(notice.dataset.state!==state){
+    notice.dataset.state=state;
+    notice.hidden=["ready","muted","unavailable"].includes(state)||(state==="waiting"&&!sound.ctx);
+    byId("audio-notice-text")!.textContent=notice.hidden?"":text;
+    byId("audio-status-text")!.textContent=text;
+  }
+  app.querySelectorAll<HTMLButtonElement>('[data-action="audio-recover"]').forEach(button=>{
+    const disabled=["interrupted","recovering","unavailable","closed"].includes(state);
+    if(button.disabled!==disabled)button.disabled=disabled;
+  });
 }
 function attachStage() {
   const host = byId("stage");
@@ -360,7 +379,7 @@ function hud(player: 0 | 1) {
 }
 function launchControls(player: 0 | 1) {
   const b = getBey(match!.teams[player][match!.slot]);
-  return `<section class="launch-controls panel ${locked[player] ? "locked" : ""}" data-player="${player}" aria-label="${player+1}P 發射操作"><div class="launch-heading"><span class="player-chip">${player === 0 ? "1P" : "2P"}</span><h3>${beyName(b)}</h3><span id="lock-status-${player}">${locked[player] ? "發射已鎖定 ✓" : "調整你的發射"}</span></div><div class="launch-options"><div><span class="field-label">落點 <small>${player === 0 ? "A / S / D" : "← / ↓ / →"}</small></span><div class="lane-options">${["內側", "中間", "外側"].map((l, i) => btn(l, "lane", inputs[player].lane === i ? "selected" : "", `data-player="${player}" data-value="${i}" ${locked[player] ? "disabled" : ""}`)).join("")}</div></div><label class="angle-label">傾角 <b id="angle-value-${player}">${inputs[player].angle}°</b><input type="range" min="0" max="30" value="${inputs[player].angle}" data-angle="${player}" aria-label="${player + 1}P 發射傾角" ${locked[player] ? "disabled" : ""}/><small>傾角越大，初始傾斜與橫移越明顯</small></label>${match!.mode==="local"?`<div class="direction-label"><span>傾斜方向</span><div class="direction-options" role="group" aria-label="${player+1}P 傾斜方向">${[[-1,"內切"],[0,"沿旋"],[1,"外切"]].map(([v,label])=>btn(String(label),"direction",(inputs[player].direction??0)===v?"selected":"",`data-player="${player}" data-value="${v}" aria-pressed="${(inputs[player].direction??0)===v}" ${locked[player]?"disabled":""}`)).join("")}</div></div>`:`<label class="direction-label">傾斜方向<select data-direction="${player}" aria-label="${player+1}P 傾斜方向" ${locked[player]?"disabled":""}>${[[-1,"偏內切"],[0,"沿旋向"],[1,"偏外切"]].map(([v,label])=>`<option value="${v}" ${(inputs[player].direction??0)===v?"selected":""}>${label}</option>`).join("")}</select></label>` }<div class="charge-block"><span class="field-label">蓄力 <small>黃綠區 = 完美發射</small></span><div class="charge-track"><span class="perfect-zone"></span><i id="charge-${player}"></i></div></div>${btn(locked[player] ? `已就緒 ${Math.round(inputs[player].power * 100)}%` : `鎖定發射 <small>${match!.mode==="local"?"按下即鎖定 · ":""}${player === 0 ? "SPACE" : "ENTER"}</small>`, "lock", "primary", `data-player="${player}" ${locked[player] ? "disabled" : ""}`)}</div></section>`;
+  return `<section class="launch-controls panel ${locked[player] ? "locked" : ""}" data-player="${player}" aria-label="${player+1}P 發射操作"><div class="launch-heading"><span class="player-chip">${player === 0 ? "1P" : "2P"}</span><h3>${beyName(b)}</h3><span id="lock-status-${player}">${locked[player] ? "發射已鎖定 ✓" : "調整你的發射"}</span></div><div class="launch-options"><div><span class="field-label">落點 <small>${player === 0 ? "A / S / D" : "← / ↓ / →"}</small></span><div class="lane-options">${["內側", "中間", "外側"].map((l, i) => btn(l, "lane", inputs[player].lane === i ? "selected" : "", `data-player="${player}" data-value="${i}" ${locked[player] ? "disabled" : ""}`)).join("")}</div></div><div class="angle-label"><label for="launch-angle-${player}">傾角 <b id="angle-value-${player}">${inputs[player].angle}°</b></label><input id="launch-angle-${player}" type="range" min="0" max="30" value="${inputs[player].angle}" data-angle="${player}" aria-valuetext="${inputs[player].angle}度" aria-label="${player + 1}P 發射傾角" ${locked[player] ? "disabled" : ""}/>${match!.mode==="local"?`<div class="angle-steps">${[-1,1].map(v=>btn(v<0?"−1°":"+1°","angle-step","secondary",`data-player="${player}" data-value="${v}" aria-label="${player+1}P 傾角${v<0?"減少":"增加"}1度" ${locked[player]?"disabled":""}`)).join("")}</div>`:""}<small>傾角越大，初始傾斜與橫移越明顯</small></div>${match!.mode==="local"?`<div class="direction-label"><span>傾斜方向</span><div class="direction-options" role="group" aria-label="${player+1}P 傾斜方向">${[[-1,"內切"],[0,"沿旋"],[1,"外切"]].map(([v,label])=>btn(String(label),"direction",(inputs[player].direction??0)===v?"selected":"",`data-player="${player}" data-value="${v}" aria-pressed="${(inputs[player].direction??0)===v}" ${locked[player]?"disabled":""}`)).join("")}</div></div>`:`<label class="direction-label">傾斜方向<select data-direction="${player}" aria-label="${player+1}P 傾斜方向" ${locked[player]?"disabled":""}>${[[-1,"偏內切"],[0,"沿旋向"],[1,"偏外切"]].map(([v,label])=>`<option value="${v}" ${(inputs[player].direction??0)===v?"selected":""}>${label}</option>`).join("")}</select></label>` }<div class="charge-block"><span class="field-label">蓄力 <small>黃綠區 = 完美發射</small></span><div class="charge-track"><span class="perfect-zone"></span><i id="charge-${player}"></i></div></div>${btn(locked[player] ? `已就緒 ${Math.round(inputs[player].power * 100)}%` : `鎖定發射 <small>${match!.mode==="local"?"按下即鎖定 · ":""}${player === 0 ? "SPACE" : "ENTER"}</small>`, "lock", "primary", `data-player="${player}" ${locked[player] ? "disabled" : ""}`)}</div></section>`;
 }
 function renderArena() {
   const launching = screen === "launch";
@@ -390,7 +409,8 @@ function setLaunchAngle(player:0|1,angle:number){
   if(screen!=="launch"||paused||locked[player]||!Number.isFinite(angle))return;
   inputs[player].angle=Math.max(0,Math.min(30,angle));
   const input=app.querySelector<HTMLInputElement>(`[data-angle="${player}"]`);
-  if(input)input.value=String(inputs[player].angle);
+  if(input){input.value=String(inputs[player].angle);input.setAttribute("aria-valuetext",inputs[player].angle+"度");}
+  app.querySelectorAll<HTMLButtonElement>(`[data-action="angle-step"][data-player="${player}"]`).forEach(b=>b.disabled=Number(b.dataset.value)<0?inputs[player].angle===0:inputs[player].angle===30);
   const label=byId(`angle-value-${player}`);if(label)label.textContent=inputs[player].angle+"°";
 }
 function startCountdown(){
@@ -445,7 +465,7 @@ function roundEnded() {
   const winner = r.result.winner;
   const winnerLabel = winner === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P";
   shell(
-    `<section class="round-result panel" data-finish="${winner === null ? "draw" : r.result.finish}" style="--finish-color:${FINISH_COLORS[winner === null ? "draw" : r.result.finish]}"><span class="eyebrow">ROUND ${r.index} COMPLETE</span>${winner === null ? '<div class="round-victor">DRAW · 本場重打</div>' : `<div class="round-victor">${art(getBey(r.beys[winner]), 70)}<div><span>${winnerLabel} WIN</span><h2>${safe(getBey(r.beys[winner]).zhName)}</h2></div><b>+${r.result.points}</b></div>`}<h1>${r.result.winner === null ? "雙方平手" : f.label}</h1><div class="round-score">${match.scores[0]} <small>:</small> ${match.scores[1]}</div><p>${r.result.winner === null ? "雙方同時終結，保持本場出場順序重打。" : `${r.result.winner === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P"} 取得 ${r.result.points} 分 · ${r.result.time.toFixed(1)} 秒`}</p><div class="next-pair">下一場：${beyName(getBey(match.teams[0][match.slot]))}<span>VS</span>${beyName(getBey(match.teams[1][match.slot]))}</div>${btn(r.result.winner === null ? "重新發射 →" : "下一場對決 →", "next-round", "primary")}</section>`,
+    `<section class="round-result panel" data-finish="${winner === null ? "draw" : r.result.finish}" style="--finish-color:${FINISH_COLORS[winner === null ? "draw" : r.result.finish]}"><span class="eyebrow">ROUND ${r.index} COMPLETE</span>${winner === null ? '<div class="round-victor">DRAW · 本場重打</div>' : `<div class="round-victor">${art(getBey(r.beys[winner]), 70)}<div><span>${winnerLabel} WIN</span><h2>${safe(getBey(r.beys[winner]).zhName)}</h2></div><b>+${r.result.points}</b></div>`}<h1>${r.result.winner === null ? "雙方平手" : f.label}</h1><div class="round-score">${match.scores[0]} <small>:</small> ${match.scores[1]}</div><p>${r.result.winner === null ? "雙方同時終結，保持本場出場順序重打。" : `${r.result.winner === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P"} 取得 ${r.result.points} 分 · ${r.result.time.toFixed(1)} 秒`}</p><p class="finish-reason">${safe(roundInsight(r).reason)}</p>${roundInsightView(r,match.mode)}<div class="next-pair">下一場：${beyName(getBey(match.teams[0][match.slot]))}<span>VS</span>${beyName(getBey(match.teams[1][match.slot]))}</div>${btn(r.result.winner === null ? "重新發射 →" : "下一場對決 →", "next-round", "primary")}</section>`,
   );
 }
 function clearHighlight() {
@@ -469,8 +489,13 @@ function beginHighlight() {
   byId("main")?.classList.add("showing-highlight");
   return true;
 }
+function roundInsightView(r:Round,mode:Mode){
+  const insight=roundInsight(r);
+  const winner=r.result.winner===null?'':r.result.winner===0?'1P':mode==='cpu'?'CPU':'2P';
+  return `<details class="round-insight"><summary>第 ${r.index} 場 · 勝負原因與發射數據</summary><p>${winner?winner+' 勝出。':''}${safe(insight.reason)}</p><div class="table-scroll"><table><thead><tr><th>本場紀錄</th><th>1P</th><th>${mode==="cpu"?"CPU":"2P"}</th></tr></thead><tbody>${insight.rows.map(row=>`<tr><th>${row.label}</th>${row.values.map(value=>`<td>${safe(value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="muted">${insight.complete?"數據取自本場保存紀錄，可用重播核對過程。":"此戰績未保存完整數據，原版重播仍保留。"}數據不代表各因素的因果占比。</p></details>`;
+}
 function roundTable(m: Match, playable = false) {
-  return `<div class="table-scroll"><table><thead><tr><th>場次</th><th>1P 陀螺</th><th>${m.mode === "cpu" ? "CPU" : "2P"} 陀螺</th><th>勝方 / 終結</th><th>耗時</th>${playable ? "<th>重播</th>" : ""}</tr></thead><tbody>${m.rounds.map((r, i) => `<tr><td>0${r.index}</td><td>${beyName(getBey(r.beys[0]))}</td><td>${beyName(getBey(r.beys[1]))}</td><td>${r.result.winner === null ? "平手" : r.result.winner === 0 ? "1P" : m.mode === "cpu" ? "CPU" : "2P"} · ${FINISH[r.result.finish].label} ${r.result.points ? `+${r.result.points}` : ""}</td><td>${r.result.time.toFixed(1)}s</td>${playable ? `<td>${btn("▶", "replay", "small-button", `data-match="${safe(m.id)}" data-index="${i}" aria-label="重播第${i + 1}場"`)}</td>` : ""}</tr>`).join("")}</tbody></table></div>`;
+  return `<div class="table-scroll"><table><thead><tr><th>場次</th><th>1P 陀螺</th><th>${m.mode === "cpu" ? "CPU" : "2P"} 陀螺</th><th>勝方 / 終結</th><th>耗時</th>${playable ? "<th>重播</th>" : ""}</tr></thead><tbody>${m.rounds.map((r, i) => `<tr><td>0${r.index}</td><td>${beyName(getBey(r.beys[0]))}</td><td>${beyName(getBey(r.beys[1]))}</td><td>${r.result.winner === null ? "平手" : r.result.winner === 0 ? "1P" : m.mode === "cpu" ? "CPU" : "2P"} · ${FINISH[r.result.finish].label} ${r.result.points ? `+${r.result.points}` : ""}</td><td>${r.result.time.toFixed(1)}s</td>${playable ? `<td>${btn("▶", "replay", "small-button", `data-match="${safe(m.id)}" data-index="${i}" aria-label="重播第${i + 1}場"`)}</td>` : ""}</tr>`).join("")}</tbody></table></div>${m.rounds.map(r=>roundInsightView(r,m.mode)).join("")}`;
 }
 function results(m: Match) {
   screen = "results";
@@ -744,10 +769,10 @@ app.addEventListener("click", (e) => {
       const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:"application/json"})),link=document.createElement("a");link.href=url;link.download=`spinforge-device-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);break;
     }
     case "audio-recover":
-      sound.recoverAudio();
+      sound.recoverAudio();updateAudioStatus();
       break;
     case "sound":
-      sound.toggle();
+      sound.toggle();updateAudioStatus();
       target.textContent = sound.muted ? "音效 關" : "音效 開";
       break;
     case "help":
@@ -834,6 +859,11 @@ app.addEventListener("click", (e) => {
     case "begin-match":
       beginMatch();
       break;
+    case "angle-step":{
+      const p=Number(target.dataset.player),delta=Number(v);
+      if((p===0||p===1)&&(delta===-1||delta===1))setLaunchAngle(p,inputs[p].angle+delta);
+      break;
+    }
     case "direction":
     case "lane": {
       const p = Number(target.dataset.player);
@@ -986,7 +1016,7 @@ document.addEventListener("keydown", (e) => {
   if((e.target as HTMLElement).closest('#battle-controls[data-mode="local"] button')&&(e.code==="Space"||e.key==="Enter"))return;
   if ((e.target as HTMLElement).matches("input,select,textarea") || e.repeat)
     return;
-  if (e.key !== "Escape" && (e.target as HTMLElement).closest(".music-controls"))
+  if (e.key !== "Escape" && (e.target as HTMLElement).closest(".music-controls,#audio-notice"))
     return;
   if (screen === "launch") {
     const mapping: Record<string, [number, number]> = {
@@ -1199,6 +1229,7 @@ function frame(time: number) {
       finished: !!battle?.result,
       matchPoint: !!match && Math.max(...match.scores) >= 3 }),
   );
+  if(time-audioUiAt>=200){audioUiAt=time;updateAudioStatus();}
   deviceLog.frame(time,!paused&&!document.hidden&&!!arena&&(screen==="battle"||screen==="replay"));
   if(time-deviceSampleAt>=1000){
     deviceSampleAt=time;
