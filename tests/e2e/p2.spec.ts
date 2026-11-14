@@ -2,6 +2,11 @@ import{test,expect,type Page}from'@playwright/test';import{readFileSync}from'nod
 test.setTimeout(90000);
 async function preview(page:Page){const m=JSON.parse(readFileSync('tests/fixtures/v5-match.json','utf8')),count={played:0,wins:0,streak:0,bestStreak:0};await page.locator('#backup-file').setInputFiles({name:'v5.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({version:1,modes:{cpu:[count,count],local:[count,count]},beys:{},matrix:{},finishes:{spin:0,burst:0,over:0,extreme:0},recent:[m],highs:[]}))});}
 test('備份預覽取消不覆蓋，確認後保留v5重播並可跳轉關鍵碰撞',async({page})=>{
+ await page.addInitScript(()=>{
+  const w=window as any,request=window.requestAnimationFrame.bind(window);w.finishFrames=[];
+  window.requestAnimationFrame=cb=>request(time=>{if(w.holdFinish&&document.querySelector('.finish-card'))w.finishFrames.push(cb);else cb(time);});
+  w.releaseFinish=()=>{w.holdFinish=false;for(const cb of w.finishFrames.splice(0))request(cb);};
+ });
  await page.goto('/');await page.locator('[data-action="stats"]').click();await preview(page);
  await expect(page.getByRole('dialog')).toContainText('匯入備份預覽');await expect(page.locator('.history-row')).toHaveCount(0);
  await page.getByRole('button',{name:'取消匯入',exact:true}).click();await expect(page.locator('.history-row')).toHaveCount(0);
@@ -12,11 +17,11 @@ test('備份預覽取消不覆蓋，確認後保留v5重播並可跳轉關鍵碰
  await page.getByRole('button',{name:'俯視鏡位',exact:true}).click();await expect(page.getByRole('button',{name:'俯視鏡位',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.locator('[data-action="replay-moment"]').last().click();await expect(page.locator('#replay-position')).toContainText('/');
  await page.locator('[data-action="replay-moment"]').first().click();await expect(page.locator('#replay-position')).toContainText('0.0');
- const end=Number(await page.getByLabel('重播時間').getAttribute('max'));
+ const end=Number(await page.getByLabel('重播時間').getAttribute('max'));await page.evaluate(()=>(window as any).holdFinish=true);
  await page.getByLabel('重播時間').fill(String(Math.floor((end-.2)*10)/10));await page.getByLabel('重播時間').dispatchEvent('change');await page.locator('#pause-button').click();
- await expect(page.locator('.finish-card')).toBeVisible();await page.locator('#pause-button').click();await expect(page.locator('#pause-overlay')).toBeVisible();
+ await expect(page.locator('.finish-card')).toBeVisible();await expect.poll(()=>page.evaluate(()=>(window as any).finishFrames.length)).toBeGreaterThan(0);await page.locator('#pause-button').click();await expect(page.locator('#pause-overlay')).toBeVisible();
  expect(Number(await page.getByLabel('重播時間').inputValue())).toBeGreaterThan(end-1);
- await page.locator('#pause-button').click();await expect(page.locator('#pause-button')).toHaveText('從頭重播');await page.locator('#pause-button').click();
+ await page.locator('#pause-button').click();await page.evaluate(()=>(window as any).releaseFinish());await expect(page.locator('#pause-button')).toHaveText('從頭重播');await page.locator('#pause-button').click();
  expect(Number(await page.getByLabel('重播時間').inputValue())).toBeLessThan(1);
 });
 test('備份提交中會停用取消與Escape，完成後才顯示已匯入',async({page})=>{
@@ -34,7 +39,8 @@ test('備份提交中會停用取消與Escape，完成後才顯示已匯入',asy
  await expect(page.locator('.history-row')).toHaveCount(1);await expect(page.locator('#toast')).toContainText('已匯入');
 });
 test('發射練習可選左右旋、調整發射及重練，不增加戰績',async({page})=>{
- await page.goto('/');await page.locator('[data-action="stats"]').click();
+ await page.setViewportSize({width:640,height:480});await page.emulateMedia({reducedMotion:'reduce'});
+ await page.goto('/');await page.getByRole('button',{name:'切換音效',exact:true}).click();await page.locator('[data-action="stats"]').click();
  const beforeDownload=page.waitForEvent('download');await page.locator('[data-action="export"]').click();const before=JSON.parse(readFileSync((await(await beforeDownload).path())!,'utf8'));
  await page.locator('nav [data-action="home"]').click();await page.getByRole('button',{name:'發射練習與教學',exact:true}).click();
  await expect(page.locator('#practice-guide')).toBeVisible();await page.getByLabel('練習陀螺').selectOption('bx-34-cobalt-dragoon');
