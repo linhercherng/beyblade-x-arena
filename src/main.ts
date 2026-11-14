@@ -1,3 +1,5 @@
+import{backupSummary}from'./backup-preview.ts';
+import{replayAt,replayMoments}from'./replay-navigation.ts';
 import {DeviceCheck,DEVICE_CASES,GAME_VERSION} from "./diagnostics.ts";
 import {bindPlayerTouch} from "./player-touch.ts";
 import {combatProfile,TRAIT_NOTE} from "./combat-profiles.ts";
@@ -121,6 +123,10 @@ let replay: Round | null = null,
   replayMatch: Match | null = null,
   historyId: string | null = null,
   statsMode: Mode = "cpu";
+let practiceId:string|null=null;
+let replayHudAt=0;
+let pendingImport:Profile|null=null,importRead=0,importSaving=false;
+let replayIndex:ReturnType<typeof replayMoments>|null=null,replayScrubbing=false,replayComplete=false;
 let toastTimer: ReturnType<typeof setTimeout>;
 sound.onInterruption=()=>{if(["launch","countdown","battle","replay"].includes(screen))setPaused(true);};
 const clearPlayerTouch=bindPlayerTouch(app,()=>match?.mode==="local"&&!paused&&(screen==="launch"||screen==="battle"),setLaunchAngle);
@@ -171,7 +177,9 @@ function radar(b: Bey) {
   return `<svg viewBox="0 0 220 220" class="radar" role="img" aria-label="${keys.map((k) => STAT_LABEL[k] + b.stats[k]).join("，")}">${[22, 44, 66].map((r) => `<polygon points="${keys.map((_, i) => point(i, r)).join(" ")}" fill="none" stroke="#334354"/>`).join("")}${keys.map((k, i) => `<line x1="110" y1="108" x2="${point(i, 66).split(",")[0]}" y2="${point(i, 66).split(",")[1]}" stroke="#334354"/><text x="${point(i, 88).split(",")[0]}" y="${Number(point(i, 88).split(",")[1]) + 4}" text-anchor="middle" fill="#bac5d0" font-size="11">${STAT_LABEL[k]}</text>`).join("")}<polygon points="${keys.map((k, i) => point(i, (b.stats[k] / 100) * 66)).join(" ")}" fill="${b.color}" fill-opacity=".22" stroke="${b.color}" stroke-width="2"/></svg>`;
 }
 function shell(content: string) {
+  pendingImport=null;importRead++;
   clearPlayerTouch();
+  app.dataset.practice=String(!!practiceId);
   app.dataset.screen = screen;
   app.classList.toggle(
     "arena-view",
@@ -233,6 +241,7 @@ function title(eyebrow: string, h: string, description: string, side = "") {
   return `<div class="page-title"><div><div class="eyebrow">${eyebrow}</div><h1>${h}</h1><p>${description}</p></div>${side}</div>`;
 }
 function home() {
+  practiceId=null;replayIndex=null;
   clearHighlight();
   screen = "home";
   battle = null;
@@ -254,7 +263,7 @@ function home() {
       )
       .join(
         "",
-      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}${btn("⚄ 隨機雙方・立即對戰", "quick-battle", "secondary quick-battle-button", !arena ? "disabled" : "")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>${BEYS.length} 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 實物參考與合成音效</small></div>`,
+      )}</div><div class="difficulty-note">${mode === "local" ? "輪流選隊，再同時發射。" : difficulty === "hard" ? "精準發射，依你的過往出場習慣反制。" : difficulty === "normal" ? "三種類型互補，適合熟悉對戰節奏。" : "輕鬆上手，從第一次完美發射開始。"}</div>${btn("組建隊伍 <span>→</span>", "play", "primary start-button", !arena ? "disabled" : "")}${btn("⚄ 隨機雙方・立即對戰", "quick-battle", "secondary quick-battle-button", !arena ? "disabled" : "")}${btn("發射練習與教學","practice","secondary practice-entry",!arena?"disabled":"")}<div class="controls-note"><span>⌨ 滑鼠 / 鍵盤</span><span>◉ 支援觸控</span></div></section></div><section class="home-bottom"><div class="quick-stats"><div><small>你的對戰場次</small><strong>${String(c.played).padStart(2, "0")}<span>場</span></strong></div><div><small>單人勝率</small><strong>${pct(c.wins, c.played)}<span>%</span></strong></div><div><small>最長連勝</small><strong>${String(c.bestStreak).padStart(2, "0")}<span>WIN</span></strong></div></div><button class="catalog-callout" data-action="catalog"><div class="mini-beys">${art(BEYS[0], 65)}${art(BEYS[2], 65)}${art(BEYS[1], 65)}</div><div><span class="eyebrow">FIND YOUR PARTNER</span><h3>${BEYS.length} 顆陀螺，無限種戰術。</h3><p>探索 BX / UX / CX 全系列圖鑑</p></div><span class="round-arrow">↗</span></button></section><div class="rule-strip"><span><b>01</b> 選三顆</span><i>→</i><span><b>02</b> 排出場順序</span><i>→</i><span><b>03</b> 蓄力發射</span><i>→</i><span><b>04</b> 先得 4 分獲勝</span><small>獨立物理模擬 · 實物參考與合成音效</small></div>`,
   );
 }
 function filters() {
@@ -282,12 +291,14 @@ function cards() {
     )}</div>${!beys.length ? '<div class="empty-state">找不到符合條件的陀螺，試試其他關鍵字。</div>' : ""}`;
 }
 function catalog() {
+  practiceId=null;
   screen = "catalog";
   shell(
     `${title("BEY ARCHIVE", "找到你的致勝搭檔。", `${BEYS.length} 顆原廠組合，本次新增 ${NEW_BEY_IDS.size} 款。點開卡牌探索零件與性能。`, btn("開始組隊 →", "play", "primary"))}${filters()}<div id="catalog-list">${cards()}</div><p class="source-note">類型與日本發售日已依 Takara Tomy 官方資料核對；未來商品標示為預定。實物圖引自 BeyGear 與官方商品頁；3D 輪廓為近似，數值為遊戲設定。</p>`,
   );
 }
 function startTeam() {
+  practiceId=null;
   battle = null;
   replay = null;
   teams = [[], []];
@@ -344,6 +355,18 @@ function beginMatch() {
   );
   prepareRound();
 }
+function startPractice(id=practiceId??BEYS[0].id){
+ const selected=BEYS.find(b=>b.id===id);if(!selected||!arena)return;
+ const prior=practiceId===id?{...inputs[0]}:undefined;clearHighlight();practiceId=id;const team=[selected,...randomTeam(20261114).filter(b=>b.blade!==selected.blade)].slice(0,3);
+ match=createMatch([team,team],'cpu','normal',20261114);speed=1;prepareRound(prior);
+}
+function practiceGuide(){
+ const b=getBey(practiceId!);
+ return `<section id="practice-guide" class="practice-guide panel"><div><strong>發射練習 · 不計入戰績</strong><label for="practice-bey">練習陀螺</label><select id="practice-bey" aria-label="練習陀螺">${BEYS.map(v=>`<option value="${v.id}" ${v.id===practiceId?'selected':''}>${safe(v.zhName)} · ${SPIN[v.spin].label}</option>`).join('')}</select>${spinBadge(b)}</div><details open><summary>操作教學</summary><ol><li>選陀螺看旋向箭頭；左、右旋依原廠組合，不能任意反轉。</li><li>選內／中／外落點，調整0–30°傾角及內外切，觀察初始路徑。</li><li>在黃綠蓄力區鎖定可得100%力量；右方固定90%、中間落點、10°、沿旋。</li><li>完成後比較發射、衝量與剩餘轉速，再練一次。雙方仍會碰撞，數據不代表單一因素因果。</li></ol></details></section>`;
+}
+function practiceResults(r:Round){
+ screen='round';shell(`<section class="panel round-result"><div class="eyebrow">LAUNCH PRACTICE</div><h1>練習完成</h1><p>不計入戰績 · ${r.result.time.toFixed(1)} 秒 · ${FINISH[r.result.finish].label}</p><p>實際力量 ${Math.round(r.inputs[0].power*100)}% · 傾角 ${r.inputs[0].angle}° · 可展開與固定對照的數據比較。</p>${roundInsightView(r,'cpu')}<div class="center-actions">${btn('再練一次','practice','primary')}${btn('返回主選單','home','secondary')}</div></section>`);
+}
 function quickBattle(){
   if(screen!=="home"||!arena)return;
   teams=[randomTeam(crypto.getRandomValues(new Uint32Array(1))[0]),randomTeam(crypto.getRandomValues(new Uint32Array(1))[0])];
@@ -353,16 +376,17 @@ function quickBattle(){
   locked=[true,true];
   startCountdown();
 }
-function prepareRound() {
+function prepareRound(prior?:Launch) {
   if (!match) return;
   screen = "launch";
   battle = null;
   replay = null;
   locked = [false, match.mode === "cpu"];
   inputs = [
-    { power: 0.9, lane: 1, angle: 10 },
+    prior??{ power: 0.9, lane: 1, angle: 10 },
     cpuLaunch(match.difficulty, roundSeed(match)),
   ];
+  if(practiceId)inputs[1]={power:.9,lane:1,angle:10,direction:0};
   paused = false;
   processed = false;
   accumulator = 0;
@@ -375,7 +399,7 @@ function prepareRound() {
 function hud(player: 0 | 1) {
   if (!match) return "";
   const b = battle?.tops[player].bey ?? getBey(match.teams[player][match.slot]);
-  return `<div class="fighter fighter-${player}"><div class="fighter-header"><span>${player === 0 ? "1P" : match.mode === "cpu" ? "CPU" : "2P"}</span><div class="fighter-tags">${tag(b)}${spinBadge(b)}</div></div><div class="fighter-identity">${art(b, 42)}<h2>${beyName(b)}<em>${b.code} · ${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet}${b.bit}</em></h2></div><div class="hud-label">ROTATION <b id="rpm-${player}">100%</b></div><div class="hud-bar"><i id="rpm-bar-${player}" style="width:100%;background:${player === 0 ? "#aee94b" : "#ff845b"}"></i></div><div class="hud-label">爆裂耐久 <b id="burst-${player}">${b.stats.burst}</b></div><div class="hud-bar burst"><i id="burst-bar-${player}" style="width:100%"></i></div><div class="remaining-lineup">${match.teams[player].map((id, i) => `<span class="${match!.slot === i ? "current" : ""}">${i + 1}. ${getBey(id).zhName}</span>`).join("")}</div></div>`;
+  return `<div class="fighter fighter-${player}"><div class="fighter-header"><span>${player === 0 ? "1P" : match.mode === "cpu" ? practiceId?"對照":"CPU" : "2P"}</span><div class="fighter-tags">${tag(b)}${spinBadge(b)}</div></div><div class="fighter-identity">${art(b, 42)}<h2>${beyName(b)}<em>${b.code} · ${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet}${b.bit}</em></h2></div><div class="hud-label">ROTATION <b id="rpm-${player}">100%</b></div><div class="hud-bar"><i id="rpm-bar-${player}" style="width:100%;background:${player === 0 ? "#aee94b" : "#ff845b"}"></i></div><div class="hud-label">爆裂耐久 <b id="burst-${player}">${b.stats.burst}</b></div><div class="hud-bar burst"><i id="burst-bar-${player}" style="width:100%"></i></div><div class="remaining-lineup">${match.teams[player].map((id, i) => `<span class="${match!.slot === i ? "current" : ""}">${i + 1}. ${getBey(id).zhName}</span>`).join("")}</div></div>`;
 }
 function launchControls(player: 0 | 1) {
   const b = getBey(match!.teams[player][match!.slot]);
@@ -384,7 +408,7 @@ function launchControls(player: 0 | 1) {
 function renderArena() {
   const launching = screen === "launch";
   shell(
-    `<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : `第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn(document.fullscreenElement ? "退出全螢幕" : "全螢幕", "fullscreen", "secondary")}${btn("近鏡", "close-up", "secondary", `aria-pressed="${arena?.closeUp ?? false}"`)}${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗或音訊中斷時會自動暫停</p></div></div><div id="battle-controls" data-mode="${match!.mode}">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">CPU READY</span><h3>電腦已就緒</h3><p>${DIFFICULTY[match!.difficulty]} · 等待你的完美發射</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? `<div class="replay-note">第 ${battle?.version??1} 代引擎 · 相同種子、發射輸入與呼喊時機，以固定步長重播。重播不寫入戰績。</div>` : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span class="battle-clock" role="timer" aria-label="對決經過時間" aria-live="off"><span id="battle-time">00.0 秒</span><small id="battle-phase">15–40 秒對決</small></span></div>`}</div>`,
+    `${practiceId&&launching?practiceGuide():''}<div class="battle-topline"><div><span class="eyebrow">${screen === "replay" ? "DETERMINISTIC REPLAY" : "3 ON 3 / FIRST TO 4"}</span><h1>${screen === "replay" ? "對戰重播" : practiceId?"發射練習":`第 ${match!.rounds.length + 1} 場對決`}</h1></div><div class="scoreboard"><span class="p1-score">${match!.scores[0]}</span><span>VS <small>先取 4 分</small></span><span class="p2-score">${match!.scores[1]}</span></div><div class="battle-tools">${btn(document.fullscreenElement ? "退出全螢幕" : "全螢幕", "fullscreen", "secondary")}${btn("近鏡", "close-up", "secondary", `aria-pressed="${arena?.closeUp ?? false}"`)}${btn(speed + "×", "speed", "secondary", 'id="speed-button"')}${btn("暫停", "pause", "secondary", 'id="pause-button"')}${btn(screen === "replay" ? "返回戰績" : "離開對戰", "exit", "text-button")}</div></div><div class="battle-scene">${hud(0)}<div id="stage" class="battle-stage"></div>${hud(1)}<div id="battle-message" class="battle-message" aria-live="polite"></div><div class="arena-bottom-label"><span>OVER <b>+2</b></span><span class="extreme-label">XTREME ZONE <b>+3</b></span><span>OVER <b>+2</b></span></div><div id="pause-overlay" class="pause-overlay" hidden><h2>對戰已暫停</h2>${btn("繼續對戰 →", "pause", "primary")}<p>切換視窗或音訊中斷時會自動暫停</p></div></div><div id="battle-controls" data-mode="${match!.mode}">${launching ? `<div class="launch-panels">${launchControls(0)}${match!.mode === "local" ? launchControls(1) : `<div class="cpu-ready panel"><span class="eyebrow">${practiceId?"REFERENCE LAUNCH":"CPU READY"}</span><h3>${practiceId?"固定對照已就緒":"電腦已就緒"}</h3><p>${practiceId?"相同陀螺 · 90%力量 · 中間 · 10° · 沿旋":"等待你的完美發射"}</p><span class="cpu-pulse"></span></div>`}</div>` : screen === "replay" ? `${replayControls()}` : `<div class="shout-controls">${btn("1P 氣勢呼喊 <small>SPACE · 每場一次</small>", "shout", "shout-button", `data-player="0" id="shout-0" ${screen === "countdown" ? "disabled" : ""}`)}${match!.mode === "local" ? btn("2P 氣勢呼喊 <small>ENTER · 每場一次</small>", "shout", "shout-button p2", `data-player="1" id="shout-1" ${screen === "countdown" ? "disabled" : ""}`) : "<p>在接近齒軌時呼喊，兩秒內更容易觸發極限衝刺。</p>"}<span class="battle-clock" role="timer" aria-label="對決經過時間" aria-live="off"><span id="battle-time">00.0 秒</span><small id="battle-phase">15–40 秒對決</small></span></div>`}</div>`,
   );
   setPaused(paused);
 }
@@ -450,6 +474,7 @@ function startBattle() {
 function roundEnded() {
   if (!battle?.result || !match) return;
   applyRound(match, battle.result, inputs, battle.shouts, battle);
+  if(practiceId){practiceResults(match.rounds.at(-1)!);return;}
   if (match.winner !== null) {
     recordMatch(profile, match);
     void saveProfile(profile).catch(() => {
@@ -491,8 +516,8 @@ function beginHighlight() {
 }
 function roundInsightView(r:Round,mode:Mode){
   const insight=roundInsight(r);
-  const winner=r.result.winner===null?'':r.result.winner===0?'1P':mode==='cpu'?'CPU':'2P';
-  return `<details class="round-insight"><summary>第 ${r.index} 場 · 勝負原因與發射數據</summary><p>${winner?winner+' 勝出。':''}${safe(insight.reason)}</p><div class="table-scroll"><table><thead><tr><th>本場紀錄</th><th>1P</th><th>${mode==="cpu"?"CPU":"2P"}</th></tr></thead><tbody>${insight.rows.map(row=>`<tr><th>${row.label}</th>${row.values.map(value=>`<td>${safe(value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="muted">${insight.complete?"數據取自本場保存紀錄，可用重播核對過程。":"此戰績未保存完整數據，原版重播仍保留。"}數據不代表各因素的因果占比。</p></details>`;
+  const winner=r.result.winner===null?'':r.result.winner===0?'1P':mode==='cpu'?(practiceId?'對照':'CPU'):'2P';
+  return `<details class="round-insight"><summary>第 ${r.index} 場 · 勝負原因與發射數據</summary><p>${winner?winner+' 勝出。':''}${safe(insight.reason)}</p><div class="table-scroll"><table><thead><tr><th>本場紀錄</th><th>1P</th><th>${mode==="cpu"?practiceId?"對照":"CPU":"2P"}</th></tr></thead><tbody>${insight.rows.map(row=>`<tr><th>${row.label}</th>${row.values.map(value=>`<td>${safe(value)}</td>`).join("")}</tr>`).join("")}</tbody></table></div><p class="muted">${insight.complete?"數據取自本場保存紀錄，可用重播核對過程。":"此戰績未保存完整數據，原版重播仍保留。"}數據不代表各因素的因果占比。</p></details>`;
 }
 function roundTable(m: Match, playable = false) {
   return `<div class="table-scroll"><table><thead><tr><th>場次</th><th>1P 陀螺</th><th>${m.mode === "cpu" ? "CPU" : "2P"} 陀螺</th><th>勝方 / 終結</th><th>耗時</th>${playable ? "<th>重播</th>" : ""}</tr></thead><tbody>${m.rounds.map((r, i) => `<tr><td>0${r.index}</td><td>${beyName(getBey(r.beys[0]))}</td><td>${beyName(getBey(r.beys[1]))}</td><td>${r.result.winner === null ? "平手" : r.result.winner === 0 ? "1P" : m.mode === "cpu" ? "CPU" : "2P"} · ${FINISH[r.result.finish].label} ${r.result.points ? `+${r.result.points}` : ""}</td><td>${r.result.time.toFixed(1)}s</td>${playable ? `<td>${btn("▶", "replay", "small-button", `data-match="${safe(m.id)}" data-index="${i}" aria-label="重播第${i + 1}場"`)}</td>` : ""}</tr>`).join("")}</tbody></table></div>${m.rounds.map(r=>roundInsightView(r,m.mode)).join("")}`;
@@ -527,6 +552,7 @@ function results(m: Match) {
   );
 }
 function stats() {
+  practiceId=null;
   screen = "stats";
   battle = null;
   replay = null;
@@ -619,11 +645,40 @@ function showDetail(id: string) {
   byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
 }
 function closeModal() {
+  if(importSaving)return;
+  pendingImport=null;importRead++;
   detailId = null;
   byId("modal-root")!.innerHTML = "";
   document.body.classList.remove("modal-open");
   if (modalReturnBeys.length) arena?.setBeys(modalReturnBeys);
   attachStage();
+}
+function importPreview(name:string,p:Profile){
+  pendingImport=p;const incoming=backupSummary(p),current=backupSummary(profile);
+  byId("modal-root")!.innerHTML=`<div class="modal-backdrop"><section class="help-modal" role="dialog" aria-modal="true" aria-labelledby="import-title"><h2 id="import-title">匯入備份預覽</h2><p>${safe(name)}</p><div class="table-scroll"><table><thead><tr><th>紀錄</th><th>目前本機</th><th>此備份</th></tr></thead><tbody>${([["單人局數","cpu"],["雙人1P局數","local"],["最近賽事","recent"],["可重播回合","rounds"]]as const).map(([label,key])=>`<tr><th>${label}</th><td>${current[key]}</td><td>${incoming[key]}</td></tr>`).join("")}</tbody></table></div><p>備份格式 v1 · 引擎版本：${incoming.engines.join("、")||"尚無重播"}</p><p>確認後會取代全部本機戰績，不會合併。建議先取消並匯出目前的備份。</p><p id="import-status" role="status" tabindex="-1"></p><div class="center-actions">${btn("取消匯入","cancel-import","secondary")}${btn("確認覆蓋匯入","confirm-import","primary")}</div></section></div>`;
+  document.body.classList.add("modal-open");byId("modal-root")!.querySelector<HTMLButtonElement>('button')?.focus();
+}
+async function confirmImport(target:HTMLElement){
+  const imported=pendingImport;if(!imported||importSaving)return;pendingImport=null;importSaving=true;
+  const buttons=byId('modal-root')!.querySelectorAll<HTMLButtonElement>('button');buttons.forEach(b=>b.disabled=true);
+  const status=byId('import-status')!;status.textContent='儲存中，請稍候…';status.focus();
+  try{await saveProfile(imported);profile=imported;persisted=true;importSaving=false;if(target.isConnected)closeModal();if(screen==='stats')stats();toast('戰績備份已匯入。');}
+  catch{importSaving=false;if(target.isConnected){pendingImport=imported;buttons.forEach(b=>b.disabled=false);status.textContent='儲存失敗，可重試或取消。';}toast('無法保存備份，原有戰績未變更。');}
+  finally{importSaving=false;}
+}
+function replayControls(){
+  if(!replayIndex)return'';
+  return `<section class="replay-controls" aria-label="重播操作"><label>時間跳轉 <output id="replay-position">0.0 / ${replayIndex.duration.toFixed(1)} 秒</output><input id="replay-seek" type="range" min="0" max="${replayIndex.duration}" step="0.1" value="0" aria-label="重播時間"></label><div class="replay-moments">${replayIndex.moments.map((m,i)=>btn(`${m.kind==='start'?'開場':m.kind==='finish'?'終結':'碰撞'} ${m.time.toFixed(1)}s`,'replay-moment','secondary',`data-value="${m.time}"`)).join('')}</div><div class="replay-views" role="group" aria-label="重播鏡位">${[['auto','追蹤鏡位'],['top','俯視鏡位'],['side','側面鏡位']].map(([value,label])=>btn(label,'replay-view','secondary',`data-value="${value}" aria-pressed="${value==='auto'}"`)).join('')}</div><p class="replay-note">第 ${replay?.engineVersion??1} 代引擎 · 拖曳後暫停於指定時間。碰撞點取本場最強且相隔0.75秒的最多5次撞擊；跳轉不補播過去音效，也不寫入戰績。</p></section>`;
+}
+function seekReplay(seconds:number){
+ if(screen!=='replay'||!replay||!Number.isFinite(seconds))return;
+ try{const next=replayAt(replay,Math.max(0,seconds));sound.stopEffects();sound.update(null,false,null);battle=next;previousPoses=capturePoses(next);accumulator=0;processed=!!next.result;finishStart=0;replayScrubbing=false;replayComplete=!!next.result;arena?.seekBattle(next);setPaused(true);byId('battle-message')!.innerHTML='';byId('battle-message')!.classList.remove('finish-overlay');updateHud();updateReplayPosition();}
+ catch{toast('此紀錄暫時無法跳轉，原有戰績未變更。');}
+}
+function updateReplayPosition(){
+ if(screen!=='replay'||!battle||!replayIndex||replayScrubbing)return;
+ const slider=byId('replay-seek')as HTMLInputElement|null;if(slider&&Number(slider.value)!==Number(battle.time.toFixed(1)))slider.value=battle.time.toFixed(1);
+ const out=byId('replay-position');const label=`${battle.time.toFixed(1)} / ${replayIndex.duration.toFixed(1)} 秒`;if(out&&out.textContent!==label)out.textContent=label;
 }
 function deviceCheck(){
   if(["launch","countdown","battle","replay"].includes(screen))setPaused(true);
@@ -673,18 +728,27 @@ function setPaused(value: boolean) {
     pausedFinishAnimations = [];
   }
   paused = value;
+  const practiceSelect=byId('practice-bey')as HTMLSelectElement|null;if(practiceSelect)practiceSelect.disabled=value||locked[0];
   const overlay = byId("pause-overlay");
-  if (overlay) overlay.hidden = !paused;
+  if (overlay) {overlay.hidden = !paused;overlay.querySelector('button')!.textContent=screen==='replay'&&replayComplete?'從頭重播 →':'繼續對戰 →';}
   const p = byId("pause-button");
-  if (p) p.textContent = paused ? "繼續" : "暫停";
+  if (p) p.textContent = paused ? screen==='replay'&&replayComplete?"從頭重播":"繼續" : "暫停";
+}
+function togglePause(){
+  replayScrubbing=false;
+  if(screen==='replay'&&paused&&replayComplete)seekReplay(0);
+  setPaused(!paused);
 }
 function startReplay(id: string, index: number) {
+  practiceId=null;
   const m =
     profile.recent.find((m) => m.id === id) ??
     (match?.id === id ? match : null);
   if (!m) return;
   const r = m.rounds[index];
   if (!r) return;
+  try{replayIndex=replayMoments(r);}catch{toast('無法定位此重播，原有紀錄未變更。');return;}
+  replayScrubbing=false;replayComplete=false;
   replay = r;
   replayMatch = m;
   match = { ...m, slot: r.slot };
@@ -736,6 +800,7 @@ app.addEventListener("click", (e) => {
     case "play":
       startTeam();
       break;
+    case "practice":startPractice();break;
     case "quick-battle":
       quickBattle();
       break;
@@ -893,7 +958,7 @@ app.addEventListener("click", (e) => {
       }
       break;
     case "pause":
-      setPaused(!paused);
+      togglePause();
       break;
     case "skip-highlight":
       skipHighlight();
@@ -940,6 +1005,11 @@ app.addEventListener("click", (e) => {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       break;
     }
+    case "cancel-import":closeModal();break;
+    case "confirm-import":void confirmImport(target);break;
+    case "replay-moment":seekReplay(Number(v));break;
+    case "replay-view":
+      if(screen==='replay'&&arena&&['auto','top','side'].includes(v!)){arena.setReplayView(v as 'auto'|'top'|'side');target.parentElement!.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===target)));}break;
     case "import":
       (byId("backup-file") as HTMLInputElement).click();
       break;
@@ -950,6 +1020,7 @@ app.addEventListener("click", (e) => {
 });
 app.addEventListener("input", (e) => {
   const el = e.target as HTMLInputElement;
+  if(el.id==='replay-seek'){setPaused(true);replayScrubbing=true;byId('replay-position')!.textContent=Number(el.value).toFixed(1)+' / '+replayIndex!.duration.toFixed(1)+' 秒';}
   if (el.id === "search") {
     filter.query = el.value;
     byId("catalog-list")!.innerHTML = cards();
@@ -961,6 +1032,8 @@ app.addEventListener("input", (e) => {
 });
 app.addEventListener("change", async (e) => {
   const el = e.target as HTMLInputElement;
+  if(el.id==='replay-seek'){seekReplay(Number(el.value));return;}
+  if(el.id==='practice-bey'){if(practiceId&&screen==='launch'&&!paused)startPractice(el.value);return;}
   if(el.dataset.deviceCase){deviceLog.setCheck(el.dataset.deviceCase,el.value);return;}
   if(el.dataset.direction!==undefined){
     const p=Number(el.dataset.direction);
@@ -971,27 +1044,17 @@ app.addEventListener("change", async (e) => {
     else filter.type = el.value;
     byId("catalog-list")!.innerHTML = cards();
   }
-  if (el.id === "backup-file" && el.files?.[0]) {
-    try {
-      if (el.files[0].size > 2_000_000) throw new Error("備份檔上限為 2 MB");
-      const imported = parseBackup(await el.files[0].text());
-      await saveProfile(imported);
-      profile = imported;
-      persisted = true;
-      stats();
-      toast("戰績備份已匯入。");
-    } catch (err) {
-      toast(
-        err instanceof Error ? err.message : "無法讀取備份，原有戰績未變更。",
-      );
-    }
-    el.value = "";
+  if (el.id === "backup-file" && el.files?.[0]&&!importSaving) {
+    const file=el.files[0],request=++importRead;el.value='';
+    try{if(file.size>2_000_000)throw new Error('備份檔上限為 2 MB');const imported=parseBackup(await file.text());if(request===importRead&&screen==='stats')importPreview(file.name,imported);}
+    catch(err){if(request===importRead)toast(err instanceof Error?err.message:'無法讀取備份，原有戰績未變更。');}
   }
 });
 document.addEventListener("keydown", (e) => {
   const modal =
     byId("modal-root")?.querySelector<HTMLElement>('[role="dialog"]');
   if (modal) {
+    if(importSaving&&(e.key==='Escape'||e.key==='Tab')){e.preventDefault();return;}
     if (e.key === "Escape") {
       e.preventDefault();
       closeModal();
@@ -1016,7 +1079,7 @@ document.addEventListener("keydown", (e) => {
   if((e.target as HTMLElement).closest('#battle-controls[data-mode="local"] button')&&(e.code==="Space"||e.key==="Enter"))return;
   if ((e.target as HTMLElement).matches("input,select,textarea") || e.repeat)
     return;
-  if (e.key !== "Escape" && (e.target as HTMLElement).closest(".music-controls,#audio-notice"))
+  if (e.key !== "Escape" && (e.target as HTMLElement).closest(".music-controls,#audio-notice,.replay-controls"))
     return;
   if (screen === "launch") {
     const mapping: Record<string, [number, number]> = {
@@ -1053,7 +1116,7 @@ document.addEventListener("keydown", (e) => {
     e.key === "Escape" &&
     ["launch", "battle", "countdown", "replay"].includes(screen)
   )
-    setPaused(!paused);
+    togglePause();
 });
 function pauseForBackground(){
   deviceLog.frame(performance.now(),false);
@@ -1167,7 +1230,7 @@ function frame(time: number) {
       message.classList.add("finish-overlay");
       message.dataset.finish = kind;
       message.style.setProperty("--finish-color", FINISH_COLORS[kind]);
-      message.innerHTML = `<div class="finish-card"><span class="eyebrow">${r.winner === null ? "DOUBLE FINISH / DRAW" : "ROUND DECIDED"}</span><strong class="finish-text">${r.winner === null ? "DRAW" : f.en}</strong><span class="finish-subtitle">${r.winner === null ? "雙方同時終結・本場重打" : f.label}</span><div class="finish-victor">${r.winner === null ? "保持原出場順序" : `<b>${winnerLabel} WIN</b><span>${safe(battle.tops[r.winner].bey.zhName)}</span><em>+${r.points}</em>`}</div>${replay ? '<p class="finish-score">對戰重播・不計入戰績</p>' : `<div class="finish-score"><span>比分</span><b>${before[0]} : ${before[1]}</b><i>→</i><strong>${after[0]} : ${after[1]}</strong></div>`}</div>`;
+      message.innerHTML = `<div class="finish-card"><span class="eyebrow">${r.winner === null ? "DOUBLE FINISH / DRAW" : "ROUND DECIDED"}</span><strong class="finish-text">${r.winner === null ? "DRAW" : f.en}</strong><span class="finish-subtitle">${r.winner === null ? "雙方同時終結・本場重打" : f.label}</span><div class="finish-victor">${r.winner === null ? "保持原出場順序" : `<b>${winnerLabel} WIN</b><span>${safe(battle.tops[r.winner].bey.zhName)}</span><em>+${r.points}</em>`}</div>${practiceId?'<p class="finish-score">發射練習・不計入戰績</p>':replay ? '<p class="finish-score">對戰重播・不計入戰績</p>' : `<div class="finish-score"><span>比分</span><b>${before[0]} : ${before[1]}</b><i>→</i><strong>${after[0]} : ${after[1]}</strong></div>`}</div>`;
     }
     if(highlight) {
       const frame=highlight.advance(realDt);
@@ -1198,9 +1261,7 @@ function frame(time: number) {
             ? "重播完成，結果與原對戰一致。"
             : "重播完成；模擬版本可能與原始紀錄不同。",
         );
-        replay = null;
-        battle = null;
-        stats();
+        replayComplete=true;setPaused(true);
       } else if(!highlightShown) {
         highlightShown=true;
         if(!beginHighlight())roundEnded();
@@ -1239,6 +1300,7 @@ function frame(time: number) {
     }
     updateDeviceCheck();
   }
+  if(time-replayHudAt>=100){replayHudAt=time;updateReplayPosition();}
   requestAnimationFrame(frame);
 }
 home();

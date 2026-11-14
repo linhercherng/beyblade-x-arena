@@ -3373,6 +3373,19 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 
 .audio-notice {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#182b38;border-bottom:1px solid #526b7d;font-size:12px}
 .audio-notice[hidden] {display:none}
+.replay-controls {padding:12px;border:1px solid #35434f;background:var(--bg);border-radius:6px}
+.practice-entry {width:100%;margin-top:8px;min-height:44px}
+.practice-guide {padding:14px;margin-bottom:12px;font-size:12px;order:0}
+.practice-guide>div {display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.practice-guide select {min-height:44px;max-width:100%;background:var(--bg);color:inherit;border:1px solid #53646f;padding:8px}
+.practice-guide summary {cursor:pointer;min-height:44px;display:flex;align-items:center}
+.practice-guide ol {margin:0;padding-left:24px;line-height:1.9;color:var(--muted)}
+#app[data-practice="true"] .remaining-lineup {display:none}
+.replay-controls label {display:block;font-size:13px}.replay-controls output {float:right}
+.replay-controls input {width:100%;height:44px;accent-color:var(--accent)}
+.replay-moments,.replay-views {display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.replay-controls button {min-height:44px;font-size:12px;padding:8px}
+.replay-views [aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 .audio-notice button {flex-shrink:0;min-height:44px}
 .angle-steps {display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .angle-steps button {min-width:0;min-height:44px;padding:6px}

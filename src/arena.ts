@@ -105,6 +105,8 @@ export class Arena {
   pitch = 0.54;
   exploded = false;
   closeUp = true;
+  replayView:'auto'|'top'|'side'='auto';
+  private cameraSnap=false;
   highlightShot: "approach" | "finish" | null = null;
   highlightImpact = new THREE.Vector3();
   highlightImpactActive = false;
@@ -345,7 +347,10 @@ export class Arena {
     this.renderer.domElement.style.width = w + "px";
     this.renderer.domElement.style.height = h + "px";
   }
+  setReplayView(view:'auto'|'top'|'side'){this.replayView=view;this.cameraSnap=true;this.needsRender=true;}
+  seekBattle(b:Battle){this.resetEffects();this.time=b.time;if(b.result){this.finish(b);this.time+=2;}this.cameraSnap=true;this.needsRender=true;}
   setBeys(beys: Bey[]) {
+    this.replayView='auto';
     this.needsRender=true;
     this.highlightShot=null;
     this.impactHeight = Math.max(...beys.map(b => {
@@ -640,8 +645,11 @@ export class Arena {
       base.x+=look.x-oldX;base.y+=look.y-oldY;base.z+=look.z-oldZ;
       if(trackingRange!==null)base.set(look.x+Math.sin(az+.4)*trackingRange,look.y+Math.max(3.2,trackingRange*.45),look.z+Math.cos(az+.4)*trackingRange);
     }
-    const cameraBlend = damping(cameraDt, this.highlightShot?12:8);
-    if(battle?.result && this.finishRate<1 && finishAge<.36) {
+    if(battle&&this.replayView==='top'){look.set(0,.2,0);base.set(.001,viewRange(6.5,this.camera),.001);}
+    else if(battle&&this.replayView==='side'){const radius=base.distanceTo(look);base.set(look.x+Math.sin(az+.4)*radius,2,look.z+Math.cos(az+.4)*radius);}
+    const snapCamera=this.cameraSnap,cameraBlend = snapCamera?1:damping(cameraDt, this.highlightShot?12:8);
+    this.cameraSnap=false;
+    if(!snapCamera&&battle?.result && this.finishRate<1 && finishAge<.36) {
       const blend=THREE.MathUtils.smoothstep(finishAge,0,.36);
       this.camera.position.lerpVectors(this.finishCameraPosition,base,blend);
       this.cameraFocus.lerpVectors(this.finishCameraFocus,look,blend);
