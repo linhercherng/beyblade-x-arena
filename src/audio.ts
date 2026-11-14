@@ -445,7 +445,8 @@ export class Sound {
     if(!voice&&now>this.voiceDuckUntil)return;
     this.countdownVoice=null;this.voiceDuckUntil=-Infinity;
     if(voice)for(const [source,gain]of [[voice.source,voice.gain],[voice.accent,voice.accentGain]]as const){gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);source.stop(now+.015);}
-    for(const node of [this.voiceMusicDuck,this.voiceSfxDuck])if(node){node.gain.cancelAndHoldAtTime(now);node.gain.linearRampToValueAtTime(1,now+.04);}
+    // Hold through the existing 180ms music fade so cancellation cannot cause a swell.
+    for(const [node,release]of [[this.voiceMusicDuck,.06],[this.voiceSfxDuck,.18]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.setValueAtTime(p.value,now+.18);p.setTargetAtTime(1,now+.18,release);}
   }
   countdown(cue:CountdownCue){
     this.stopCountdown();

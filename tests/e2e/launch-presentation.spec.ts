@@ -14,3 +14,10 @@ for(const reduced of [false,true])test(`發射脈衝與速度線同步、可暫�
  await page.locator('#battle-message').evaluate(el=>el.getAnimations({subtree:true}).forEach(a=>a.currentTime=90));await page.locator('#pause-overlay').evaluate(el=>el.style.visibility='hidden');
  await page.locator('.battle-scene').screenshot({path:`artifacts/launch-go-${reduced?'reduced':'full'}.png`});await page.locator('#pause-overlay').evaluate(el=>el.style.visibility='');await page.evaluate(()=>(window as any).releaseLaunch());await page.keyboard.press('Escape');await expect(streak).toHaveCount(0);await expect(page.locator('#stage canvas')).toHaveAttribute('data-launch','none');
 });
+
+test('喊聲中暫停配樂增益只下降，不會因語音duck解除而回彈',async({page})=>{
+ await page.goto('/tests/fixtures/audio.html');await page.locator('#battle').click();await expect.poll(()=>page.evaluate(()=>(window as any).audioMetrics().playing)).toBe('battle');await page.waitForTimeout(600);
+ await page.evaluate(()=>{const w=window as any,s=w.audioSound;w.mixMusicGain=s.playing.gain;w.mixLevel=()=>w.mixMusicGain.gain.value*s.music.gain.value*s.musicDuck.gain.value*s.voiceMusicDuck.gain.value*s.master.gain.value;s.countdown(0);});await page.waitForTimeout(70);
+ const before=await page.evaluate(()=>(window as any).mixLevel());await page.evaluate(()=>{const w=window as any;w.maxPausedMusic=0;document.querySelector<HTMLButtonElement>('#pause')!.click();const until=performance.now()+250;const frame=()=>{w.maxPausedMusic=Math.max(w.maxPausedMusic,w.mixLevel());if(performance.now()<until)requestAnimationFrame(frame);};requestAnimationFrame(frame);});await page.waitForTimeout(300);
+ const after=await page.evaluate(()=>(window as any).maxPausedMusic);console.log('Pause envelope',JSON.stringify({before,after}));expect(after).toBeLessThanOrEqual(before*1.1);
+});
