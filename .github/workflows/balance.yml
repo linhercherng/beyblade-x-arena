@@ -19,6 +19,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test tests/e2e/opening-pause.spec.ts
       - run: npm run balance:check
       - run: npm run build
       - name: Preserve balance report

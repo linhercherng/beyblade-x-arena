@@ -61,6 +61,8 @@ export class Sound {
   private session:(EventTarget&{readonly state?:string})|undefined;
   private clockTime=-1;
   private clockWall=0;
+  private clockSampleWall=0;
+  private clockGapGrace=false;
   private background=false;
   private recovering=true;
   private recovery=0;
@@ -95,7 +97,7 @@ export class Sound {
   private restore(){
     if(!this.ctx||!this.master||this.background||this.ctx.state!=="running"||!this.recovering||this.session?.state==="interrupted")return;
     this.resumeRejected=false;this.note("restored");
-    this.recovering=false;this.clockTime=this.ctx.currentTime;this.clockWall=performance.now();
+    this.recovering=false;this.clockGapGrace=false;this.clockTime=this.ctx.currentTime;this.clockWall=this.clockSampleWall=performance.now();
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
     this.master.gain.linearRampToValueAtTime(this.muted?0:.65,now+.25);
@@ -462,7 +464,10 @@ export class Sound {
   ) {
     if (!this.ready || !this.ctx) return;
     const wall=performance.now(),clock=this.ctx.currentTime;
-    if(clock!==this.clockTime){this.clockTime=clock;this.clockWall=wall;}
+    const sampleGap=wall-this.clockSampleWall;this.clockSampleWall=wall;
+    if(clock!==this.clockTime){this.clockTime=clock;this.clockWall=wall;this.clockGapGrace=false;}
+    // 同一時鐘只寬限一次取樣空窗，避免開場誤判，也不讓低幀率掩蓋真停滯。
+    else if(sampleGap>=1000&&!this.clockGapGrace){this.clockWall=wall;this.clockGapGrace=true;}
     // 路由切換可能沒有事件且仍回報running；只在預期有聲音時檢查停住的時鐘。
     else if(!this.muted&&(this.sources.size>0||active)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
     if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
