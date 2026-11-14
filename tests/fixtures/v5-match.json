@@ -1,0 +1,690 @@
+{
+  "id": "fixture-engine-v5",
+  "date": "2026-11-14T00:00:00.000Z",
+  "mode": "local",
+  "difficulty": "normal",
+  "teams": [
+    [
+      "bx-34-cobalt-dragoon",
+      "bx-35-black-shell",
+      "ux-09-samurai-saber"
+    ],
+    [
+      "bx-01-dran-sword",
+      "bx-02-hells-scythe",
+      "bx-03-wizard-arrow"
+    ]
+  ],
+  "scores": [
+    4,
+    1
+  ],
+  "slot": 2,
+  "rounds": [
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 1,
+      "slot": 0,
+      "seed": 20269033,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 19.291666666666668
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 163.71459983576042,
+          "maxImpulse": 38.90076573786519,
+          "dashes": 3,
+          "rpm": 0.29878546453899035
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 159.8775389021098,
+          "maxImpulse": 37.989029040883985,
+          "dashes": 2,
+          "rpm": 0.29420552792735777
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 2,
+      "slot": 0,
+      "seed": 20276952,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 19.291666666666668
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 141.55075453312273,
+          "maxImpulse": 39.29048331818249,
+          "dashes": 3,
+          "rpm": 0.3209469569652441
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 138.23315872375267,
+          "maxImpulse": 38.36961261541259,
+          "dashes": 3,
+          "rpm": 0.31746951033770476
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 3,
+      "slot": 0,
+      "seed": 20284871,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 16.633333333333333
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 102.37786586036172,
+          "maxImpulse": 39.171189617531944,
+          "dashes": 3,
+          "rpm": 0.443182077864231
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 99.97838462925951,
+          "maxImpulse": 38.25311486087104,
+          "dashes": 2,
+          "rpm": 0.4374223905645577
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 4,
+      "slot": 0,
+      "seed": 20292790,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 19.066666666666666
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 139.86358191509868,
+          "maxImpulse": 38.87061254081862,
+          "dashes": 3,
+          "rpm": 0.3240595129038551
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 136.58552921396353,
+          "maxImpulse": 37.959582559393176,
+          "dashes": 3,
+          "rpm": 0.3119323762695805
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 5,
+      "slot": 0,
+      "seed": 20300709,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 28.95
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 67.37594732364033,
+          "maxImpulse": 20.470532688248948,
+          "dashes": 4,
+          "rpm": 0.1025927582292741
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 65.79682355824251,
+          "maxImpulse": 19.990754578368115,
+          "dashes": 2,
+          "rpm": 0.08682341972054532
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 6,
+      "slot": 0,
+      "seed": 20308628,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 18.65833333333333
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 100.59502962005112,
+          "maxImpulse": 24.62608149110486,
+          "dashes": 3,
+          "rpm": 0.3603257090385809
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 98.23733361333115,
+          "maxImpulse": 24.04890770615709,
+          "dashes": 3,
+          "rpm": 0.35271394706529635
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 7,
+      "slot": 0,
+      "seed": 20316547,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 19.116666666666667
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 140.7163189327794,
+          "maxImpulse": 38.89629446372973,
+          "dashes": 3,
+          "rpm": 0.3214855918147694
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 137.41828020779235,
+          "maxImpulse": 37.98466256223607,
+          "dashes": 4,
+          "rpm": 0.3110922425612371
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 8,
+      "slot": 0,
+      "seed": 20324466,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 19.25
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 137.69873587935152,
+          "maxImpulse": 39.08990836070116,
+          "dashes": 3,
+          "rpm": 0.3070763251235164
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 134.4714217571792,
+          "maxImpulse": 38.17373863349722,
+          "dashes": 3,
+          "rpm": 0.3072921636030267
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 9,
+      "slot": 0,
+      "seed": 20332385,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 15.983333333333333
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 218.72632304466606,
+          "maxImpulse": 39.22790033514729,
+          "dashes": 4,
+          "rpm": 0.35295406123320405
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 213.59992484830664,
+          "maxImpulse": 38.30849642104228,
+          "dashes": 4,
+          "rpm": 0.3518956921334182
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 10,
+      "slot": 0,
+      "seed": 20340304,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": null,
+        "finish": "burst",
+        "points": 0,
+        "time": 17.308333333333334
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 98.68592500552276,
+          "maxImpulse": 16.370144281026985,
+          "dashes": 3,
+          "rpm": 0.40469032366787777
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 96.37297363820582,
+          "maxImpulse": 15.986469024440416,
+          "dashes": 2,
+          "rpm": 0.40344670202388005
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 11,
+      "slot": 0,
+      "seed": 20348223,
+      "beys": [
+        "bx-34-cobalt-dragoon",
+        "bx-01-dran-sword"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": 0,
+        "finish": "over",
+        "points": 2,
+        "time": 18.183333333333334
+      },
+      "reports": [
+        {
+          "id": "bx-34-cobalt-dragoon",
+          "impulse": 132.23014109744935,
+          "maxImpulse": 38.34390172622388,
+          "dashes": 4,
+          "rpm": 0.34162310167128185
+        },
+        {
+          "id": "bx-01-dran-sword",
+          "impulse": 129.13099716547788,
+          "maxImpulse": 37.44521652951551,
+          "dashes": 3,
+          "rpm": 0.3422182983195553
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 12,
+      "slot": 1,
+      "seed": 20356142,
+      "beys": [
+        "bx-35-black-shell",
+        "bx-02-hells-scythe"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "spin",
+        "points": 1,
+        "time": 31.016666666666666
+      },
+      "reports": [
+        {
+          "id": "bx-35-black-shell",
+          "impulse": 3.4625359438235295,
+          "maxImpulse": 2.0521137157126232,
+          "dashes": 0,
+          "rpm": 0
+        },
+        {
+          "id": "bx-02-hells-scythe",
+          "impulse": 3.6586042802180305,
+          "maxImpulse": 2.168315981583634,
+          "dashes": 0,
+          "rpm": 0.009008802772536177
+        }
+      ]
+    },
+    {
+      "engineVersion": 5,
+      "traitVersion": 1,
+      "index": 13,
+      "slot": 2,
+      "seed": 20364061,
+      "beys": [
+        "ux-09-samurai-saber",
+        "bx-03-wizard-arrow"
+      ],
+      "inputs": [
+        {
+          "power": 0.9,
+          "lane": 1,
+          "angle": 10,
+          "direction": -1
+        },
+        {
+          "power": 0.88,
+          "lane": 2,
+          "angle": 20,
+          "direction": 1
+        }
+      ],
+      "shouts": [
+        [],
+        []
+      ],
+      "result": {
+        "winner": 0,
+        "finish": "burst",
+        "points": 2,
+        "time": 24.65833333333333
+      },
+      "reports": [
+        {
+          "id": "ux-09-samurai-saber",
+          "impulse": 28.811199096439786,
+          "maxImpulse": 9.621583958666541,
+          "dashes": 0,
+          "rpm": 0.25976927317424126
+        },
+        {
+          "id": "bx-03-wizard-arrow",
+          "impulse": 23.233350951369047,
+          "maxImpulse": 7.758845304268697,
+          "dashes": 0,
+          "rpm": 0.39413850115459187
+        }
+      ]
+    }
+  ],
+  "winner": 0,
+  "seed": 20261114
+}
