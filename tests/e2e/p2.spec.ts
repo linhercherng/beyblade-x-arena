@@ -36,7 +36,7 @@ test('備份提交中會停用取消與Escape，完成後才顯示已匯入',asy
 test('發射練習可選左右旋、調整發射及重練，不增加戰績',async({page})=>{
  await page.goto('/');await page.locator('[data-action="stats"]').click();
  const beforeDownload=page.waitForEvent('download');await page.locator('[data-action="export"]').click();const before=JSON.parse(readFileSync((await(await beforeDownload).path())!,'utf8'));
- await page.locator('[data-action="home"]').first().click();await page.getByRole('button',{name:'發射練習與教學',exact:true}).click();
+ await page.locator('nav [data-action="home"]').click();await page.getByRole('button',{name:'發射練習與教學',exact:true}).click();
  await expect(page.locator('#practice-guide')).toBeVisible();await page.getByLabel('練習陀螺').selectOption('bx-34-cobalt-dragoon');
  await expect(page.locator('#practice-guide')).toContainText('左迴旋');await page.getByLabel('1P 發射傾角').fill('25');
  await page.locator('[data-action="lane"][data-value="2"]').click();await page.locator('[data-action="lock"]').click();
@@ -55,6 +55,6 @@ test('三款精修模型可由側面與底面辨識，手機練習版面不溢�
   for(const view of ['model-side','model-bottom']){await page.locator(`[data-action="${view}"]`).click();await page.waitForTimeout(500);await page.locator('.detail-layout').screenshot({path:`artifacts/p2-${name.replaceAll(' ','-')}-${view}.png`});}
   await page.keyboard.press('Escape');
  }
- await page.locator('[data-action="home"]').first().click();await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'發射練習與教學',exact:true}).click();
+ await page.locator('nav [data-action="home"]').click();await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'發射練習與教學',exact:true}).click();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'artifacts/p2-practice-mobile.png',fullPage:true});expect(errors).toEqual([]);
 });
