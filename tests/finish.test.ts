@@ -78,3 +78,15 @@ test("比分預覽不改正式比分，平手不加分", () => {
   assert.deepEqual(scores, [1, 2]);
   assert.deepEqual(scorePreview({ winner: null, finish: "burst", points: 0, time: 20 }, scores), scores);
 });
+test('四種終結的三材質保留主音，材質落地紋理各自不同且不超出原峰值',()=>{
+ for(const rate of [44100,48000])for(const kind of ['burst','over','extreme','spin']as const){
+  const variants=(['metal','plastic','rubber']as const).map(m=>cueSamples(kind,rate,m));
+  assert.notDeepEqual(variants[0],variants[1]);assert.notDeepEqual(variants[1],variants[2]);
+  const before={burst:1,over:.8,extreme:.4,spin:.6}[kind];
+  assert.deepEqual(variants[0].slice(0,Math.floor(before*rate)),variants[1].slice(0,Math.floor(before*rate)));
+  assert.deepEqual(variants[1].slice(0,Math.floor(before*rate)),variants[2].slice(0,Math.floor(before*rate)));
+  for(const a of variants){assert.ok(a.every(Number.isFinite));assert.ok(a.every(v=>Math.abs(v)<=.83));assert.ok(Math.abs(a.at(-1)!)<.001);assert.ok(a.reduce((sum,v)=>sum+v*v,0)/a.length>.0002);}
+  if(kind==='spin'){assert.equal(variants[0].length,Math.ceil(1.65*rate));assert.ok(variants[0].slice(Math.floor(1.45*rate)).some(v=>Math.abs(v)>.002));}
+ }
+ assert.deepEqual(cueSamples('victory',48000,'metal'),cueSamples('victory',48000));
+});

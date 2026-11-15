@@ -61,8 +61,9 @@ export class Sound {
   private voiceDuckUntil=-Infinity;
   private voiceReadyAt=0;
   get countdownReady(){return this.muted||typeof AudioContext==='undefined'||this.ready&&!!this.ctx&&this.ctx.currentTime>=this.voiceReadyAt;}
-  private cueBuffers = new Map<Cue, AudioBuffer>();
+  private cueBuffers = new Map<string, AudioBuffer>();
   private cues = new Map<AudioBufferSourceNode, GainNode>();
+  private cueTails = new Map<AudioBufferSourceNode,GainNode>();
   private dashBuffers = new Map<boolean,AudioBuffer>();
   private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
   private lastDash = [-Infinity,-Infinity];
@@ -114,6 +115,7 @@ export class Sound {
     // 包含交叉淡出中的配樂與短音效，避免凍結的聲源在恢復時一起響起。
     for(const source of this.sources){source.stop(now);source.disconnect();}this.sources.clear();
     for(const v of this.frictionVoices.values()){v.filter.disconnect();v.gain.disconnect();v.pan.disconnect();}this.frictionVoices.clear();
+    for(const gain of this.cueTails.values())gain.disconnect();this.cueTails.clear();
     for(const rotor of this.rotors){rotor.gain.gain.cancelScheduledValues(now);rotor.gain.gain.setValueAtTime(0,now);}
     this.lastImpact=-Infinity;this.lastDash=[-Infinity,-Infinity];
   }
@@ -197,6 +199,7 @@ export class Sound {
       for(const kind of ["burst","over","extreme","spin","draw"] as const) {
         const samples=cueSamples(kind,this.ctx.sampleRate),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
         buffer.getChannelData(0).set(samples);this.cueBuffers.set(kind,buffer);
+        if(kind!=='draw')for(const material of ['metal','plastic','rubber']as const){const samples=cueSamples(kind,this.ctx.sampleRate,material),variant=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);variant.getChannelData(0).set(samples);this.cueBuffers.set(`${kind}:${material}`,variant);}
       }
       for(const kind of ["impact","decision"] as const){
         const samples=replayAccentSamples(kind,this.ctx.sampleRate),buffer=this.ctx.createBuffer(1,samples.length,this.ctx.sampleRate);
@@ -429,10 +432,12 @@ export class Sound {
   private stopCues() {
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
+    for(const [source,gain]of this.cueTails){source.stop(now);source.disconnect();gain.disconnect();this.sources.delete(source);}this.cueTails.clear();
     this.cues.forEach((gain, source) => {
       gain.gain.cancelAndHoldAtTime(now);
       gain.gain.linearRampToValueAtTime(0, now + .015);
       source.stop(now + .015);
+      this.cueTails.set(source,gain);
     });
     this.cues.clear();
     this.cuePans.clear();
@@ -443,14 +448,15 @@ export class Sound {
     this.replayAccent=null;
     this.stopDashes();
     this.stopCues();
-    if (!this.cueBuffers.has(kind)) {
-      const samples = cueSamples(kind, this.ctx.sampleRate);
+    const material=identity?(identity.rubber?'rubber':identity.metal?'metal':'plastic'):undefined,key=material&&['burst','over','extreme','spin'].includes(kind)?`${kind}:${material}`:kind;
+    if (!this.cueBuffers.has(key)) {
+      const samples = cueSamples(kind, this.ctx.sampleRate,material);
       const buffer = this.ctx.createBuffer(1, samples.length, this.ctx.sampleRate);
       buffer.getChannelData(0).set(samples);
-      this.cueBuffers.set(kind, buffer);
+      this.cueBuffers.set(key, buffer);
     }
     const source = this.track(this.ctx.createBufferSource()), gain = this.ctx.createGain();
-    source.buffer = this.cueBuffers.get(kind)!;
+    source.buffer = this.cueBuffers.get(key)!;
     const now=this.ctx.currentTime;
     source.playbackRate.setValueAtTime(initialRate,now);
     if(!slowReplay)source.playbackRate.linearRampToValueAtTime(1,now+FINISH_RECOVERY);
@@ -458,17 +464,19 @@ export class Sound {
     gain.gain.setValueAtTime(initialRate<1?0:level,now);
     if(initialRate<1)gain.gain.linearRampToValueAtTime(level,now+.035);
     let pan:StereoPannerNode|null=null;const filter=identity?this.ctx.createBiquadFilter():null;
-    if(filter){filter.type='lowpass';filter.frequency.value=identity!.dash.cutoff;filter.Q.value=identity!.bound?1.1:.6;source.connect(filter).connect(gain);}else source.connect(gain);
+    if(filter){filter.type='lowpass';filter.frequency.setValueAtTime(identity!.dash.cutoff*initialRate,now);if(!slowReplay)filter.frequency.linearRampToValueAtTime(identity!.dash.cutoff,now+FINISH_RECOVERY);filter.Q.value=identity!.bound?1.1:.6;source.connect(filter).connect(gain);}else source.connect(gain);
     if(slowReplay){pan=this.ctx.createStereoPanner();pan.pan.value=cameraPan;gain.connect(pan).connect(this.sfx);this.cuePans.set(source,pan);}
     else gain.connect(this.sfx);
     this.cues.set(source, gain);
-    source.onended = () => { source.disconnect();filter?.disconnect(); gain.disconnect();pan?.disconnect();this.cuePans.delete(source);this.cues.delete(source); };
-    source.start();
+    source.onended = () => { source.disconnect();filter?.disconnect(); gain.disconnect();pan?.disconnect();this.cuePans.delete(source);this.cues.delete(source);this.cueTails.delete(source); };
+    if(['burst','over','extreme','spin'].includes(kind))this.duckFriction(.4,.18);
+    source.start(now+.008);
     if (this.musicDuck) {
       const duck = this.musicDuck.gain;
       duck.cancelAndHoldAtTime(now);
-      duck.linearRampToValueAtTime(Math.min(duck.value,.25), now + .015);
-      duck.setTargetAtTime(1, now + (slowReplay?source.buffer.duration/initialRate:initialRate<1?1.45:.65), .12);
+      duck.linearRampToValueAtTime(Math.min(duck.value,.25), now + .004);
+      const duration=slowReplay?source.buffer.duration/initialRate:source.buffer.duration+(1-initialRate)*FINISH_RECOVERY/2;
+      duck.setTargetAtTime(1, now+.008+duration, .12);
     }
   }
   finish(result: Result, initialRate=1, slowReplay=false, cameraPan=0,battle?:Battle) {

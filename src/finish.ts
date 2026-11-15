@@ -1,4 +1,6 @@
 import type { Finish, Result } from "./physics.ts";
+import{frictionSamples,type FrictionMaterial}from'./friction.ts';
+import{stopMotion}from'./motion.ts';
 export type Cue = Finish | "draw" | "victory" | "defeat";
 export const FINISH_COLORS = { spin: "#b6f55b", burst: "#ffbc56", over: "#68dbff", extreme: "#ff634c", draw: "#b9c9d7" };
 export const FINISH_RECOVERY = .22;
@@ -30,8 +32,8 @@ export function scorePreview(result: Result, scores: readonly number[]) {
   if (result.winner !== null) next[result.winner] += result.points;
   return next;
 }
-export function cueSamples(kind: Cue, rate: number) {
-  const duration = kind === "burst" ? 1.5 : kind === "victory" ? 1.45 : kind === "over" ? 1.3 : kind === "extreme" ? 1.25 : .95;
+export function cueSamples(kind: Cue, rate: number,material?:FrictionMaterial) {
+  const duration = kind === "burst" ? 1.5 : kind === "victory" ? 1.45 : kind === "over" ? 1.3 : kind === "extreme" ? 1.25 : material&&kind==='spin'?1.65:.95;
   const samples = new Float32Array(Math.ceil(duration*rate));
   const notes = kind === "victory" ? [523.25,659.25,783.99,1046.5]
     : kind === "defeat" ? [392,349.23,261.63] : [329.63,311.13];
@@ -65,5 +67,12 @@ export function cueSamples(kind: Cue, rate: number) {
   }
   const peak=samples.reduce((m,v)=>Math.max(m,Math.abs(v)),0);
   for(let i=0;i<samples.length;i++) samples[i]*=.82/peak;
+  if(material&&['burst','over','extreme','spin'].includes(kind)){
+    const texture=frictionSamples(rate,material),tap=(t:number,at:number,decay:number)=>t<at?0:Math.min(1,(t-at)/.004)*Math.exp(-(t-at)/decay);
+    for(let i=0;i<samples.length;i++){
+      const t=i/rate,contact=kind==='burst'?tap(t,1.17,.07)+tap(t,1.21,.07)+tap(t,1.25,.07):kind==='over'?tap(t,.95,.16):kind==='extreme'?tap(t,.55,.18):Math.abs(stopMotion(t,.08).rock)*20+tap(t,1.5,.04);
+      samples[i]=samples[i]*.85+texture[i%texture.length]*.18*Math.min(1,contact)*Math.min(1,(duration-t)/.04);
+    }
+  }
   return samples;
 }
