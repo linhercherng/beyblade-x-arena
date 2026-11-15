@@ -1,8 +1,12 @@
+import{TOP_RADIUS,GATE_HALF_ANGLES}from'./physics.ts';
 const smooth = (x: number) => { const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t); };
 export function dashVisual(age: number, reduced = false) {
   if(reduced || !Number.isFinite(age) || age<0)return {latch:0,intensity:0,lean:0};
   const intensity=smooth(age/.035)*(1-smooth((age-.38)/.36));
   return {latch:smooth(age/.025)*(1-smooth((age-.035)/.085)),intensity,lean:intensity*.13};
+}
+export function railLatch(age:number,separation=Infinity,releaseAge=0,reduced=false){
+  return dashVisual(age,reduced).latch*Math.exp(-45*Math.max(0,releaseAge))*smooth((separation-TOP_RADIUS*2)/.8);
 }
 export function dashSamples(sampleRate: number, grip = true) {
   const duration=.62, samples=new Float32Array(Math.ceil(duration*sampleRate));

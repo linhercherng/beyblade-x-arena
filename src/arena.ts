@@ -4,7 +4,7 @@ import{stadiumSurface,stadiumNormal}from"./stadium-surface.ts";
 import{BowlContact}from"./bey-contact.ts";
 import{beyEffects,effectMode,effectVertices,hitBey,collisionAccent,finishAccent,type BeyEffects}from"./bey-effects.ts";
 import { impactProfile, impactShake, contactFeedback, contactRecoil } from "./impact.ts";
-import { dashVisual, hasRail } from "./dash.ts";
+import { dashVisual, hasRail, railLatch } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
 import { exitPose, burstPose, finishPlayback, FINISH_COLORS } from "./finish.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -147,7 +147,7 @@ export class Arena {
   trails: THREE.Line[] = [];
   trailPositions: number[][] = [[], []];
   trailTimes: number[][] = [[], []];
-  dashStates: ({at:number;x:number;z:number;grip:boolean}|null)[] = [null,null];
+  dashStates: ({at:number;x:number;z:number;grip:boolean;releaseAt?:number}|null)[] = [null,null];
   dashRibbons: THREE.Mesh[] = [];
   hitPlayback = new DashHitPlayback();
   hitRing = ring(.45,.018,"#b8f6ff");
@@ -474,7 +474,7 @@ export class Arena {
         ?exitPose(b.result!.finish as "over"|"extreme",finishPlayback(this.time-this.finishTime,this.finishRate),{x:p.x,y:ground,z:p.z}):{x:p.x,y:ground,z:p.z};
       radius=Math.max(radius,Math.hypot(flight.x-focus.x,flight.y+.35-focus.y,flight.z-focus.z)+margin);
       const state=this.dashStates[i];
-      if(!b.result&&state?.grip&&dashVisual(this.time-state.at).latch>0)
+      if(!b.result&&state&&(state.grip||state.releaseAt!==undefined)&&railLatch(this.time-state.at,Infinity,state.releaseAt===undefined?0:this.time-state.releaseAt)>0)
         radius=Math.max(radius,Math.hypot(state.x-focus.x,.75-focus.y,state.z-focus.z)+.8);
     });
     if(!this.closeUp)radius=Math.max(radius,6.5+focus.length());
@@ -503,7 +503,7 @@ export class Arena {
       const contact=contactFeedback(e,battle);
       if(contact){this.contactHits=this.contactHits.filter(h=>this.time-h.at<.45).slice(-7);this.contactHits.push({at:this.time,feedback:contact});}
       this.models.forEach(g=>g.userData.effectHitAt=this.time);
-      this.dashStates.forEach(s=>{if(s)s.grip=false;});
+      this.dashStates.forEach(s=>{if(s?.grip){s.releaseAt=this.time;s.grip=false;}});
       const lead=battle?beyEffects(hitBey(battle)):null;
       const opposed=this.models[0].userData.spin!==this.models[1].userData.spin;
       const accents=this.models.map(g=>collisionAccent(g.userData.effects,opposed));
@@ -515,7 +515,6 @@ export class Arena {
       if(opposed)this.spinContactPower=.65*Math.max(0,(profile.gain-.36)/1.14);
       if(dashHit) {
         profile.shake*=1.5;
-        this.dashStates.forEach(s=>{if(s)s.grip=false;});
         this.hitRing.position.set(e.x,stadiumSurface(Math.hypot(e.x,e.z))+.09,e.z);
       }
       if (!this.reduced && profile.shake > this.shake * Math.exp(-this.shakeAge * 20)) {
@@ -740,7 +739,8 @@ export class Arena {
           lean = spinLean(pose.tilt, pose.rotation, i);
         if(pose.axisX!==undefined){lean.x+=(pose.axisZ??0)*.65;lean.z-=pose.axisX*.65;}
         const state=this.dashStates[i],dash=dashVisual(state?this.time-state.at:Infinity,this.reduced);
-        const latch=state?.grip?dash.latch:0;
+        const separation=Math.hypot(poses![0].x-poses![1].x,poses![0].z-poses![1].z);
+        const latch=state&&(state.grip||state.releaseAt!==undefined)?railLatch(this.time-state.at,separation,state.releaseAt===undefined?0:this.time-state.releaseAt,this.reduced):0;
         const speed=Math.max(.01,Math.hypot(t.vx,t.vz));
         const opening =
           openingSeconds === null
@@ -751,6 +751,7 @@ export class Arena {
                 this.reduced,
               );
         const currentLean = (g.userData.lean ??= { x: 0, z: 0 });
+        lean.x+=t.vz/speed*dash.lean;lean.z-=t.vx/speed*dash.lean;
         const leanBlend = damping(dt, 12);
         currentLean.x += (lean.x - currentLean.x) * leanBlend;
         currentLean.z += (lean.z - currentLean.z) * leanBlend;
@@ -758,10 +759,10 @@ export class Arena {
         const recoil={x:0,z:0};
         if(!this.reduced&&!battle!.result&&!opening)for(const h of this.contactHits){const r=contactRecoil(h.feedback,i,this.time-h.at);recoil.x+=r.x;recoil.z+=r.z;}
         const recoilScale=Math.min(1,.18/Math.max(.001,Math.hypot(recoil.x,recoil.z)));recoil.x*=recoilScale;recoil.z*=recoilScale;
-        const grip=state?.grip?{x:state.x,z:state.z,weight:latch}:undefined;
+        const grip=state&&latch>0?{x:state.x,z:state.z,weight:latch}:undefined;
         // Three.js 正 Y 角從上方看為逆時針，顯示角與物理圈數反號。
-        contact.place(pose.x,pose.z,currentLean.x+recoil.x+t.vz/speed*dash.lean,
-          currentLean.z+recoil.z-t.vx/speed*dash.lean+(opening?.height??0)*.025*(i?-1:1),
+        contact.place(pose.x,pose.z,currentLean.x+recoil.x,
+          currentLean.z+recoil.z+(opening?.height??0)*.025*(i?-1:1),
           rotation-(opening?.rotation??0),dt,grip);
         if(grip&&state){state.x=grip.x;state.z=grip.z;}
         const ground=g.position.y;g.position.y+=opening?.height??0;

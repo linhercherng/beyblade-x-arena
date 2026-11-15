@@ -41,7 +41,7 @@ test('手機密集衝刺與碰撞不重建幾何，粒子及音訊聲部有界',
 test('減少動態停用貼軌偏移、拖尾和閃光，保留少量接觸提示',async({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:390,height:844});
   await page.goto('/tests/fixtures/dash.html');await page.locator('#latch').click();const m=await metrics(page);
-  expect(m.flashes).toBe(0);expect(m.ribbons.every((r:any)=>!r.visible)).toBe(true);expect(m.particles).toBeLessThanOrEqual(4);expect(Math.hypot(m.model[0][0],m.model[0][2])).toBeCloseTo(3.325,3);
+  expect(m.flashes).toBe(0);expect(m.ribbons.every((r:any)=>!r.visible)).toBe(true);expect(m.particles).toBeLessThanOrEqual(4);expect(Math.hypot(m.centers[0][0],m.centers[0][2])).toBeCloseTo(3.325,3);
 });
 
 test('出口空隙只呈現加速，不把咬合火花放在不存在的齒軌',async({page})=>{

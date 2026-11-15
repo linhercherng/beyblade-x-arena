@@ -1,0 +1,12 @@
+import{test,expect}from'@playwright/test';const metrics=(p:import('@playwright/test').Page)=>p.evaluate(()=>(window as any).slopeMetrics());
+test('齒軌受撞解除不瞬移，滑回凹碗仍貼盤且幾何保持重用',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:640,height:480});await page.goto('/tests/fixtures/slope.html');await page.locator('#rail').click();const latched=await metrics(page);expect(Math.hypot(latched.rails[0][0],latched.rails[0][2])).toBeCloseTo(4.13,3);await page.locator('#release').click();const release=await metrics(page);expect(release.positions).toEqual(latched.positions);expect(release.quaternions).toEqual(latched.quaternions);
+ await page.locator('#glide').click();const glide=await metrics(page);expect(glide.stable).toBe(true);expect(glide.geometries).toEqual(latched.geometries);for(const s of glide.samples)for(const gap of s.gaps){expect(gap).toBeGreaterThanOrEqual(-.002);expect(gap).toBeLessThan(.015);}expect(Math.hypot(glide.centers[0][0],glide.centers[0][2])).toBeLessThan(2.4);await page.screenshot({path:'artifacts/slope-release-v0300.png'});expect(errors).toEqual([]);
+});
+test('接近對手提早退出齒軌，接觸時對齊碰撞中心，反向與暫停連續',async({page})=>{
+ await page.setViewportSize({width:640,height:480});await page.goto('/tests/fixtures/slope.html');await page.locator('#rail').click();await page.locator('#approach').click();const m=await metrics(page),b=JSON.parse(m.state);
+ for(let i=0;i<2;i++)expect(Math.hypot(m.centers[i][0]-b.tops[i].x,m.centers[i][2]-b.tops[i].z)).toBeLessThan(1e-6);await page.locator('#reverse').click();const reversed=await metrics(page);const angle=Math.acos(Math.max(-1,Math.min(1,m.up[0].reduce((s:number,v:number,i:number)=>s+v*reversed.up[0][i],0))));expect(angle).toBeLessThan(.12);await page.locator('#pause').click();const frozen=await metrics(page);expect(frozen.positions).toEqual(reversed.positions);expect(frozen.quaternions).toEqual(reversed.quaternions);expect(frozen.stable).toBe(true);
+});
+test('左右旋連續斜坡碰撞與長畫格不穿盤或懸空，手機畫面可繪製',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/slope.html');await page.locator('#sweep').click();const m=await metrics(page);expect(m.stable).toBe(true);for(const s of m.samples)for(const gap of s.gaps){expect(gap).toBeGreaterThanOrEqual(-.002);expect(gap).toBeLessThan(.015);}await page.screenshot({path:'artifacts/slope-collisions-mobile-v0300.png'});
+});

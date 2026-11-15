@@ -15,6 +15,7 @@ export class BowlContact {
  private point=new Vector3();
  private target=new Vector3();
  private frame=new Quaternion();
+ private attitude=new Quaternion();
  private bank=new Quaternion();
  private spin=new Quaternion();
  private euler=new Euler();
@@ -45,12 +46,14 @@ export class BowlContact {
  reset(){this.ready=false;}
  place(x:number,z:number,leanX:number,leanZ:number,rotation:number,dt:number,grip?:{x:number;z:number;weight:number}){
   this.model.scale.setScalar(this.scale);
-  const weight=grip?.weight??0,gr=grip?Math.hypot(grip.x,grip.z):1,nx=grip?grip.x/gr:0,nz=grip?grip.z/gr:0;
+  const initial=!this.ready,weight=grip?.weight??0,gr=grip?Math.hypot(grip.x,grip.z):1,nx=grip?grip.x/gr:0,nz=grip?grip.z/gr:0;
   let px=x+(grip?grip.x-x:0)*weight,pz=z+(grip?grip.z-z:0)*weight;
   stadiumNormal(px,pz,this.target);
   if(!this.ready){this.normal.copy(this.target);this.ready=true;}else if(dt>0)this.normal.lerp(this.target,1-Math.exp(-18*dt)).normalize();
   this.frame.setFromUnitVectors(this.up,this.normal);
   this.bank.setFromEuler(this.euler.set(leanX,0,leanZ));this.frame.multiply(this.bank);
+  if(initial)this.attitude.copy(this.frame);else if(dt>0)this.attitude.slerp(this.frame,1-Math.exp(-24*dt));
+  this.frame.copy(this.attitude);
   if(weight>0){this.target.set(nx*Math.sin(.24),Math.cos(.24),nz*Math.sin(.24));this.bank.setFromUnitVectors(this.up,this.target);this.frame.slerp(this.bank,weight);}
   this.spin.setFromAxisAngle(this.up,rotation);this.model.quaternion.copy(this.frame).multiply(this.spin);
   this.point.copy(this.center).applyQuaternion(this.model.quaternion);
