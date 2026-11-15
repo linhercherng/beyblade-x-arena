@@ -1,4 +1,24 @@
 import type { MusicMode } from "./music-state.ts";
+import { TOP_RADIUS, type Battle, type BattleEvent } from "./physics.ts";
+
+export function contactFeedback(e:BattleEvent,b?:Battle){
+  if(!b||b.result||e.type!=='hit')return null;
+  const [a,c]=b.tops,dx=c.x-a.x,dz=c.z-a.z,d=Math.hypot(dx,dz),nx=d>.0001?dx/d:1,nz=d>.0001?dz/d:0;
+  const vx=a.vx-c.vx,vz=a.vz-c.vz,strength=Number.isFinite(e.strength)?Math.max(0,e.strength):0;
+  const normal=strength*(a.bey.stats.weight+c.bey.stats.weight)*70/(2*a.bey.stats.weight*c.bey.stats.weight),tangent=-vx*nz+vz*nx;
+  const headOn=normal/Math.max(.001,Math.hypot(normal,tangent)),power=Math.sqrt(Math.min(14,strength)/14);
+  // Facing rims shear for equal spin; opposite spin can roll at similar RPM.
+  const rim=TOP_RADIUS*65,shear=Math.max(-1,Math.min(1,(tangent+rim*((a.bey.spin==='R'?a.rpm:-a.rpm)+(c.bey.spin==='R'?c.rpm:-c.rpm)))/(2*rim)));
+  return {nx,nz,headOn,shear,weight:.35+.65*headOn,
+    kicks:b.tops.map(t=>Math.min(.18,power*(.025+.13*headOn)*Math.max(.7,Math.min(1.3,70/t.bey.stats.weight))*(1.15-.45*t.rpm))),
+    spins:b.tops.map(t=>t.bey.spin==='L'?1:-1)};
+}
+export function contactRecoil(hit:ReturnType<typeof contactFeedback>,player:number,age:number,reduced=false){
+  if(!hit||reduced||!Number.isFinite(age)||age<=0||age>=.45)return{x:0,z:0};
+  const wave=Math.sin(age*32)*Math.exp(-age*12)*(1-age/.45),angle=hit.spins[player]*age*10+hit.shear*.18;
+  const sign=player===0?-1:1,push=hit.kicks[player]*wave*sign,c=Math.cos(angle),s=Math.sin(angle);
+  return{x:(-hit.nx*s+hit.nz*c)*push,z:-(hit.nx*c+hit.nz*s)*push};
+}
 export function impactProfile(strength: number) {
   const strengthSafe = Number.isFinite(strength) ? Math.max(0, Math.min(14, strength)) : 0;
   const energy = Math.sqrt(strengthSafe / 14);

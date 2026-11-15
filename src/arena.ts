@@ -3,7 +3,7 @@ import { createStadium } from "./stadium.ts";
 import{stadiumSurface,stadiumNormal}from"./stadium-surface.ts";
 import{BowlContact}from"./bey-contact.ts";
 import{beyEffects,effectMode,effectVertices,hitBey,collisionAccent,finishAccent,type BeyEffects}from"./bey-effects.ts";
-import { impactProfile, impactShake } from "./impact.ts";
+import { impactProfile, impactShake, contactFeedback, contactRecoil } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
 import { exitPose, burstPose, finishPlayback, FINISH_COLORS } from "./finish.ts";
@@ -127,6 +127,8 @@ export class Arena {
   lastY = 0;
   shake = 0;
   shakeAge = 1;
+  private contactHits:{at:number;feedback:ReturnType<typeof contactFeedback>}[]=[];
+  private spinContactPower=0;
   eventFlash = 0;
   particles: Particle[] = [];
   particleGeometry = new THREE.BufferGeometry();
@@ -449,6 +451,8 @@ export class Arena {
     this.dashRibbons.forEach(r=>r.visible=false);
     this.particles.length = 0;
     this.shake = 0;
+    this.contactHits=[];
+    this.spinContactPower=0;
     this.impactFlashes.forEach(f => { f.userData.life = 0; (f.material as THREE.SpriteMaterial).opacity = 0; });
     this.finished = null;
     this.exitTrail.visible = false;
@@ -496,6 +500,8 @@ export class Arena {
   event(e: BattleEvent, battle?: Battle): boolean {
     const dashHit=battle ? this.hitPlayback.trigger(e,battle,this.time) : false;
     if (e.type === "hit") {
+      const contact=contactFeedback(e,battle);
+      if(contact){this.contactHits=this.contactHits.filter(h=>this.time-h.at<.45).slice(-7);this.contactHits.push({at:this.time,feedback:contact});}
       this.models.forEach(g=>g.userData.effectHitAt=this.time);
       this.dashStates.forEach(s=>{if(s)s.grip=false;});
       const lead=battle?beyEffects(hitBey(battle)):null;
@@ -505,6 +511,8 @@ export class Arena {
       if(opposed&&!this.reduced){this.spinContactAt=this.time;this.hitRing.position.set(e.x,stadiumSurface(Math.hypot(e.x,e.z))+.09,e.z);(this.hitRing.material as THREE.MeshBasicMaterial).color.copy((this.traitRings[0].material as THREE.MeshBasicMaterial).color).lerp((this.traitRings[1].material as THREE.MeshBasicMaterial).color,.5);}
       const colors=this.models.map(g=>(g.userData.effects as BeyEffects).color);
       const profile = impactProfile(dashHit ? Math.max(10,e.strength*1.35) : e.strength);
+      if(contact){profile.gain*=contact.weight;profile.sparks=Math.max(2,Math.round(profile.sparks*contact.weight));profile.shake*=contact.headOn*contact.headOn;}
+      if(opposed)this.spinContactPower=.65*Math.max(0,(profile.gain-.36)/1.14);
       if(dashHit) {
         profile.shake*=1.5;
         this.dashStates.forEach(s=>{if(s)s.grip=false;});
@@ -525,16 +533,16 @@ export class Arena {
       }
       const count = Math.min(360 - this.particles.length, this.reduced ? 8 : innerWidth < 700 ? 24 : 48, profile.sparks);
       for (let i = 0; i < count; i++) {
-        const a = i * 2.39996 + e.time;
+        const a = i * 2.39996 + e.time,glance=contact?1-contact.headOn:0,nx=contact?.nx??1,nz=contact?.nz??0;
         const accent=accents[i%2];
         const life = this.reduced ? .08 : (.12 + profile.tier * .055 + (i % 4) * .025)*accent.decay;
         const speed = this.reduced ? 0 : (.7 + profile.gain) * (1 + (i % 4) * .65)*accent.spread;
         this.particles.push({
           p: new THREE.Vector3(e.x, height, e.z),
           v: new THREE.Vector3(
-            Math.cos(a) * speed,
-            this.reduced ? 0 : accent.lift + (i % 5) * .35,
-            Math.sin(a) * speed,
+            (nx*Math.cos(a)*(1-glance*.65)-nz*Math.sin(a)*(1+glance*.6))*speed,
+            this.reduced ? 0 : (accent.lift + (i % 5) * .35)*(1-glance*.6),
+            (nz*Math.cos(a)*(1-glance*.65)+nx*Math.sin(a)*(1+glance*.6))*speed,
           ),
           life, totalLife: life,owner:i%2,curl:this.reduced?0:accent.curl,
           color: new THREE.Color(battle?(i%3?colors[i%2]:"#fff5d2"):dashHit ? i%3 ? "#8eefff" : "#ffffff" : i % 3 ? "#ffbd60" : "#fff5d2"),
@@ -621,7 +629,7 @@ export class Arena {
     this.time += dt;
     const finishAge=Math.max(0,this.time-this.finishTime),finishElapsed=finishPlayback(finishAge,this.finishRate);
     const hit=this.hitPlayback.sample(this.time,this.reduced);
-    const spinShock=this.reduced?0:Math.max(0,1-(this.time-this.spinContactAt)/.24)*.65;
+    const spinShock=this.reduced?0:Math.max(0,1-(this.time-this.spinContactAt)/.24)*this.spinContactPower;
     const shock=battle?.result?this.finishShock*(1-THREE.MathUtils.smoothstep(finishAge,0,.18)):Math.max(hit.shock,spinShock);
     this.hitRing.visible=!!battle&&shock>0;
     this.hitRing.scale.setScalar(1+(1-shock)*3.8);
@@ -747,10 +755,13 @@ export class Arena {
         currentLean.x += (lean.x - currentLean.x) * leanBlend;
         currentLean.z += (lean.z - currentLean.z) * leanBlend;
         const contact=g.userData.contact as BowlContact;
+        const recoil={x:0,z:0};
+        if(!this.reduced&&!battle!.result&&!opening)for(const h of this.contactHits){const r=contactRecoil(h.feedback,i,this.time-h.at);recoil.x+=r.x;recoil.z+=r.z;}
+        const recoilScale=Math.min(1,.18/Math.max(.001,Math.hypot(recoil.x,recoil.z)));recoil.x*=recoilScale;recoil.z*=recoilScale;
         const grip=state?.grip?{x:state.x,z:state.z,weight:latch}:undefined;
         // Three.js 正 Y 角從上方看為逆時針，顯示角與物理圈數反號。
-        contact.place(pose.x,pose.z,currentLean.x+t.vz/speed*dash.lean,
-          currentLean.z-t.vx/speed*dash.lean+(opening?.height??0)*.025*(i?-1:1),
+        contact.place(pose.x,pose.z,currentLean.x+recoil.x+t.vz/speed*dash.lean,
+          currentLean.z+recoil.z-t.vx/speed*dash.lean+(opening?.height??0)*.025*(i?-1:1),
           rotation-(opening?.rotation??0),dt,grip);
         if(grip&&state){state.x=grip.x;state.z=grip.z;}
         const ground=g.position.y;g.position.y+=opening?.height??0;

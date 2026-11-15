@@ -7,7 +7,7 @@ import type { Battle, BattleEvent, Result } from "./physics.ts";
 import { cueSamples, FINISH_RECOVERY, type Cue } from "./finish.ts";
 import tracks from "./music-tracks.json" with {type:"json"};
 import { musicVolume, type MusicMode } from "./music-state.ts";
-import { impactProfile, impactSamples, musicLevel } from "./impact.ts";
+import { impactProfile, impactSamples, musicLevel, contactFeedback } from "./impact.ts";
 import { dashSamples, hasRail } from "./dash.ts";
 import { replayMix, replayAccentSamples, type ReplayStage } from "./replay-audio.ts";
 
@@ -337,15 +337,20 @@ export class Sound {
       this.lastImpact = now;
       this.lastStrength = e.strength;
       const profile = impactProfile(dashHit ? Math.max(10,e.strength*1.35) : e.strength);
+      const contact=contactFeedback(e,battle);
+      if(contact)profile.gain*=contact.weight;
       const source = this.track(this.ctx.createBufferSource()), gain = this.ctx.createGain(), pan = this.ctx.createStereoPanner();
       source.buffer = this.strikes[profile.tier];
       const fx=battle?beyEffects(hitBey(battle)):null;
       source.playbackRate.value = (dashHit ? .8 : 1 + Math.sin(e.time * 17 + e.x) * .04)*(fx?.pitch??1)*(battle&&battle.tops[0].bey.spin!==battle.tops[1].bey.spin?.93:1);
       gain.gain.value = profile.gain*(dashHit?1.1:1);
+      if(contact)source.playbackRate.value*=.88+.12*contact.headOn;
       pan.pan.value = cameraPan ?? Math.max(-.85, Math.min(.85, e.x / 5));
-      source.connect(gain).connect(pan).connect(this.sfx);
+      const filter=contact&&contact.headOn<.9?this.ctx.createBiquadFilter():null;
+      if(filter){filter.type='lowpass';filter.frequency.value=1600+2400*contact!.headOn;filter.Q.value=.6+Math.abs(contact!.shear)*.2;source.connect(filter).connect(gain);}else source.connect(gain);
+      gain.connect(pan).connect(this.sfx);
       this.impacts.set(source,gain);
-      source.onended = () => { source.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source);this.impactTails.delete(source); };
+      source.onended = () => { source.disconnect();filter?.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source);this.impactTails.delete(source); };
       // 先完成4ms配樂壓低，再起音，避免強拍遮住撞擊瞬態。
       source.start(now+.008);
       const duck = this.musicDuck.gain;
