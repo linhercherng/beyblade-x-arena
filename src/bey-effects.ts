@@ -27,7 +27,7 @@ export function effectMode(p:BeyEffects,speed:number,tilt:number):EffectMode{
 // Shared hit events identify neither attacker; derive the visual lead from actual momentum.
 export function hitBey(b:Battle){const [a,c]=b.tops;return Math.hypot(a.vx,a.vz)*a.bey.stats.weight>=Math.hypot(c.vx,c.vz)*c.bey.stats.weight?a.bey:c.bey;}
 export function effectVertices(p:BeyEffects,mode:EffectMode,time:number,hit:number,out:Float32Array,dash=0){
- const phase=time*p.spin*(mode==='stamina'?.8:2),radius=p.radius+(mode==='defense'?hit*.12:0);
+ const phase=-time*p.spin*(mode==='stamina'?.8:2),radius=p.radius+(mode==='defense'?hit*.12:0);
  for(let i=0;i<72;i++)for(let j=0;j<2;j++){
   const t=(i+j)/72,band=mode==='stamina'?Math.min(1,Math.floor(i/36)):0;
   let a=phase+t*Math.PI*2,r=radius+dash*(p.rubber?.14:p.free?.09:.06),y=0;

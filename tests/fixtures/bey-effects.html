@@ -9,6 +9,7 @@ let dashRates=[];select('attack');document.addEventListener('click',e=>{const id
  }if(id==='hit'){const e={type:'hit',x:0,z:0,strength:10,player:0,time:battle.time};arena.event(e,battle);sound.event(e,false,undefined,battle);arena.draw(.035,battle);paused=true;}});
 function frame(now){const dt=Math.min(.05,(now-last)/1000||0);if(last&&frames.length<300)frames.push(now-last);last=now;if(!paused){battle.time+=dt;battle.tops.forEach((t,i)=>t.rotation+=(i?-1:1)*35*dt);}arena.draw(paused?0:dt,battle);sound.update(battle,!paused,'battle');requestAnimationFrame(frame);}requestAnimationFrame(frame);
 window.identityArena=arena;window.identitySound=sound;window.identityDashRates=()=>dashRates;
+window.curveDirection=()=>{arena.particles.forEach(p=>p.v.set(1,0,0));arena.draw(.01,battle);return arena.particles.map(p=>({curl:p.curl,z:p.v.z}));};
 window.effectMetrics=()=>({rings:arena.traitRings.map(r=>({visible:r.visible,mode:r.userData.mode,opacity:r.material.opacity,color:r.material.color.getHexString(),points:Array.from(r.geometry.attributes.position.array)})),profiles:arena.models.map(g=>g.userData.effects),waves:sound.rotors.map(r=>r.osc.type),particles:arena.particles.length,calls:arena.renderer.info.render.calls,stable:ids.join()===arena.traitRings.map(r=>r.geometry.uuid).join(),frames});
 window.effectsDoNotMutate=()=>{const before=JSON.stringify(battle);arena.draw(0,battle);return JSON.stringify(battle)===before;};
 </script></html>

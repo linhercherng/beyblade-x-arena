@@ -9,3 +9,6 @@ test('91款專屬衝刺參數有界，橡膠、偏心、自由環與彈簧軸各
 test('反向旋轉形成相反捲流，同向擦擊較短促，交換玩家不改旋向判定',()=>{
  const right=fx('bx-01-dran-sword'),left={...right,spin:1};assert.equal(right.spin,-1);assert.equal(collisionAccent(right,true).curl,-collisionAccent(left,true).curl);assert.ok(Math.abs(collisionAccent(right,true).curl)>Math.abs(collisionAccent(right,false).curl));
 });
+test('獨立氣流相位遵循Three.js正Y為左旋的座標，低轉速不反轉',()=>{
+ const r=fx('bx-01-dran-sword'),l={...r,spin:1,offset:false,free:false};const a=new Float32Array(432),b=new Float32Array(432);effectVertices(l,'stamina',.1,0,a);effectVertices({...l,spin:-1},'stamina',.1,0,b);assert.ok(a[2]<0);assert.ok(b[2]>0);
+});

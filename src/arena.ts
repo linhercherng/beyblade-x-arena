@@ -873,7 +873,7 @@ export class Arena {
       const p = this.particles[i];
       p.life -= dt;
       if (!this.reduced) p.v.y -= dt * 8;
-      if(p.curl&&dt>0){const angle=p.curl*dt,c=Math.cos(angle),s=Math.sin(angle),x=p.v.x;p.v.x=x*c-p.v.z*s;p.v.z=x*s+p.v.z*c;}
+      if(p.curl&&dt>0){const angle=p.curl*dt,c=Math.cos(angle),s=Math.sin(angle),x=p.v.x;p.v.x=x*c+p.v.z*s;p.v.z=-x*s+p.v.z*c;}
       p.p.addScaledVector(p.v, dt);
       pos.setXYZ(i, p.p.x, p.p.y, p.p.z);
       const fade = p.life / p.totalLife;
