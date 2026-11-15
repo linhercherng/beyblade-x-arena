@@ -69,6 +69,9 @@ export class Sound {
   private frictionBuffers=new Map<FrictionMaterial,AudioBuffer>();
   private frictionVoices=new Map<number,FrictionVoice>();
   private frictionMix=1;
+  private frictionDuck:GainNode|null=null;
+  private frictionDuckUntil=-Infinity;
+  private frictionDuckLevel=1;
   private resumeRejected=false;
   get status(){return audioStatus({available:typeof AudioContext!=="undefined",muted:this.muted,context:this.ctx?.state??null,sessionInterrupted:this.session?.state==="interrupted",background:this.background,recovering:this.recovering,resumeAge:this.lastResume===-Infinity?null:performance.now()-this.lastResume,rejected:this.resumeRejected,musicFailed:!!this.requested&&this.volume>0&&this.failed.has(this.requested)});}
   private events:{atMs:number;kind:string}[]=[];
@@ -164,6 +167,7 @@ export class Sound {
       this.master.connect(limiter).connect(this.ctx.destination);
       this.sfx = this.ctx.createGain();
       this.sfx.gain.value = 0.27;
+      this.frictionDuck=this.ctx.createGain();this.frictionDuck.connect(this.sfx);
       this.voiceSfxDuck=this.ctx.createGain();this.sfx.connect(this.voiceSfxDuck).connect(this.master);
       this.music = this.ctx.createGain();
       this.music.gain.value = musicLevel(this.volume, this.requested);
@@ -341,6 +345,7 @@ export class Sound {
       if (!this.ready || !this.ctx || !this.sfx || !this.musicDuck || this.muted) return;
       const now = this.ctx.currentTime;
       // 為衝刺命中保留一聲部，普通擦撞的節流不應吞掉主撞擊聲。
+      const speed=this.replayStage?HIGHLIGHT_RATE:1;
       if (this.impacts.size >= (dashHit?6:5) || (!dashHit && now - this.lastImpact < .035 && e.strength <= this.lastStrength)) return;
       this.lastImpact = now;
       this.lastStrength = e.strength;
@@ -353,18 +358,20 @@ export class Sound {
       source.playbackRate.value = (dashHit ? .8 : 1 + Math.sin(e.time * 17 + e.x) * .04)*(fx?.pitch??1)*(battle&&battle.tops[0].bey.spin!==battle.tops[1].bey.spin?.93:1);
       gain.gain.value = profile.gain*(dashHit?1.1:1);
       if(contact)source.playbackRate.value*=.88+.12*contact.headOn;
+      source.playbackRate.value*=speed;
       pan.pan.value = cameraPan ?? Math.max(-.85, Math.min(.85, e.x / 5));
-      const filter=contact&&contact.headOn<.9?this.ctx.createBiquadFilter():null;
-      if(filter){filter.type='lowpass';filter.frequency.value=1600+2400*contact!.headOn;filter.Q.value=.6+Math.abs(contact!.shear)*.2;source.connect(filter).connect(gain);}else source.connect(gain);
+      const filter=fx||contact&&contact.headOn<.9?this.ctx.createBiquadFilter():null;
+      if(filter){filter.type='lowpass';filter.frequency.value=Math.min(fx?.dash.cutoff??4000,contact?1600+2400*contact.headOn:4000)*speed;filter.Q.value=.6+Math.abs(contact?.shear??0)*.2;source.connect(filter).connect(gain);}else source.connect(gain);
       gain.connect(pan).connect(this.sfx);
       this.impacts.set(source,gain);
       source.onended = () => { source.disconnect();filter?.disconnect(); gain.disconnect(); pan.disconnect(); this.impacts.delete(source);this.impactTails.delete(source); };
       // 先完成4ms配樂壓低，再起音，避免強拍遮住撞擊瞬態。
+      this.duckFriction(dashHit?.28:.55,dashHit?.16:.08);
       source.start(now+.008);
       const duck = this.musicDuck.gain;
       duck.cancelAndHoldAtTime(now);
       duck.linearRampToValueAtTime(Math.min(duck.value, dashHit?.18:profile.duck), now + .004);
-      duck.setTargetAtTime(1, now + (dashHit?.15:.08), .085);
+      duck.setTargetAtTime(1, now + (dashHit?.15:.08)/speed, .085/speed);
     }
     if (e.type === "dash") this.playDash(e,cameraPan,battle);
     if (e.type === "shout") {
@@ -404,18 +411,19 @@ export class Sound {
     if(old) { old.gain.gain.cancelAndHoldAtTime(now);old.gain.gain.linearRampToValueAtTime(0,now+.015);old.source.stop(now+.015); }
     const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),pan=this.ctx.createStereoPanner();
     source.buffer=this.dashBuffers.get(grip)!;gain.gain.value=.95;
-    const fx=battle?beyEffects(battle.tops[e.player].bey):null,filter=this.ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=fx?.dash.cutoff??3800;
-    source.playbackRate.value=fx?.dash.rate??1;
-    if(fx?.dash.pulse)for(let i=0;i<6;i++){const at=now+.008+i*.05;gain.gain.linearRampToValueAtTime(.95*(1-fx.dash.pulse),at+.02);gain.gain.linearRampToValueAtTime(.95,at+.045);}
+    const speed=this.replayStage?HIGHLIGHT_RATE:1,fx=battle?beyEffects(battle.tops[e.player].bey):null,filter=this.ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=(fx?.dash.cutoff??3800)*speed;
+    source.playbackRate.value=(fx?.dash.rate??1)*speed;
+    if(fx?.dash.pulse)for(let i=0;i<6;i++){const at=now+.008+i*.05/speed;gain.gain.linearRampToValueAtTime(.95*(1-fx.dash.pulse),at+.02/speed);gain.gain.linearRampToValueAtTime(.95,at+.045/speed);}
     pan.pan.value=cameraPan??Math.max(-.8,Math.min(.8,e.x/5));
     source.connect(filter).connect(gain).connect(pan).connect(this.sfx);
     this.dashVoices.set(e.player,{source,gain});
     source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();pan.disconnect();if(this.dashVoices.get(e.player)?.source===source)this.dashVoices.delete(e.player);};
+    this.duckFriction(grip?.6:.45,.22);
     source.start(now+.008);
     if(this.musicDuck) {
       const duck=this.musicDuck.gain;duck.cancelAndHoldAtTime(now);
       duck.linearRampToValueAtTime(Math.min(duck.value,.18),now+.004);
-      duck.setTargetAtTime(1,now+.22,.12);
+      duck.setTargetAtTime(1,now+.22/speed,.12/speed);
     }
   }
   private stopCues() {
@@ -469,20 +477,32 @@ export class Sound {
     if(!slowReplay)this.speakVoice(this.announcementBuffers.get(kind));
   }
   private restoreDuck(){if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
-  stopEffects() {this.stopVoice();this.stopImpacts();this.stopDashes();this.stopCues();this.stopFriction();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  stopEffects() {this.stopVoice();this.stopImpacts();this.stopDashes();this.stopCues();this.stopFriction();this.clearFrictionDuck();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  private duckFriction(level:number,hold:number){
+    if(!this.ctx||!this.frictionDuck)return;
+    const now=this.ctx.currentTime,speed=this.replayStage?HIGHLIGHT_RATE:1,p=this.frictionDuck.gain;
+    if(now>=this.frictionDuckUntil)this.frictionDuckLevel=1;
+    // 重疊事件保留較深的退讓與較晚的恢復，避免弱擦撞提早掀起底音。
+    this.frictionDuckLevel=Math.min(this.frictionDuckLevel,level,p.value);this.frictionDuckUntil=Math.max(this.frictionDuckUntil,now+hold/speed);
+    p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(this.frictionDuckLevel,now+.004);p.setValueAtTime(this.frictionDuckLevel,this.frictionDuckUntil);p.setTargetAtTime(1,this.frictionDuckUntil,.12/speed);
+  }
+  private clearFrictionDuck(){
+    if(!this.ctx||!this.frictionDuck||this.frictionDuckUntil===-Infinity)return;
+    this.frictionDuckUntil=-Infinity;this.frictionDuckLevel=1;const now=this.ctx.currentTime,p=this.frictionDuck.gain;p.cancelAndHoldAtTime(now);p.setTargetAtTime(1,now,.04);
+  }
   private stopFriction(){
     if(!this.ctx)return;const now=this.ctx.currentTime;
     for(const v of this.frictionVoices.values())if(!v.closing){v.closing=true;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.025);v.source.stop(now+.025);}
   }
   private updateFriction(frames:readonly FrictionFrame[]|null,active:boolean,enabled:boolean){
-    if(!this.ctx||!this.sfx||!this.frictionBuffers.size)return 0;const now=this.ctx.currentTime;let level=0;
+    if(!this.ctx||!this.frictionDuck||!this.frictionBuffers.size)return 0;const now=this.ctx.currentTime;let level=0;
     for(let i=0;i<2;i++){
       const f=frames?.[i],playing=enabled&&!!f&&(f.phase==='settle'||active&&f.phase==='spin');let v=this.frictionVoices.get(i);
       const material=f?.material==='metal'||f?.material==='rubber'?f.material:'plastic';
       if(!playing||v&&v.material!==material){if(v&&!v.closing){v.closing=true;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.025);v.source.stop(now+.025);}continue;}
       if(v?.closing)continue;
       if(!v){
-        const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),filter=this.ctx.createBiquadFilter(),pan=this.ctx.createStereoPanner();source.buffer=this.frictionBuffers.get(material)!;source.loop=true;filter.type='lowpass';filter.Q.value=material==='metal'?1.1:material==='rubber'?.8:.55;gain.gain.value=0;source.connect(filter).connect(gain).connect(pan).connect(this.sfx);v={source,gain,filter,pan,closing:false,material};this.frictionVoices.set(i,v);
+        const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),filter=this.ctx.createBiquadFilter(),pan=this.ctx.createStereoPanner();source.buffer=this.frictionBuffers.get(material)!;source.loop=true;filter.type='lowpass';filter.Q.value=material==='metal'?1.1:material==='rubber'?.8:.55;gain.gain.value=0;source.connect(filter).connect(gain).connect(pan).connect(this.frictionDuck);v={source,gain,filter,pan,closing:false,material};this.frictionVoices.set(i,v);
         const voice=v;source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();pan.disconnect();if(this.frictionVoices.get(i)===voice)this.frictionVoices.delete(i);};source.start(now,now%source.buffer.duration);
       }
       const target=Number.isFinite(f!.level)?Math.max(0,Math.min(.25,f!.level)):0;level=Math.max(level,target);
@@ -574,7 +594,7 @@ export class Sound {
     else if(!this.muted&&(this.sources.size>0||active||waitingForCountdown)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
     const frictionLevel=this.updateFriction(friction,active,!this.muted&&(active||mode==='results')&&mode!==null&&mode!=='menu'&&this.replayStage!=='impact'&&this.replayStage!=='decision'),mix=1/(1+20*frictionLevel);
     if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
-    if(mode===null||mode==="menu") { this.stopVoice();this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
+    if(mode===null||mode==="menu") { this.stopVoice();this.stopDashes();this.stopImpacts();this.clearFrictionDuck();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if(mode!==this.requested||Math.abs(mix-this.frictionMix)>.01||mix===1&&this.frictionMix!==1){
       const seconds=mix<this.frictionMix ? .08 : .18;this.frictionMix=mix;

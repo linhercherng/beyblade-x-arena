@@ -1,5 +1,6 @@
 import{test,expect}from'@playwright/test';const metrics=(p:import('@playwright/test').Page)=>p.evaluate(()=>(window as any).frictionMetrics());
 test.use({viewport:{width:640,height:480}});
+test.afterEach(async({page},info)=>{if(info.status!==info.expectedStatus)console.log('Friction failure',await page.evaluate(()=>({metrics:(window as any).frictionMetrics?.(),audio:(window as any).frictionSound?.diagnostics()})));});
 test('摩擦細節壓低配樂且保留音量偏好，結束後平滑回復原音量',async({page})=>{
  await page.goto('/tests/fixtures/friction.html');await page.locator('#slow').click();await expect.poll(async()=>(await metrics(page)).mix).toBeLessThan(.6);await page.evaluate(()=>(window as any).frictionSound.setMusicVolume(.3));await expect.poll(async()=>(await metrics(page)).musicGain).toBeLessThan(.3*.34*.8);expect((await metrics(page)).volume).toBe(.3);
  await page.locator('#fast').click();await expect.poll(async()=>(await metrics(page)).mix).toBe(1);await expect.poll(async()=>(await metrics(page)).musicGain).toBeCloseTo(.3*.34,3);expect((await metrics(page)).volume).toBe(.3);expect((await metrics(page)).peak).toBeLessThan(.95);
@@ -50,4 +51,27 @@ test('連續切換軸心材質等待舊聲源淡出，不重建快取或疊加�
  await page.goto('/tests/fixtures/friction.html');await page.locator('#metal').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);
  for(const material of ['rubber','plastic','metal','rubber']){await page.locator('#'+material).click();await expect.poll(async()=>(await metrics(page)).voices.filter((v:any)=>v.material===material&&!v.closing).length).toBe(2);expect((await metrics(page)).voices.length).toBeLessThanOrEqual(2);expect((await metrics(page)).cache).toBe(3);}
  await page.locator('#skip').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(0);expect((await metrics(page)).peak).toBeLessThan(.95);
+});
+
+
+test('三材質連續碰撞與齒軌交接保留摩擦聲源，強瞬態退讓後平滑恢復',async({page})=>{
+ await page.goto('/tests/fixtures/friction.html');
+ const tones:number[][]=[];
+ for(const material of ['metal','plastic','rubber']){
+  await page.locator('#'+material).click();await expect.poll(async()=>(await metrics(page)).voices.filter((v:any)=>v.material===material&&!v.closing).length).toBe(2);const before=await metrics(page);
+  const burst=await page.evaluate(()=>{const w=window as any,hit=w.frictionEvent('dash-hit'),rail=w.frictionEvent('rail',1);for(let i=0;i<30;i++){w.frictionEvent('hit');w.frictionEvent('dash',i%2);}return{hit,rail,last:w.frictionMetrics()};});
+  expect(burst.hit.duckFloor).toBeLessThan(.4);expect(burst.hit.duckFloor).toBeGreaterThan(0);expect(burst.rail.duckFloor).toBeLessThanOrEqual(burst.hit.duckFloor);expect(burst.rail.duckUntil).toBeGreaterThanOrEqual(burst.hit.duckUntil);expect(burst.last.duckUntil).toBeGreaterThan(burst.last.clock);
+  expect(burst.last.voices.map((v:any)=>v.id)).toEqual(before.voices.map((v:any)=>v.id));expect(burst.last.impacts.length).toBeLessThanOrEqual(6);expect(burst.last.dashes.length).toBeLessThanOrEqual(2);
+  tones.push([burst.hit.impacts.at(-1).cutoff,burst.rail.dashes.at(-1).cutoff]);console.log('Handoff material',material,burst.hit.bits,tones.at(-1));
+  await expect.poll(async()=>(await metrics(page)).clock).toBeGreaterThan(burst.last.duckUntil+.6);await expect.poll(async()=>(await metrics(page)).duck).toBeGreaterThan(.98);const done=await metrics(page);expect(done.voices.map((v:any)=>v.id)).toEqual(before.voices.map((v:any)=>v.id));expect(done.peak).toBeLessThan(.95);expect(done.stable).toBe(true);
+ }
+ for(const layer of [0,1]){expect(tones[0][layer]).toBeGreaterThan(tones[1][layer]);expect(tones[1][layer]).toBeGreaterThan(tones[2][layer]);}
+});
+
+test('重播碰撞與咬軌速率及材質頻寬同為0.55倍，暫停清除交接排程',async({page})=>{
+ await page.goto('/tests/fixtures/friction.html');await page.locator('#metal').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);
+ const normal=await page.evaluate(()=>{const w=window as any;w.frictionEvent('hit');return w.frictionEvent('rail');});
+ await page.evaluate(()=>(window as any).frictionSound.beginReplay());await expect.poll(async()=>(await metrics(page)).voices.filter((v:any)=>!v.closing).length).toBe(2);await page.waitForTimeout(200);
+ const slow=await page.evaluate(()=>{const w=window as any;w.frictionEvent('hit');return w.frictionEvent('rail');});expect(slow.impacts.at(-1).rate).toBeCloseTo(normal.impacts.at(-1).rate*.55,6);expect(slow.dashes.at(-1).rate).toBeCloseTo(normal.dashes.at(-1).rate*.55,6);expect(slow.impacts.at(-1).cutoff).toBeCloseTo(normal.impacts.at(-1).cutoff*.55,5);expect(slow.dashes.at(-1).cutoff).toBeCloseTo(normal.dashes.at(-1).cutoff*.55,5);
+ await page.locator('#pause').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(0);expect((await metrics(page)).duckFloor).toBe(1);expect((await metrics(page)).duckUntil).toBe(-Infinity);await page.locator('#resume').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);await expect.poll(async()=>(await metrics(page)).duck).toBeCloseTo(1,3);expect((await metrics(page)).peak).toBeLessThan(.95);
 });
