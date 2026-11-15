@@ -5,11 +5,11 @@ export function frictionFrame(rpm:number,tilt:number,rotation:number,player:numb
  if(stopAge!==null){
   if(stopAge>=1.6||stopAge<0)return off;
   const m=stopMotion(stopAge,stopRpm),tail=1-stopAge/1.6;
-  return{...off,phase:'settle',level:Math.min(.25,(.04+.2*Math.sin(Math.PI*m.fall)**2+Math.abs(m.rock)*2)*tail),rate:.55+.35*(1-m.fall)+Math.abs(m.rock)*3};
+  return{...off,phase:'settle',level:Math.min(.25,2*(.04+.2*Math.sin(Math.PI*m.fall)**2+Math.abs(m.rock)*2)*tail),rate:.55+.35*(1-m.fall)+Math.abs(m.rock)*3};
  }
  if(rpm<=0||rpm>=.32)return off;
  const slow=(.32-rpm)/.32,pulse=.65+.35*Math.abs(Math.sin(rotation*.12+player*1.7));
- return{...off,phase:'spin',level:slow*slow*(.05+.18*Math.min(1,Math.max(0,tilt)/.7))*pulse,rate:.65+rpm*1.2};
+ return{...off,phase:'spin',level:Math.min(.25,2*slow*slow*(.05+.18*Math.min(1,Math.max(0,tilt)/.7))*pulse),rate:.65+rpm*1.2};
 }
 export function frictionSamples(rate:number){
  const n=Math.round(rate*.6),blend=Math.round(rate*.02),raw=new Float32Array(n+blend),out=new Float32Array(n);let seed=32017,low=0,peak=0;

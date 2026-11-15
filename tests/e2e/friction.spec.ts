@@ -1,5 +1,9 @@
 import{test,expect}from'@playwright/test';const metrics=(p:import('@playwright/test').Page)=>p.evaluate(()=>(window as any).frictionMetrics());
 test.use({viewport:{width:640,height:480}});
+test('摩擦細節壓低配樂且保留音量偏好，結束後平滑回復原音量',async({page})=>{
+ await page.goto('/tests/fixtures/friction.html');await page.locator('#slow').click();await expect.poll(async()=>(await metrics(page)).mix).toBeLessThan(.6);await page.evaluate(()=>(window as any).frictionSound.setMusicVolume(.3));await expect.poll(async()=>(await metrics(page)).musicGain).toBeLessThan(.3*.34*.8);expect((await metrics(page)).volume).toBe(.3);
+ await page.locator('#fast').click();await expect.poll(async()=>(await metrics(page)).mix).toBe(1);await expect.poll(async()=>(await metrics(page)).musicGain).toBeCloseTo(.3*.34,3);expect((await metrics(page)).volume).toBe(.3);expect((await metrics(page)).peak).toBeLessThan(.95);
+});
 test('精彩重播定格收起摩擦聲，慢放恢復降調且跳過不殘留',async({page})=>{
  await page.goto('/tests/fixtures/friction.html');await page.locator('#slow').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);
  await page.evaluate(()=>{const s=(window as any).frictionSound;s.beginReplay();s.setReplay('impact');});await expect.poll(async()=>(await metrics(page)).voices.length).toBe(0);
