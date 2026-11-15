@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
 import{stadiumSurface,stadiumNormal}from"./stadium-surface.ts";
 import{BowlContact}from"./bey-contact.ts";
-import{beyEffects,effectMode,effectVertices,hitBey,collisionAccent,type BeyEffects}from"./bey-effects.ts";
+import{beyEffects,effectMode,effectVertices,hitBey,collisionAccent,finishAccent,type BeyEffects}from"./bey-effects.ts";
 import { impactProfile, impactShake } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
@@ -18,7 +18,7 @@ import {
   damping,
   type TopPose,
 } from "./motion.ts";
-import { type Battle, type BattleEvent } from "./physics.ts";
+import { TOP_RADIUS, type Battle, type BattleEvent } from "./physics.ts";
 
 export function keepAboveFloor(group: THREE.Object3D, floor: number, bounds = new THREE.Box3()) {
   group.updateMatrixWorld(true);
@@ -39,7 +39,7 @@ export function settleBurstParts(group: THREE.Group, bounds = new THREE.Box3(), 
     parts.forEach((part, i) => { if (links[i] === link) bounds.expandByObject(part, true); });
     const r2 = Math.max(bounds.min.x**2, bounds.max.x**2) + Math.max(bounds.min.z**2, bounds.max.z**2);
     const amount = Math.max(0, stadiumSurface(Math.sqrt(r2))+.012-bounds.min.y);
-    lift.set(0, amount, 0).applyQuaternion(inverse);
+    lift.set(0, amount, 0).applyQuaternion(inverse).divide(group.scale);
     parts.forEach((part, i) => { if (links[i] === link) { part.position.add(lift); part.updateMatrixWorld(true); } });
   }
 }
@@ -65,6 +65,7 @@ interface Particle {
   life: number;
   totalLife: number;
   curl?:number;
+  owner?:number;
   color: THREE.Color;
 }
 const RIBBON_POINT = [0,0,1,0,1,1], RIBBON_SIDE = [-1,1,-1,1,1,-1];
@@ -150,12 +151,13 @@ export class Arena {
   hitRing = ring(.45,.018,"#b8f6ff");
   get playbackScale() { return this.hitPlayback.sample(this.time,this.reduced).scale; }
   exitTrail = new THREE.Line(
-    new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(new Float32Array(18 * 3), 3)),
-    new THREE.LineBasicMaterial({ color: "#68dbff", transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
+    new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(new Float32Array(18 * 3), 3)).setAttribute("color",new THREE.BufferAttribute(new Float32Array(18*3),3)),
+    new THREE.LineBasicMaterial({ vertexColors:true, transparent: true, opacity: 0, depthWrite: false, toneMapped: false }),
   );
   reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   time = 0;
   finishTime = 0;
+  private finishTint=new THREE.Color();
   finishRate = 1;
   finishShock = 0;
   finishZoom = 0;
@@ -406,7 +408,8 @@ export class Arena {
       const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src,()=>{this.needsRender=true;});
       const g = beyModel(b, texture);
         g.userData.spin=b.spin;
-      g.userData.contact=new BowlContact(g);
+      const sizing=modelSpec(b);
+      g.userData.contact=new BowlContact(g,TOP_RADIUS,sizing.bitHeight+sizing.ratchetHeight+sizing.bladeThickness*.5);
       const fx=beyEffects(b),spec=modelSpec(b);g.userData.effects=fx;g.userData.effectHitAt=-Infinity;g.userData.effectHeight=spec.bitHeight+spec.ratchetHeight+spec.bladeThickness*.5;
       const color=(this.traitRings[i].material as THREE.MeshBasicMaterial).color.set(fx.color),hsl=color.getHSL({h:0,s:0,l:0});
       if(hsl.s<.3)color.set(TYPE[b.type].color);else color.setHSL(hsl.h,Math.max(.55,hsl.s),Math.max(.38,Math.min(.58,hsl.l)));
@@ -420,6 +423,7 @@ export class Arena {
       this.scene.add(g);
       return g;
     });
+    this.impactHeight=Math.max(...this.models.map(g=>g.userData.effectHeight*(g.userData.contact as BowlContact).scale));
     this.resetEffects();
   }
   private placeFloorRing(ring:THREE.Object3D,x:number,z:number){
@@ -493,6 +497,7 @@ export class Arena {
     const dashHit=battle ? this.hitPlayback.trigger(e,battle,this.time) : false;
     if (e.type === "hit") {
       this.models.forEach(g=>g.userData.effectHitAt=this.time);
+      this.dashStates.forEach(s=>{if(s)s.grip=false;});
       const lead=battle?beyEffects(hitBey(battle)):null;
       const opposed=this.models[0].userData.spin!==this.models[1].userData.spin;
       const accents=this.models.map(g=>collisionAccent(g.userData.effects,opposed));
@@ -531,7 +536,7 @@ export class Arena {
             this.reduced ? 0 : accent.lift + (i % 5) * .35,
             Math.sin(a) * speed,
           ),
-          life, totalLife: life,curl:this.reduced?0:accent.curl,
+          life, totalLife: life,owner:i%2,curl:this.reduced?0:accent.curl,
           color: new THREE.Color(battle?(i%3?colors[i%2]:"#fff5d2"):dashHit ? i%3 ? "#8eefff" : "#ffffff" : i % 3 ? "#ffbd60" : "#fff5d2"),
         });
       }
@@ -554,7 +559,7 @@ export class Arena {
       const count=Math.min(360-this.particles.length,this.reduced?4:innerWidth<700?12:24);
       for(let i=0;i<count;i++){
         const tangent=((i%7)-3)*.8,life=this.reduced?.08:.15+(i%4)*.025;
-        this.particles.push({p:new THREE.Vector3(x,.51,z),v:this.reduced?new THREE.Vector3():new THREE.Vector3(-nx*(1+i%3)-nz*tangent,.8+(i%4)*.45,-nz*(1+i%3)+nx*tangent),life,totalLife:life,curl:this.reduced?0:(this.models[e.player].userData.effects as BeyEffects).spin*5,color:new THREE.Color(i%3?(this.traitRings[e.player].material as THREE.MeshBasicMaterial).color:"#fff6d9")});
+        this.particles.push({p:new THREE.Vector3(x,.51,z),v:this.reduced?new THREE.Vector3():new THREE.Vector3(-nx*(1+i%3)-nz*tangent,.8+(i%4)*.45,-nz*(1+i%3)+nx*tangent),life,totalLife:life,owner:e.player,curl:this.reduced?0:(this.models[e.player].userData.effects as BeyEffects).spin*5,color:new THREE.Color(i%3?(this.traitRings[e.player].material as THREE.MeshBasicMaterial).color:"#fff6d9")});
       }
     }
     return dashHit;
@@ -569,29 +574,37 @@ export class Arena {
     this.finished = b;
     this.dashStates=[null,null];this.dashRibbons.forEach(r=>r.visible=false);
     this.finishTime = this.time;
-    const result = b.result, kind = result.winner === null ? "draw" : result.finish;
+    const result = b.result, kind = result.winner === null ? "draw" : result.finish;this.finishTint.set(FINISH_COLORS[kind]);
     if(chained) {
-      this.particles.forEach((p,i)=>p.color.set(i%3?FINISH_COLORS[kind]:"#fff7da"));
-      this.impactFlashes.forEach(f=>(f.material as THREE.SpriteMaterial).color.set(FINISH_COLORS[kind]));
+      this.particles.forEach(p=>p.color.lerp(this.finishTint,.35));
+      this.impactFlashes.forEach(f=>(f.material as THREE.SpriteMaterial).color.lerp(this.finishTint,.35));
       (this.hitRing.material as THREE.MeshBasicMaterial).color.set(FINISH_COLORS[kind]);
     }
     this.exitTrail.visible = false;
     const losers = result.winner === null ? [0, 1] : [1 - result.winner];
     for (const index of losers) {
       const top = b.tops[index], start = this.particles.length;
-      if(!chained)this.event({type: "hit", x: top.x, z: top.z, strength: kind === "draw" ? 1 : kind === "burst" || kind === "extreme" ? 14 : 4, player:index, time:b.time});
-      for (let i = start; i < this.particles.length; i++) this.particles[i].color.set(i % 3 ? FINISH_COLORS[kind] : "#fff7da");
+      if(!chained)this.event({type: "hit", x: top.x, z: top.z, strength: kind === "draw" ? 1 : kind === "burst" || kind === "extreme" ? 14 : 4, player:index, time:b.time},b);
+      for (let i=start;i<this.particles.length;i++){
+        const p=this.particles[i];p.owner=index;p.curl=this.reduced?0:collisionAccent(this.models[index].userData.effects,b.tops[0].bey.spin!==b.tops[1].bey.spin).curl;
+        p.color.copy((this.traitRings[index].material as THREE.MeshBasicMaterial).color).lerp(this.finishTint,.35);
+      }
       if ((result.finish === "over" || result.finish === "extreme") && result.winner !== null) {
         const positions = this.exitTrail.geometry.getAttribute("position") as THREE.BufferAttribute;
-        const origin = {x:top.x, y:stadiumSurface(Math.hypot(top.x,top.z))+.065, z:top.z};
+        const g=this.models[index],lean=g.userData.lean;
+        (g.userData.contact as BowlContact).place(top.x,top.z,lean?.x??0,lean?.z??0,-top.rotation,0);
+        const origin = {x:top.x, y:g.position.y, z:top.z},fx=this.models[index].userData.effects as BeyEffects;
+        const colors=this.exitTrail.geometry.getAttribute('color') as THREE.BufferAttribute,own=(this.traitRings[index].material as THREE.MeshBasicMaterial).color,end=this.finishTint;
         for (let i=0; i<18; i++) {
           const pose = exitPose(result.finish, i/17*(result.finish === "over" ? .95 : .55), origin);
-          positions.setXYZ(i, pose.x, pose.y+.16, pose.z);
+          const accent=finishAccent(fx,result.finish,i/17*(result.finish==='over'?.95:.55));
+          positions.setXYZ(i,pose.x+Math.sin(i/17*Math.PI*4)*accent.angle*.18,pose.y+g.userData.effectHeight*(g.userData.contact as BowlContact).scale+accent.bounce,pose.z);
+          const mix=i/17*.65;colors.setXYZ(i,own.r*(1-mix)+end.r*mix,own.g*(1-mix)+end.g*mix,own.b*(1-mix)+end.b*mix);
         }
-        positions.needsUpdate = true;
+        positions.needsUpdate = true;colors.needsUpdate=true;
         this.exitTrail.geometry.computeBoundingSphere();
         this.exitTrail.geometry.setDrawRange(0,0);
-        (this.exitTrail.material as THREE.LineBasicMaterial).color.set(FINISH_COLORS[kind]);
+        (this.exitTrail.material as THREE.LineBasicMaterial).color.set("#ffffff");
         this.exitTrail.visible = !this.reduced;
       }
     }
@@ -758,7 +771,8 @@ export class Arena {
             g.rotateY(rotation);
             (g.userData.parts as THREE.Group[]).forEach((part, j) => {
               const link = (g.userData.partLinks as number[])[j];
-              const offset = burstPose(elapsed, link, g.userData.partFloors[link], this.reduced);
+              const offset=burstPose(elapsed,link,g.userData.partFloors[link],this.reduced),accent=finishAccent(g.userData.effects,'burst',elapsed,this.reduced),x=offset.x;
+              offset.x=x*Math.cos(accent.angle)+offset.z*Math.sin(accent.angle);offset.z=-x*Math.sin(accent.angle)+offset.z*Math.cos(accent.angle);offset.y+=accent.bounce;
               const ax = offset.x*Math.cos(rotation)+offset.z*Math.sin(rotation);
               const az = offset.z*Math.cos(rotation)-offset.x*Math.sin(rotation);
               const travel = this.reduced ? 1 : 1-Math.pow(1-Math.min(1,elapsed/1.25),3);
@@ -775,7 +789,7 @@ export class Arena {
           } else if (loser) {
             const flight = exitPose(result.finish as "over" | "extreme", elapsed, {x:pose.x,y:ground,z:pose.z}, this.reduced);
             g.position.set(flight.x, flight.y, flight.z);
-            g.rotation.z = flight.tilt;
+            g.rotation.z = flight.tilt+finishAccent(g.userData.effects,result.finish,elapsed,this.reduced).angle*.18;
             g.rotateY(this.reduced ? 0 : spin*Math.min(elapsed,.95)*13);
             keepAboveFloor(g, .105, this.finishBounds);
           } else if (!this.reduced) {
@@ -784,7 +798,7 @@ export class Arena {
           if (result.winner !== null) {
             const pulse = this.landingRings[i], mat = pulse.material as THREE.MeshBasicMaterial;
             pulse.visible = true;
-            mat.color.set(loser ? FINISH_COLORS[result.finish] : i ? "#ff9a71" : "#b6f55b");
+            mat.color.copy((this.traitRings[i].material as THREE.MeshBasicMaterial).color);if(loser)mat.color.lerp(this.finishTint,.35);
             mat.opacity = loser ? Math.max(0,.55-elapsed*.3) : .5;
             if(loser&&["over","extreme"].includes(result.finish)){pulse.position.set(g.position.x,.115,g.position.z);pulse.quaternion.copy(this.ringRotation);}
             else this.placeFloorRing(pulse,g.position.x,g.position.z);
@@ -793,18 +807,21 @@ export class Arena {
         }
         const fx=g.userData.effects as BeyEffects,aura=this.traitRings[i],hit=Math.max(0,1-(this.time-g.userData.effectHitAt)/.42),style=effectMode(fx,speed,Math.max(pose.tilt,Math.hypot(pose.axisX??0,pose.axisZ??0)));
         aura.userData.mode=style;
-        aura.visible=!this.reduced&&!opening&&!battle!.result&&pose.rpm>.08;
+        const terminal=battle!.result?finishAccent(fx,battle!.result.finish,finishElapsed,this.reduced):null,drive=Math.max(dash.intensity,terminal?.glow??0),modelScale=(g.userData.contact as BowlContact).scale;
+        aura.visible=!this.reduced&&!opening&&(terminal?terminal.glow>0:pose.rpm>.08);
         if(aura.visible){
           const positions=aura.geometry.getAttribute('position') as THREE.BufferAttribute;
-          const centers=aura.userData.centers as Float32Array;effectVertices(fx,style,this.time,hit,centers,dash.intensity);
-          const width=.006+hit*.012+dash.intensity*.008;
+          const centers=aura.userData.centers as Float32Array;effectVertices(fx,style,this.time,Math.max(hit,terminal?.glow??0),centers,drive);
+          const width=.006+hit*.012+drive*.008;
           for(let segment=0;segment<72;segment++)for(let v=0;v<6;v++){
             const end=RIBBON_POINT[v],side=RIBBON_SIDE[v],at=segment*6+end*3,x=centers[at],z=centers[at+2],r=Math.max(.01,Math.hypot(x,z));
             positions.setXYZ(segment*6+v,x+x/r*width*side,centers[at+1],z+z/r*width*side);
           }
           aura.geometry.setDrawRange(0,72*6);positions.needsUpdate=true;
-          aura.position.copy(g.position);aura.quaternion.copy(g.quaternion);aura.translateY(g.userData.effectHeight);
-          (aura.material as THREE.MeshBasicMaterial).opacity=Math.min(.82,(style==='attack'?.08+speed*.035:style==='stamina'?.08+pose.rpm*.18:.035)+hit*.7+dash.intensity*.22);
+          if(battle!.result?.finish==='burst'&&(battle!.result.winner===null||battle!.result.winner!==i)){const blade=(g.userData.parts as THREE.Group[])[0];blade.getWorldPosition(aura.position);blade.getWorldQuaternion(aura.quaternion);}
+          else{aura.position.copy(g.position);aura.quaternion.copy(g.quaternion);}
+          aura.scale.setScalar(modelScale);aura.translateY(g.userData.effectHeight*modelScale);
+          (aura.material as THREE.MeshBasicMaterial).opacity=Math.min(.82,(style==='attack'?.08+speed*.035:style==='stamina'?.08+pose.rpm*.18:.035)+hit*.7+drive*.22)*(terminal?.glow??1);
         }
         const path = this.trailPositions[i];
         const times=this.trailTimes[i];
@@ -837,6 +854,7 @@ export class Arena {
         }
         ribbon.geometry.setDrawRange(0,vertex);rp.needsUpdate=rc.needsUpdate=true;
       } else {
+        g.scale.setScalar(1);
         const a = this.time * (i ? -0.7 : 0.55) + i * Math.PI;
         const r = inspecting ? 0 : 2.3;
         g.position.set(

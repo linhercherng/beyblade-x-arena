@@ -14,7 +14,7 @@ function start(kind,terminal=false){
  const finish={winner:0,finish:kind,points:kind==='extreme'?3:2,time:20};if(terminal)battle.result=finish;
  const event={type:'hit',x:(battle.tops[0].x+battle.tops[1].x)/2,z:(battle.tops[0].z+battle.tops[1].z)/2,strength:9,player:0,time:20};const hit=arena.event(event,battle);sound.event(event,hit);
  if(!terminal)for(let i=0;i<10;i++)draw(1/120);
- beforeCamera=arena.camera.position.toArray();beforeFocus=arena.cameraFocus.toArray();battle.result=finish;snapshot=JSON.stringify(battle);rate=arena.finish(battle);cached=sound.cueBuffers.has(kind);sound.finish(finish,rate);draw(0);frames=[];peak=0;freeze=true;paused=false;
+ beforeCamera=arena.camera.position.toArray();beforeFocus=arena.cameraFocus.toArray();battle.result=finish;snapshot=JSON.stringify(battle);rate=arena.finish(battle);cached=sound.cueBuffers.has(kind);sound.finish(finish,rate,false,0,battle);draw(0);frames=[];peak=0;freeze=true;paused=false;
 }
 document.addEventListener('click',e=>{if(e.target.tagName!=='BUTTON')return;const id=e.target.id;sound.unlock();sound.setMusicVolume(1);if(!analyser){analyser=sound.ctx.createAnalyser();analyser.fftSize=1024;sound.master.connect(analyser);}
  if(id==='pause'){paused=!paused;return;}if(id==='mute'){sound.toggle();return;}if(id==='whole'){arena.closeUp=false;return;}if(id==='play'){freeze=false;return;}

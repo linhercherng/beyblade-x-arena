@@ -7,8 +7,9 @@ import { BEYS } from "../src/catalog.ts";
 import { beyModel } from "../src/bey-model.ts";
 import { keepAboveFloor, settleBurstParts, settleOnBowl } from "../src/arena.ts";
 
-test("實際傾斜模型落地不穿接盤，爆裂連接件不穿碗面", () => {
+for(const scale of [1,.75])test(`實際傾斜模型落地不穿接盤，爆裂連接件不穿碗面 scale=${scale}`, () => {
   const g = beyModel(BEYS.find(b => b.name.includes("Phoenix Wing"))!, new THREE.Texture());
+  g.scale.setScalar(scale);
   g.rotation.set(.26, .95*13, 1.15); g.position.set(5.65,.13,0);
   keepAboveFloor(g,.105);
   assert.ok(new THREE.Box3().setFromObject(g,true).min.y >= .10499);

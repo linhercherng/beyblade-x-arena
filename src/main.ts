@@ -1,3 +1,4 @@
+import{beySignature}from'./bey-effects.ts';
 import{backupSummary}from'./backup-preview.ts';
 import{LaunchCountdown}from'./launch-countdown.ts';
 import{replayAt,replayMoments}from'./replay-navigation.ts';
@@ -505,6 +506,9 @@ function skipHighlight() {
   if(!highlight)return;
   clearHighlight();if(paused)setPaused(false);roundEnded();
 }
+function signatureBadges(b:Battle|null){
+ return b?`<div class="replay-signatures" role="group" aria-label="陀螺旋向與軸心特徵">${b.tops.map((t,i)=>`<span data-player="${i}" data-spin="${t.bey.spin}"><b>${i===0?'1P':match?.mode==='cpu'?'CPU':'2P'} · ${safe(t.bey.zhName)}</b><small>${SPIN[t.bey.spin].arrow} ${SPIN[t.bey.spin].label} · ${safe(t.bey.bit)} · ${safe(beySignature(t.bey))}</small></span>`).join('')}</div>`:'';
+}
 function beginHighlight() {
   if(!battle||!arena||arena.reduced)return false;
   highlight=highlightRecorder.clip(battle);if(!highlight)return false;
@@ -512,7 +516,7 @@ function beginHighlight() {
   for(const event of first.events){const dashHit=arena.event(event,first.battle);sound.event(event,dashHit,arena.soundPan(event.x,event.z),first.battle);}
   const message=byId("battle-message")!;message.classList.remove("finish-overlay");message.innerHTML="";
   const kind=battle.result!.finish,hint=kind==="burst"?"三段分離":kind==="over"?"側盤出界":"前方出口";
-  message.insertAdjacentHTML("afterend",`<section id="highlight-panel" class="highlight-panel" aria-label="終結精彩重播" style="--finish-color:${FINISH_COLORS[kind]}"><div><span class="eyebrow">HIGHLIGHT REPLAY</span><span id="highlight-type" class="highlight-type">${FINISH[kind].label} · ${hint}</span><strong id="highlight-moment" aria-live="polite">精彩重播 · 最後一擊</strong><small id="highlight-shot">追擊鏡位 · 0.55× 慢動作</small></div>${btn("跳過重播 →","skip-highlight","primary")}<div class="highlight-progress" aria-hidden="true"><i id="highlight-progress"></i></div></section>`);
+  message.insertAdjacentHTML("afterend",`<section id="highlight-panel" class="highlight-panel" aria-label="終結精彩重播" style="--finish-color:${FINISH_COLORS[kind]}"><div><span class="eyebrow">HIGHLIGHT REPLAY</span><span id="highlight-type" class="highlight-type">${FINISH[kind].label} · ${hint}</span><strong id="highlight-moment" aria-live="polite">精彩重播 · 最後一擊</strong><small id="highlight-shot">追擊鏡位 · 0.55× 慢動作</small>${signatureBadges(battle)}</div>${btn("跳過重播 →","skip-highlight","primary")}<div class="highlight-progress" aria-hidden="true"><i id="highlight-progress"></i></div></section>`);
   byId("main")?.classList.add("showing-highlight");
   return true;
 }
@@ -670,7 +674,7 @@ async function confirmImport(target:HTMLElement){
 }
 function replayControls(){
   if(!replayIndex)return'';
-  return `<section class="replay-controls" aria-label="重播操作"><label>時間跳轉 <output id="replay-position">0.0 / ${replayIndex.duration.toFixed(1)} 秒</output><input id="replay-seek" type="range" min="0" max="${replayIndex.duration}" step="0.1" value="0" aria-label="重播時間"></label><div class="replay-moments">${replayIndex.moments.map((m,i)=>btn(`${m.kind==='start'?'開場':m.kind==='finish'?'終結':'碰撞'} ${m.time.toFixed(1)}s`,'replay-moment','secondary',`data-value="${m.time}"`)).join('')}</div><div class="replay-views" role="group" aria-label="重播鏡位">${[['auto','追蹤鏡位'],['top','俯視鏡位'],['side','側面鏡位']].map(([value,label])=>btn(label,'replay-view','secondary',`data-value="${value}" aria-pressed="${value==='auto'}"`)).join('')}</div><p class="replay-note">第 ${replay?.engineVersion??1} 代引擎 · 拖曳後暫停於指定時間。碰撞點取本場最強且相隔0.75秒的最多5次撞擊；跳轉不補播過去音效，也不寫入戰績。</p></section>`;
+  return `<section class="replay-controls" aria-label="重播操作">${signatureBadges(battle)}<label>時間跳轉 <output id="replay-position">0.0 / ${replayIndex.duration.toFixed(1)} 秒</output><input id="replay-seek" type="range" min="0" max="${replayIndex.duration}" step="0.1" value="0" aria-label="重播時間"></label><div class="replay-moments">${replayIndex.moments.map((m,i)=>btn(`${m.kind==='start'?'開場':m.kind==='finish'?'終結':'碰撞'} ${m.time.toFixed(1)}s`,'replay-moment','secondary',`data-value="${m.time}"`)).join('')}</div><div class="replay-views" role="group" aria-label="重播鏡位">${[['auto','追蹤鏡位'],['top','俯視鏡位'],['side','側面鏡位']].map(([value,label])=>btn(label,'replay-view','secondary',`data-value="${value}" aria-pressed="${value==='auto'}"`)).join('')}</div><p class="replay-note">第 ${replay?.engineVersion??1} 代引擎 · 拖曳後暫停於指定時間。碰撞點取本場最強且相隔0.75秒的最多5次撞擊；跳轉不補播過去音效，也不寫入戰績。</p></section>`;
 }
 function seekReplay(seconds:number){
  if(screen!=='replay'||!replay||!Number.isFinite(seconds))return;
@@ -1223,7 +1227,7 @@ function frame(time: number) {
       finishStart = time;
       const finishRate=arena?.finish(battle) ?? 1;
       const r = battle.result, f = FINISH[r.finish];
-      sound.finish(r,finishRate);
+      sound.finish(r,finishRate,false,0,battle);
       const winnerLabel = r.winner === 0 ? "1P" : match?.mode === "cpu" ? "CPU" : "2P";
       const kind = r.winner === null ? "draw" : r.finish;
       const before = match?.scores ?? [0, 0], after = scorePreview(r, before);
@@ -1245,7 +1249,7 @@ function frame(time: number) {
         highlightFinishing=true;arena?.showHighlightFinish(frame.battle);
         const shot=byId("highlight-shot");if(shot)shot.textContent="終結追蹤鏡位 · 0.55× 慢動作";
       }
-      if(frame.phase==="finish"&&frame.hold!=="finish"&&!highlightFinishSound){highlightFinishSound=true;sound.finish(frame.battle.result!,HIGHLIGHT_RATE,true,pan);}
+      if(frame.phase==="finish"&&frame.hold!=="finish"&&!highlightFinishSound){highlightFinishSound=true;sound.finish(frame.battle.result!,HIGHLIGHT_RATE,true,pan,frame.battle);}
       const moment=byId("highlight-moment"),label=highlightPrompt(battle.result!.finish,frame.hold,frame.phase==="finish");
       if(moment&&moment.textContent!==label)moment.textContent=label;
       const panel=byId("highlight-panel"),momentState=frame.hold??"";

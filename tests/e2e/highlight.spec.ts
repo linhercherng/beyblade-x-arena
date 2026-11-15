@@ -40,6 +40,8 @@ test('實際遊戲自動精彩重播可暫停並一鍵跳過，只結算原結�
   if(await page.locator('#highlight-panel').isVisible()){
    await expect(page.locator('#highlight-type')).toContainText(/爆裂終結|越界終結|極限終結/);
    found=true;await action('pause').first().click();const progress=await page.locator('#highlight-progress').getAttribute('style');await page.waitForTimeout(120);expect(await page.locator('#highlight-progress').getAttribute('style')).toBe(progress);
+   const signatures=page.getByRole('group',{name:'陀螺旋向與軸心特徵'});await expect(signatures.locator('span')).toHaveCount(2);
+   await expect(signatures).toContainText(/左迴旋|右迴旋/);expect(await signatures.evaluate(el=>{const r=el.getBoundingClientRect(),panel=el.closest('section')!.getBoundingClientRect();return r.left>=panel.left&&r.right<=panel.right;})).toBe(true);
    await page.screenshot({path:'artifacts/highlight-paused-mobile-v0150.png'});await action('pause').first().click();await page.screenshot({path:'artifacts/highlight-live-mobile-v0150.png'});await action('pause').first().click();await action('skip-highlight').click();await expect(page.locator('#highlight-panel')).toHaveCount(0);await expect(page.locator('.round-result,.result-hero')).toBeVisible();
    if(await page.locator('.round-result').isVisible())await expect(page.locator('.round-result .eyebrow')).toHaveText(`ROUND ${rounds} COMPLETE`);else await expect(page.locator('.report-panel table').first().locator('tbody tr')).toHaveCount(rounds);break;
   }

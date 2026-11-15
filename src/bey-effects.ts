@@ -50,3 +50,11 @@ export function collisionAccent(p:BeyEffects,opposed:boolean){
  return {curl:p.spin*(opposed?9:3)*(p.free?1.5:1),spread:p.rubber?1.4:p.metal?.85:1,
   lift:p.bound?1.8:p.offset?1.2:p.type==='defense'?.35:.7,decay:p.free?1.25:p.rubber?.85:1};
 }
+
+export function beySignature(b:Bey){
+ const p=beyEffects(b);return p.rubber?'橡膠抓地':p.offset?'偏心脈動':p.free?'自由環':p.bound?'彈簧回彈':p.metal?'金屬軸':p.type==='attack'?'掃刃追擊':p.type==='defense'?'護環反擊':p.type==='stamina'?'穩定氣流':'攻守切換';
+}
+export function finishAccent(p:BeyEffects,kind:string,age:number,reduced=false){
+ const duration=kind==='burst'?1.25:kind==='over'?.95:.55,u=Math.max(0,Math.min(1,age/duration)),wave=u===0||u===1||reduced?0:Math.sin(Math.PI*u);
+ return {angle:wave?p.spin*wave*(p.free?.48:p.rubber?.2:p.offset?.38:.28):0,bounce:wave*(p.bound?.08:p.offset?.035:0),glow:reduced?0:Math.max(0,1-age/1.5)};
+}

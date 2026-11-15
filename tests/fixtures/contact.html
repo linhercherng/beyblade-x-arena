@@ -1,0 +1,8 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>實際接觸與戰鬥模型驗收</title><style>body{margin:0;background:#101927;color:white;font:14px sans-serif}header{position:absolute;top:12px;left:12px;z-index:2}button{padding:10px}#stage{height:100vh}</style><header><button id="step">推進至碰撞</button><button id="preview">原比例預覽</button><output></output></header><div id="stage"></div><script type="module">
+import{Arena}from'/src/arena.ts';import{BEYS}from'/src/catalog.ts';import{createBattle,stepBattle,TOP_RADIUS}from'/src/physics.ts';
+const arena=new Arena();arena.setBeys([BEYS[0],BEYS[11]]);arena.attach(document.querySelector('#stage'),'battle');const b=createBattle(BEYS[0],BEYS[11],[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],7);b.time=16;b.tops.forEach((t,i)=>Object.assign(t,{x:i?.46:-.46,z:0,vx:i?-1:1,vz:0,tilt:0,axisX:0,axisZ:0}));let hits=0,preview=false;
+function draw(){arena.draw(0,preview?null:b);document.querySelector('output').textContent=`實際撞擊 ${hits} 次`;}
+document.addEventListener('click',e=>{if(e.target.id==='preview')preview=true;if(e.target.id==='step'){for(let i=0;i<90&&hits===0;i++){stepBattle(b);for(const event of b.events){if(event.type==='hit')hits++;arena.event(event,b);}}}draw();});draw();
+window.contactMetrics=()=>({hits,distance:Math.hypot(b.tops[0].x-b.tops[1].x,b.tops[0].z-b.tops[1].z),radius:TOP_RADIUS,scales:arena.models.map(m=>m.scale.x),radii:arena.models.map((g,i)=>{let max=0;for(const p of g.userData.contact.vertices){const w=p.clone().applyQuaternion(g.quaternion).add(g.position);max=Math.max(max,Math.hypot(w.x-b.tops[i].x,w.z-b.tops[i].z));}return max;}),state:JSON.stringify(b)});
+window.contactDoesNotMutate=()=>{const before=JSON.stringify(b);draw();return before===JSON.stringify(b);};
+</script></html>

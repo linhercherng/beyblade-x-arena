@@ -85,6 +85,9 @@ for (const version of [1, 2, 3, 4, 5]) test(`已發布v${version}戰績匯入後
   await expect(insight).toContainText('發射力量');await expect(insight).toContainText('因果占比');
   await expect(insight.locator('tbody tr').first()).toContainText(Math.round(m.rounds[0].inputs[0].power*100)+'%');
   await action(page, "replay").first().click();
+  const signatures=page.getByRole('group',{name:'陀螺旋向與軸心特徵'});
+  await expect(signatures.locator('span')).toHaveCount(2);
+  for(const span of await signatures.locator('span').all())await expect(span).toContainText((await span.getAttribute('data-spin'))==='L'?'左迴旋':'右迴旋');
   await expect(page.locator("#toast")).toContainText("結果與原對戰一致", {
     timeout: 60000,
   });

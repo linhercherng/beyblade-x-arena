@@ -3435,3 +3435,10 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 .battle-message.awaiting-launch .launch-call {animation-play-state:paused}
 
 .battle-message .dash-message small {display:block;font-size:.52em;letter-spacing:.08em;line-height:1.5}
+
+.replay-signatures {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;max-width:640px;min-width:0}
+.replay-signatures>span {min-width:0;padding:5px 7px;border-left:2px solid #a6ddff;background:#23364b70;color:#e6f0f7;text-align:left;font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.replay-signatures>span[data-spin="L"] {border-left-color:#e2b7ff}
+.replay-signatures b,.replay-signatures small {display:block;font-size:inherit;line-height:1.4}
+.replay-signatures small {color:#c2d3e1}
+@media(max-width:600px){.highlight-panel .replay-signatures {grid-template-columns:1fr;gap:3px}.highlight-panel .replay-signatures>span{padding:3px 5px}.highlight-panel .replay-signatures b{display:none}}

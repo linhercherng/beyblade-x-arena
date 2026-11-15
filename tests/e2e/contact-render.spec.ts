@@ -1,0 +1,5 @@
+import{test,expect}from'@playwright/test';
+test('看得見的戰刃對齊碰撞半徑，接近後反彈且保留原比例預覽',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:640,height:480});await page.goto('/tests/fixtures/contact.html');const metrics=()=>page.evaluate(()=>(window as any).contactMetrics());const before=await metrics();expect(before.hits).toBe(0);expect(before.radii.every((r:number)=>r<=before.radius+.006)).toBe(true);expect(before.distance-before.radius*2).toBeGreaterThan(.1);
+ await page.screenshot({path:'artifacts/contact-before-v0280.png'});await page.locator('#step').click();const hit=await metrics();expect(hit.hits).toBeGreaterThan(0);expect(hit.distance).toBeGreaterThanOrEqual(hit.radius*2-.001);expect(await page.evaluate(()=>(window as any).contactDoesNotMutate())).toBe(true);await page.screenshot({path:'artifacts/contact-hit-v0280.png'});await page.locator('#preview').click();expect((await metrics()).scales).toEqual([1,1]);expect(errors).toEqual([]);
+});

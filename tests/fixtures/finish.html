@@ -1,27 +1,30 @@
 <!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>終結演出驗證</title>
 <style>body{margin:0;background:#101927;color:white;font:16px sans-serif}header{position:absolute;top:12px;left:16px;z-index:3}button{padding:10px;margin:3px}#stage{height:100vh}small{display:block;margin:8px}</style>
-<header>終結演出驗證<br><button id="burst">爆裂</button><button id="over">越界</button><button id="extreme">極限</button><button id="spin">旋轉</button><button id="draw">平手</button><button id="wallburst">近牆爆裂</button><button id="integrated">一體式爆裂</button><button id="victory">勝利</button><button id="defeat">敗北</button><button id="capture">定格下一次</button><button id="pause">暫停</button><button id="mute">靜音</button><small>隔離演出驗證，不寫入正式戰績</small></header><div id="stage"></div>
+<header>終結演出驗證<br><button id="special">橡膠與自由環</button><button id="left">左旋機</button><button id="bound">金屬與彈簧</button><button id="burst">爆裂</button><button id="over">越界</button><button id="extreme">極限</button><button id="spin">旋轉</button><button id="draw">平手</button><button id="wallburst">近牆爆裂</button><button id="integrated">一體式爆裂</button><button id="victory">勝利</button><button id="defeat">敗北</button><button id="capture">定格下一次</button><button id="pause">暫停</button><button id="mute">靜音</button><small>隔離演出驗證，不寫入正式戰績</small></header><div id="stage"></div>
 <script type="module">
-import {Arena} from '/src/arena.ts';import {Sound} from '/src/audio.ts';import {BEYS} from '/src/catalog.ts';import {createBattle} from '/src/physics.ts';import * as THREE from 'three';
+import {Arena} from '/src/arena.ts';import {Sound} from '/src/audio.ts';import {BEYS,getBey} from '/src/catalog.ts';import {createBattle} from '/src/physics.ts';import * as THREE from 'three';
 const arena=new Arena(),sound=new Sound();arena.attach(document.querySelector('#stage'),'battle');
-let battle=null,paused=false,capture=false,last=0,analyser,peak=0;
+let selected=null,lastFilter=null,battle=null,paused=false,capture=false,last=0,analyser,peak=0;
 document.addEventListener('click',e=>{
  const id=e.target.id;if(e.target.tagName!=='BUTTON')return;
  sound.unlock(); if(!analyser){analyser=sound.ctx.createAnalyser();analyser.fftSize=2048;sound.master.connect(analyser);}
+ if(['special','left','bound'].includes(id)){selected=({special:['bx-00-storm-pegasus','ux-08-silver-wolf'],left:['bx-01-dran-sword','bx-34-cobalt-dragoon'],bound:['ux-05-shinobi-shadow','ux-10-knight-mail']})[id].map(getBey);return;}
  if(id==='mute'){sound.toggle();return;} if(id==='pause'){paused=!paused;return;} if(id==='capture'){capture=true;return;}
  if(['victory','defeat'].includes(id)){peak=0;sound.victory(id==='victory');return;}
- const opponent=id==='integrated'?BEYS.find(b=>b.integrated):BEYS[11];
- arena.setBeys([BEYS[0],opponent]);battle=createBattle(BEYS[0],opponent,[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],7);
+ const opponent=id==='integrated'?BEYS.find(b=>b.integrated):selected?.[1]??BEYS[11],first=selected?.[0]??BEYS[0];
+ arena.setBeys([first,opponent]);battle=createBattle(first,opponent,[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],7);
  battle.tops[0].x=-.45;battle.tops[0].z=0;battle.tops[1].x=.45;battle.tops[1].z=0;
  if(id==='over'){battle.tops[0].x=2.4;battle.tops[1].x=4.3;}
  if(id==='wallburst'){battle.tops[0].x=2.4;battle.tops[1].x=3.9;}
  if(id==='extreme'){battle.tops.forEach(t=>t.x=0);battle.tops[0].z=2.4;battle.tops[1].z=4.3;}
  battle.result={winner:id==='draw'?null:0,finish:['draw','integrated','wallburst'].includes(id)?'burst':id,points:id==='draw'?0:id==='extreme'?3:id==='spin'?1:2,time:20};
- arena.finish(battle);sound.finish(battle.result);peak=0;paused=false;
+ arena.finish(battle);const createFilter=sound.ctx.createBiquadFilter.bind(sound.ctx);sound.ctx.createBiquadFilter=()=>{lastFilter=createFilter();return lastFilter;};sound.finish(battle.result,1,false,0,battle);sound.ctx.createBiquadFilter=createFilter;peak=0;paused=false;
  if(capture){arena.draw(id==='wallburst'?1.4:.7,battle);paused=true;capture=false;}
 });
-function frame(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;arena.draw(paused?0:dt,battle);sound.update(null,false,paused?null:'results');
+function frame(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;if(!paused||arena.needsRender)arena.draw(paused?0:dt,battle);sound.update(null,false,paused?null:'results');
  if(analyser){const a=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(a);const rms=Math.sqrt(a.reduce((s,v)=>s+v*v,0)/a.length);peak=Math.max(peak,rms);window.currentRms=rms;}requestAnimationFrame(frame);}
+window.finishArena=arena;window.finishSound=sound;window.finishBattle=()=>battle;
+window.finishIdentityMetrics=()=>({auras:arena.traitRings.map(r=>({visible:r.visible,position:r.position.toArray(),scale:r.scale.toArray(),color:r.material.color.getHexString()})),scales:arena.models.map(m=>m.scale.x),effects:arena.models.map(m=>m.userData.effects),particles:arena.particles.map(p=>({owner:p.owner,color:p.color.getHexString(),curl:p.curl})),trailColors:Array.from(arena.exitTrail.geometry.attributes.color.array),cutoff:lastFilter?.frequency.value,voices:sound.cues.size});
 window.finishMetrics=()=>({pulses:arena.landingRings.map(m=>m.position.toArray()),positions:arena.models.map(m=>m.position.toArray()),parts:arena.models.map(m=>m.userData.parts.map(p=>p.position.toArray())),links:arena.models.map(m=>m.userData.partLinks),
  trail:arena.exitTrail?.visible??false,partMin:arena.models.map(m=>m.userData.parts.map(p=>new THREE.Box3().setFromObject(p,true).min.y)),peak,rms:window.currentRms??0,cues:sound.cues?.size??0,reduced:arena.reduced,quaternion:arena.camera.quaternion.toArray()});requestAnimationFrame(frame);
 </script></html>

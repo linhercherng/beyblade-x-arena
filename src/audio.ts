@@ -1,5 +1,5 @@
 import{finishSamples,FINISH_VOICE_CUES,type FinishVoiceCue}from'./finish-voice.ts';
-import{beyEffects,hitBey}from'./bey-effects.ts';
+import{beyEffects,hitBey,type BeyEffects}from'./bey-effects.ts';
 import type{CountdownPlayback}from'./launch-countdown.ts';
 import {countdownSamples,openingSamples,COUNTDOWN_RATE,type CountdownCue} from './countdown-voice.ts';
 import {audioStatus} from "./audio-state.ts";
@@ -416,7 +416,7 @@ export class Sound {
     this.cues.clear();
     this.cuePans.clear();
   }
-  private playCue(kind: Cue, initialRate=1, slowReplay=false, cameraPan=0) {
+  private playCue(kind: Cue, initialRate=1, slowReplay=false, cameraPan=0,identity?:BeyEffects) {
     if (!this.ready || !this.ctx || !this.sfx || this.muted) return;
     this.stopImpacts(initialRate<1?.065:.015);
     this.replayAccent=null;
@@ -436,11 +436,12 @@ export class Sound {
     const level=slowReplay?1.45:1.2;
     gain.gain.setValueAtTime(initialRate<1?0:level,now);
     if(initialRate<1)gain.gain.linearRampToValueAtTime(level,now+.035);
-    let pan:StereoPannerNode|null=null;
-    if(slowReplay){pan=this.ctx.createStereoPanner();pan.pan.value=cameraPan;source.connect(gain).connect(pan).connect(this.sfx);this.cuePans.set(source,pan);}
-    else source.connect(gain).connect(this.sfx);
+    let pan:StereoPannerNode|null=null;const filter=identity?this.ctx.createBiquadFilter():null;
+    if(filter){filter.type='lowpass';filter.frequency.value=identity!.dash.cutoff;filter.Q.value=identity!.bound?1.1:.6;source.connect(filter).connect(gain);}else source.connect(gain);
+    if(slowReplay){pan=this.ctx.createStereoPanner();pan.pan.value=cameraPan;gain.connect(pan).connect(this.sfx);this.cuePans.set(source,pan);}
+    else gain.connect(this.sfx);
     this.cues.set(source, gain);
-    source.onended = () => { source.disconnect(); gain.disconnect();pan?.disconnect();this.cuePans.delete(source);this.cues.delete(source); };
+    source.onended = () => { source.disconnect();filter?.disconnect(); gain.disconnect();pan?.disconnect();this.cuePans.delete(source);this.cues.delete(source); };
     source.start();
     if (this.musicDuck) {
       const duck = this.musicDuck.gain;
@@ -449,9 +450,9 @@ export class Sound {
       duck.setTargetAtTime(1, now + (slowReplay?source.buffer.duration/initialRate:initialRate<1?1.45:.65), .12);
     }
   }
-  finish(result: Result, initialRate=1, slowReplay=false, cameraPan=0) {
+  finish(result: Result, initialRate=1, slowReplay=false, cameraPan=0,battle?:Battle) {
     const kind=result.winner===null?'draw':result.finish;
-    this.playCue(kind,initialRate,slowReplay,cameraPan);
+    this.playCue(kind,initialRate,slowReplay,cameraPan,battle&&result.winner!==null?beyEffects(battle.tops[1-result.winner].bey):undefined);
     if(!slowReplay)this.speakVoice(this.announcementBuffers.get(kind));
   }
   private restoreDuck(){if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
