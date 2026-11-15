@@ -24,3 +24,17 @@ test('靜音或沒有WebAudio時仍逐拍呈現，GO不阻擋遊戲',()=>{
 test('中斷當拍不讓降下動畫回跳',()=>{
  const c=new LaunchCountdown(),voice={complete:false,cancelled:false};c.step(0,()=>voice);c.step(10,()=>voice);assert.equal(c.progress(510),.5);voice.cancelled=true;assert.equal(c.progress(510),.5);c.step(1000,()=>({complete:false,cancelled:false}));assert.ok(c.progress(1100)>=.5);
 });
+
+test('落盤進度跟隨音訊時鐘，暫停補償實際音訊流逝而非牆鐘',()=>{
+ const c=new LaunchCountdown();let audio=0;const voice={complete:false,cancelled:false,elapsed:()=>audio};
+ c.step(0,()=>voice);c.step(10,()=>voice);audio=.2;assert.equal(c.progress(9000),.2);
+ c.freeze(9000);audio=3;assert.equal(c.progress(12000),.2);c.shift(3000);audio=3.2;assert.ok(Math.abs(c.progress(12200)-.4)<1e-8);
+ c.freeze(12200);c.shift(5000);audio=3.3;assert.ok(Math.abs(c.progress(18000)-.5)<1e-8);
+});
+test('GO聲音真正開始才釋放發射演出，卡頓保留音訊相位且只觸發一次',()=>{
+ const c=new LaunchCountdown();c.cue=0;let audio=-.012;const voice={complete:false,cancelled:false,elapsed:()=>audio};c.step(0,()=>voice);c.step(10,()=>voice);
+ assert.equal(c.started,false);assert.equal(c.takeLaunch(10),null);audio=.17;assert.equal(c.started,true);assert.equal(c.takeLaunch(9999),.17);assert.equal(c.takeLaunch(10000),null);
+});
+test('長畫格跨過整句GO後仍交接正確相位，不補播發射閃光',()=>{
+ const c=new LaunchCountdown();c.cue=0;let audio=0;const voice={complete:false,cancelled:false,elapsed:()=>audio};c.step(0,()=>voice);c.step(10,()=>voice);audio=1.2;voice.complete=true;assert.equal(c.step(1500,()=>voice),'done');assert.equal(c.takeLaunch(1500),1.2);
+});

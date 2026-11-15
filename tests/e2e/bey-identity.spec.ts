@@ -1,0 +1,8 @@
+import{test,expect}from'@playwright/test';
+const identity=(page:import('@playwright/test').Page)=>page.evaluate(()=>(window as any).identityMetrics());
+test('同旋剪切、反旋雙色捲流與特殊軸心衝刺可區分，交換玩家不改旋向',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:640,height:480});await page.goto('/tests/fixtures/bey-effects.html');
+ for(const pair of ['attack','reverse','matched']){await page.locator('#'+pair).click();await page.locator('#hit').click();const m=await identity(page);expect(m.spin).toBe(pair==='matched'?'matched':'opposed');if(pair==='matched')expect(m.curls.every((v:number)=>v<0)).toBe(true);else{expect(m.curls.some((v:number)=>v<0)).toBe(true);expect(m.curls.some((v:number)=>v>0)).toBe(true);}expect(new Set(m.colors).size).toBeGreaterThan(1);await page.screenshot({path:`artifacts/identity-${pair}-v0270.png`});const frozen=await identity(page);await page.waitForTimeout(100);expect((await identity(page)).curls).toEqual(frozen.curls);}
+ for(const pair of ['special','bound']){await page.locator('#'+pair).click();await expect.poll(async()=>(await identity(page)).audioReady).toBe(true);await page.locator('#dash').click();const m=await identity(page);expect(m.rates).toHaveLength(2);expect(m.rates[0]).not.toBe(m.rates[1]);expect(m.ribbon.every((r:any)=>r.visible)).toBe(true);expect(m.ribbon[0].points).not.toEqual(m.ribbon[1].points);await page.screenshot({path:`artifacts/identity-${pair}-dash-v0270.png`});expect(await page.evaluate(()=>(window as any).effectsDoNotMutate())).toBe(true);}
+ expect(errors).toEqual([]);
+});

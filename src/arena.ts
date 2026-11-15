@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
 import{stadiumSurface,stadiumNormal}from"./stadium-surface.ts";
 import{BowlContact}from"./bey-contact.ts";
-import{beyEffects,effectMode,effectVertices,hitBey,type BeyEffects}from"./bey-effects.ts";
+import{beyEffects,effectMode,effectVertices,hitBey,collisionAccent,type BeyEffects}from"./bey-effects.ts";
 import { impactProfile, impactShake } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
@@ -64,6 +64,7 @@ interface Particle {
   v: THREE.Vector3;
   life: number;
   totalLife: number;
+  curl?:number;
   color: THREE.Color;
 }
 const RIBBON_POINT = [0,0,1,0,1,1], RIBBON_SIDE = [-1,1,-1,1,1,-1];
@@ -105,6 +106,7 @@ export class Arena {
   cameraTarget = new THREE.Vector3();
   landingRings: THREE.Mesh[] = [];
   private launchAt=-Infinity;
+  private spinContactAt=-Infinity;
   stadium = createStadium();
   models: THREE.Group[] = [];
   host: HTMLElement | null = null;
@@ -257,8 +259,9 @@ export class Arena {
     this.scene.add(this.particlePoints);
     const streakGeometry = new THREE.BufferGeometry();
     streakGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(360 * 6), 3).setUsage(THREE.DynamicDrawUsage));
+    streakGeometry.setAttribute("color",new THREE.BufferAttribute(new Float32Array(360*6),3).setUsage(THREE.DynamicDrawUsage));
     streakGeometry.setDrawRange(0, 0);
-    this.sparkStreaks = new THREE.LineSegments(streakGeometry, new THREE.LineBasicMaterial({ color: "#ff963d", transparent: true, opacity: .85, depthWrite: false, toneMapped: false }));
+    this.sparkStreaks = new THREE.LineSegments(streakGeometry, new THREE.LineBasicMaterial({ vertexColors:true, transparent: true, opacity: .85, depthWrite: false, toneMapped: false }));
     this.sparkStreaks.frustumCulled = false;
     this.particlePoints.frustumCulled = false;
     this.scene.add(this.sparkStreaks);
@@ -424,12 +427,12 @@ export class Arena {
     ring.quaternion.setFromUnitVectors(this.floorUp,this.floorNormal).multiply(this.ringRotation);
     ring.position.set(x,stadiumSurface(Math.hypot(x,z))+.035,z);
   }
-  launch(b:Battle){
-    this.launchAt=this.time;this.needsRender=true;
+  launch(b:Battle,age=0,frameDt=0){
+    this.launchAt=this.time+Math.max(0,frameDt)-Math.max(0,age);this.needsRender=true;
     this.landingRings.forEach((ring,i)=>{const t=b.tops[i];this.placeFloorRing(ring,t.x,t.z);});
   }
   private resetEffects() {
-    this.launchAt=-Infinity;
+    this.launchAt=-Infinity;this.spinContactAt=-Infinity;this.renderer.domElement.dataset.spinContact="none";
     this.highlightImpactActive=false;
     this.finishRate=1;this.finishShock=this.finishZoom=0;
     this.hitPlayback.reset();this.hitRing.visible=false;
@@ -491,6 +494,10 @@ export class Arena {
     if (e.type === "hit") {
       this.models.forEach(g=>g.userData.effectHitAt=this.time);
       const lead=battle?beyEffects(hitBey(battle)):null;
+      const opposed=this.models[0].userData.spin!==this.models[1].userData.spin;
+      const accents=this.models.map(g=>collisionAccent(g.userData.effects,opposed));
+      this.renderer.domElement.dataset.spinContact=opposed?'opposed':'matched';
+      if(opposed&&!this.reduced){this.spinContactAt=this.time;this.hitRing.position.set(e.x,stadiumSurface(Math.hypot(e.x,e.z))+.09,e.z);(this.hitRing.material as THREE.MeshBasicMaterial).color.copy((this.traitRings[0].material as THREE.MeshBasicMaterial).color).lerp((this.traitRings[1].material as THREE.MeshBasicMaterial).color,.5);}
       const colors=this.models.map(g=>(g.userData.effects as BeyEffects).color);
       const profile = impactProfile(dashHit ? Math.max(10,e.strength*1.35) : e.strength);
       if(dashHit) {
@@ -514,16 +521,17 @@ export class Arena {
       const count = Math.min(360 - this.particles.length, this.reduced ? 8 : innerWidth < 700 ? 24 : 48, profile.sparks);
       for (let i = 0; i < count; i++) {
         const a = i * 2.39996 + e.time;
-        const life = this.reduced ? .08 : .12 + profile.tier * .055 + (i % 4) * .025;
-        const speed = this.reduced ? 0 : (.7 + profile.gain) * (1 + (i % 4) * .65)*(lead?.type==="attack"?1.12:1);
+        const accent=accents[i%2];
+        const life = this.reduced ? .08 : (.12 + profile.tier * .055 + (i % 4) * .025)*accent.decay;
+        const speed = this.reduced ? 0 : (.7 + profile.gain) * (1 + (i % 4) * .65)*accent.spread;
         this.particles.push({
           p: new THREE.Vector3(e.x, height, e.z),
           v: new THREE.Vector3(
             Math.cos(a) * speed,
-            this.reduced ? 0 : (lead?.type==="defense"?.3:.7) + (i % 5) * .35,
+            this.reduced ? 0 : accent.lift + (i % 5) * .35,
             Math.sin(a) * speed,
           ),
-          life, totalLife: life,
+          life, totalLife: life,curl:this.reduced?0:accent.curl,
           color: new THREE.Color(battle?(i%3?colors[i%2]:"#fff5d2"):dashHit ? i%3 ? "#8eefff" : "#ffffff" : i % 3 ? "#ffbd60" : "#fff5d2"),
         });
       }
@@ -540,13 +548,13 @@ export class Arena {
       const x=nx*4.13,z=nz*4.13;
       if(!this.reduced) {
         const flare=this.impactFlashes.find(f=>f.userData.life<=0)??this.impactFlashes[0];
-        (flare.material as THREE.SpriteMaterial).color.set("#8eefff");
+        (flare.material as THREE.SpriteMaterial).color.copy((this.traitRings[e.player].material as THREE.MeshBasicMaterial).color);
         flare.position.set(x,.51,z);flare.userData.life=flare.userData.totalLife=.10;flare.userData.size=.65;
       }
       const count=Math.min(360-this.particles.length,this.reduced?4:innerWidth<700?12:24);
       for(let i=0;i<count;i++){
         const tangent=((i%7)-3)*.8,life=this.reduced?.08:.15+(i%4)*.025;
-        this.particles.push({p:new THREE.Vector3(x,.51,z),v:this.reduced?new THREE.Vector3():new THREE.Vector3(-nx*(1+i%3)-nz*tangent,.8+(i%4)*.45,-nz*(1+i%3)+nx*tangent),life,totalLife:life,color:new THREE.Color(i%3?"#8eefff":"#fff6d9")});
+        this.particles.push({p:new THREE.Vector3(x,.51,z),v:this.reduced?new THREE.Vector3():new THREE.Vector3(-nx*(1+i%3)-nz*tangent,.8+(i%4)*.45,-nz*(1+i%3)+nx*tangent),life,totalLife:life,curl:this.reduced?0:(this.models[e.player].userData.effects as BeyEffects).spin*5,color:new THREE.Color(i%3?(this.traitRings[e.player].material as THREE.MeshBasicMaterial).color:"#fff6d9")});
       }
     }
     return dashHit;
@@ -600,7 +608,8 @@ export class Arena {
     this.time += dt;
     const finishAge=Math.max(0,this.time-this.finishTime),finishElapsed=finishPlayback(finishAge,this.finishRate);
     const hit=this.hitPlayback.sample(this.time,this.reduced);
-    const shock=battle?.result?this.finishShock*(1-THREE.MathUtils.smoothstep(finishAge,0,.18)):hit.shock;
+    const spinShock=this.reduced?0:Math.max(0,1-(this.time-this.spinContactAt)/.24)*.65;
+    const shock=battle?.result?this.finishShock*(1-THREE.MathUtils.smoothstep(finishAge,0,.18)):Math.max(hit.shock,spinShock);
     this.hitRing.visible=!!battle&&shock>0;
     this.hitRing.scale.setScalar(1+(1-shock)*3.8);
     (this.hitRing.material as THREE.MeshBasicMaterial).opacity=shock*.65;
@@ -787,7 +796,7 @@ export class Arena {
         aura.visible=!this.reduced&&!opening&&!battle!.result&&pose.rpm>.08;
         if(aura.visible){
           const positions=aura.geometry.getAttribute('position') as THREE.BufferAttribute;
-          const centers=aura.userData.centers as Float32Array;effectVertices(fx,style,this.time,hit,centers);
+          const centers=aura.userData.centers as Float32Array;effectVertices(fx,style,this.time,hit,centers,dash.intensity);
           const width=.006+hit*.012+dash.intensity*.008;
           for(let segment=0;segment<72;segment++)for(let v=0;v<6;v++){
             const end=RIBBON_POINT[v],side=RIBBON_SIDE[v],at=segment*6+end*3,x=centers[at],z=centers[at+2],r=Math.max(.01,Math.hypot(x,z));
@@ -821,7 +830,7 @@ export class Arena {
           const dx=path[(segment+1)*3]-path[segment*3],dz=path[(segment+1)*3+2]-path[segment*3+2],len=Math.max(.001,Math.hypot(dx,dz));
           for(let v=0;v<6;v++){
             const point=segment+RIBBON_POINT[v],sign=RIBBON_SIDE[v],fade=(point/(path.length/3-1))**2;
-            const width=(.012+fade*(fx.rubber?.19:.14)*fx.grip)*dash.intensity;
+            const width=(.012+fade*.14*fx.dash.width)*(1+fx.dash.pulse*Math.sin(this.time*42-point*1.5))*dash.intensity;
             rp.setXYZ(vertex,path[point*3]-dz/len*width*sign,path[point*3+1],path[point*3+2]+dx/len*width*sign);
             rc.setXYZW(vertex,tint.r,tint.g,tint.b,fade*dash.intensity);vertex++;
           }
@@ -859,21 +868,24 @@ export class Arena {
         "color",
       ) as THREE.BufferAttribute;
     const streak = this.sparkStreaks.geometry.getAttribute("position") as THREE.BufferAttribute;
+    const streakColors=this.sparkStreaks.geometry.getAttribute("color") as THREE.BufferAttribute;
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i];
       p.life -= dt;
       if (!this.reduced) p.v.y -= dt * 8;
+      if(p.curl&&dt>0){const angle=p.curl*dt,c=Math.cos(angle),s=Math.sin(angle),x=p.v.x;p.v.x=x*c-p.v.z*s;p.v.z=x*s+p.v.z*c;}
       p.p.addScaledVector(p.v, dt);
       pos.setXYZ(i, p.p.x, p.p.y, p.p.z);
       const fade = p.life / p.totalLife;
       col.setXYZ(i, p.color.r * fade, p.color.g * fade, p.color.b * fade);
+      streakColors.setXYZ(i*2,p.color.r*fade,p.color.g*fade,p.color.b*fade);streakColors.setXYZ(i*2+1,p.color.r*fade*.5,p.color.g*fade*.5,p.color.b*fade*.5);
       streak.setXYZ(i * 2, p.p.x, p.p.y, p.p.z);
       streak.setXYZ(i * 2 + 1, p.p.x - p.v.x * .045 * fade, p.p.y - p.v.y * .045 * fade, p.p.z - p.v.z * .045 * fade);
     }
     this.particleGeometry.setDrawRange(0, this.particles.length);
     pos.needsUpdate = true;
     col.needsUpdate = true;
-    streak.needsUpdate = true;
+    streak.needsUpdate = true;streakColors.needsUpdate=true;
     this.sparkStreaks.geometry.setDrawRange(0, this.reduced ? 0 : this.particles.length * 2);
     this.impactFlashes.forEach(flare => {
       flare.userData.life = Math.max(0, flare.userData.life - dt);

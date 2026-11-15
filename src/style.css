@@ -3431,3 +3431,7 @@ button[aria-pressed="true"] {border-color:var(--accent);color:var(--accent)}
 @keyframes count-ring {from{transform:scale(.8);opacity:.65}to{transform:scale(1.8);opacity:0}}
 @keyframes launch-streaks {from{transform:scale(.85);opacity:.6}to{transform:scale(1.25);opacity:0}}
 @media(prefers-reduced-motion:reduce){.count-ring,.launch-streaks{display:none}.count-beat,.launch-call{animation:none}}
+
+.battle-message.awaiting-launch .launch-call {animation-play-state:paused}
+
+.battle-message .dash-message small {display:block;font-size:.52em;letter-spacing:.08em;line-height:1.5}

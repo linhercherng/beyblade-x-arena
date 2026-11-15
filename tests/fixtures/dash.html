@@ -17,7 +17,7 @@ if(id==='capture'){capture=.20;return;}if(id==='latch'){capture=.025;}
 peakSfx=musicAtPeak=peakMix=0;paused=false;
 for(let i=0;i<(id==='rapid'?30:id==='both'?2:1);i++){
  const p=i%2,t=battle.tops[p],a=(p?Math.PI:0)+(id==='gap'?0:.55);Object.assign(t,{x:Math.cos(a)*3.55,z:Math.sin(a)*3.55,vx:-Math.cos(a)*9,vz:-Math.sin(a)*9,dashUntil:battle.time+.65});
- const event={type:'dash',x:t.x,z:t.z,player:p,strength:1,time:battle.time};arena.event(event);sound.event(event);
+ const event={type:'dash',x:t.x,z:t.z,player:p,strength:1,time:battle.time};arena.event(event);sound.event(event,false,undefined,battle);
  if(id==='rapid'){const hit={...event,type:'hit',x:0,z:0,strength:14};arena.event(hit);sound.event(hit);}
 }
 if(capture){let t=0;while(t<capture){const dt=Math.min(1/120,capture-t);move(dt);arena.draw(dt,battle);t+=dt;}paused=true;capture=0;}

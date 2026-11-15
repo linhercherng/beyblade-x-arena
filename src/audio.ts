@@ -340,7 +340,7 @@ export class Sound {
       const source = this.track(this.ctx.createBufferSource()), gain = this.ctx.createGain(), pan = this.ctx.createStereoPanner();
       source.buffer = this.strikes[profile.tier];
       const fx=battle?beyEffects(hitBey(battle)):null;
-      source.playbackRate.value = (dashHit ? .8 : 1 + Math.sin(e.time * 17 + e.x) * .04)*(fx?.pitch??1);
+      source.playbackRate.value = (dashHit ? .8 : 1 + Math.sin(e.time * 17 + e.x) * .04)*(fx?.pitch??1)*(battle&&battle.tops[0].bey.spin!==battle.tops[1].bey.spin?.93:1);
       gain.gain.value = profile.gain*(dashHit?1.1:1);
       pan.pan.value = cameraPan ?? Math.max(-.85, Math.min(.85, e.x / 5));
       source.connect(gain).connect(pan).connect(this.sfx);
@@ -353,7 +353,7 @@ export class Sound {
       duck.linearRampToValueAtTime(Math.min(duck.value, dashHit?.18:profile.duck), now + .004);
       duck.setTargetAtTime(1, now + (dashHit?.15:.08), .085);
     }
-    if (e.type === "dash") this.playDash(e,cameraPan);
+    if (e.type === "dash") this.playDash(e,cameraPan,battle);
     if (e.type === "shout") {
       this.tone(330, 0.25, "triangle", 0.6, 990);
     }
@@ -381,7 +381,7 @@ export class Sound {
     }
     this.dashVoices.clear();
   }
-  private playDash(e:BattleEvent,cameraPan?:number) {
+  private playDash(e:BattleEvent,cameraPan?:number,battle?:Battle) {
     if(!this.ready||!this.ctx||!this.sfx||this.muted||(e.player!==0&&e.player!==1))return;
     const now=this.ctx.currentTime;
     if(now-this.lastDash[e.player]<.12)return;
@@ -391,10 +391,13 @@ export class Sound {
     if(old) { old.gain.gain.cancelAndHoldAtTime(now);old.gain.gain.linearRampToValueAtTime(0,now+.015);old.source.stop(now+.015); }
     const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),pan=this.ctx.createStereoPanner();
     source.buffer=this.dashBuffers.get(grip)!;gain.gain.value=.95;
+    const fx=battle?beyEffects(battle.tops[e.player].bey):null,filter=this.ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=fx?.dash.cutoff??3800;
+    source.playbackRate.value=fx?.dash.rate??1;
+    if(fx?.dash.pulse)for(let i=0;i<6;i++){const at=now+.008+i*.05;gain.gain.linearRampToValueAtTime(.95*(1-fx.dash.pulse),at+.02);gain.gain.linearRampToValueAtTime(.95,at+.045);}
     pan.pan.value=cameraPan??Math.max(-.8,Math.min(.8,e.x/5));
-    source.connect(gain).connect(pan).connect(this.sfx);
+    source.connect(filter).connect(gain).connect(pan).connect(this.sfx);
     this.dashVoices.set(e.player,{source,gain});
-    source.onended=()=>{source.disconnect();gain.disconnect();pan.disconnect();if(this.dashVoices.get(e.player)?.source===source)this.dashVoices.delete(e.player);};
+    source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();pan.disconnect();if(this.dashVoices.get(e.player)?.source===source)this.dashVoices.delete(e.player);};
     source.start(now+.008);
     if(this.musicDuck) {
       const duck=this.musicDuck.gain;duck.cancelAndHoldAtTime(now);
@@ -462,9 +465,9 @@ export class Sound {
     // Hold through the existing 180ms music fade so cancellation cannot cause a swell.
     for(const [node,release]of [[this.voiceMusicDuck,.06],[this.voiceSfxDuck,.18]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.setValueAtTime(p.value,now+.18);p.setTargetAtTime(1,now+.18,release);}
   }
-  countdown(cue:CountdownCue){
+  countdown(cue:CountdownCue,landed=false){
     if(this.muted||typeof AudioContext==='undefined')return{complete:true,cancelled:false};
-    return this.speakVoice(this.countdownBuffers.get(cue),{buffer:this.launchBuffers.get(cue),rate:cue===1||cue===0?1:1+(3-cue)*.12,gain:cue===0?1.1:.65});
+    return this.speakVoice(this.countdownBuffers.get(cue),{buffer:this.launchBuffers.get(cue===1&&landed?3:cue),rate:cue===1||cue===0?1:1+(3-cue)*.12,gain:cue===0?1.1:.65});
   }
   private speakVoice(buffer:AudioBuffer|undefined,accent?:{buffer:AudioBuffer|undefined;rate:number;gain:number}){
     this.stopVoice();
@@ -473,13 +476,14 @@ export class Sound {
     source.buffer=buffer;gain.gain.value=.52;source.connect(gain).connect(this.master);
     let accentVoice:{source:AudioBufferSourceNode;gain:GainNode}|null=null;
     if(accent?.buffer){const a=this.track(this.ctx.createBufferSource()),g=this.ctx.createGain();a.buffer=accent.buffer;a.playbackRate.value=accent.rate;g.gain.value=accent.gain;a.connect(g).connect(this.sfx);a.onended=()=>{a.disconnect();g.disconnect();if(playback.complete&&this.voicePlayback===playback)this.voicePlayback=null;};accentVoice={source:a,gain:g};}
-    const playback={source,gain,accent:accentVoice,complete:false,cancelled:false};this.voicePlayback=playback;
+    const context=this.ctx,startAt=context.currentTime+.012;
+    const playback={source,gain,accent:accentVoice,complete:false,cancelled:false,elapsed:()=>context.currentTime-startAt};this.voicePlayback=playback;
     source.onended=()=>{playback.complete=true;source.disconnect();gain.disconnect();if(this.voicePlayback?.source===source&&(!accentVoice||accentVoice.source.buffer!.duration/accentVoice.source.playbackRate.value<=buffer.duration))this.voicePlayback=null;};
     const now=this.ctx.currentTime;
     // Independent priority gains keep hit/replay duck recovery from masking speech.
     this.voiceDuckUntil=now+buffer.duration+.23;
     for(const [node,level]of [[this.voiceMusicDuck,.1],[this.voiceSfxDuck,.32]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(level,now+.008);p.setValueAtTime(level,now+buffer.duration+.06);p.linearRampToValueAtTime(1,this.voiceDuckUntil);}
-    accentVoice?.source.start(now+.008);source.start(now+.012);
+    accentVoice?.source.start(startAt);source.start(startAt);
     return playback;
   }
   beginReplay(){this.stopEffects();this.replayPlayed.clear();this.setReplay("tracking");}
@@ -540,7 +544,7 @@ export class Sound {
       if(r.osc.type!==wave)r.osc.type=wave;
       const held=this.replayStage==="impact"||this.replayStage==="decision";
       r.osc.frequency.setTargetAtTime(
-        (45 + (battle?.tops[i].rpm ?? 0) * 135 + (active && battle && battle.tops[i].dashUntil>battle.time ? 120 : 0))*(this.replayStage?(held?.65:.82):1)*(fx?.pitch??1),
+        (45 + (battle?.tops[i].rpm ?? 0) * 135 + (active && battle && battle.tops[i].dashUntil>battle.time ? 120 : 0))*(this.replayStage?(held?.65:.82):1)*(fx?.pitch??1)*(battle&&battle.tops[0].bey.spin!==battle.tops[1].bey.spin?(fx?.spin===1?1.04:.96):1),
         this.ctx!.currentTime,
         0.08,
       );

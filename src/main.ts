@@ -469,8 +469,8 @@ function startBattle() {
   finishStart = 0;
   renderArena();
   const msg = byId("battle-message")!;
-  msg.innerHTML = '<i class="launch-streaks" aria-hidden="true"></i><strong class="shoot launch-call">GO SHOOT!</strong>';
-  arena?.launch(battle!);
+  msg.classList.add('awaiting-launch');
+  msg.innerHTML = '<strong class="shoot launch-call">GO SHOOT!</strong>';
 
 }
 function roundEnded() {
@@ -714,8 +714,8 @@ function askExit() {
   byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
 }
 function setPaused(value: boolean) {
+  if(value&&!paused){pauseStarted=performance.now();if(screen==="countdown"||launchCountdown.cue===0)launchCountdown.freeze(pauseStarted);}
   if(value){deviceLog.frame(performance.now(),false);clearPlayerTouch();sound.update(battle,false,null);}
-  if (value && !paused) pauseStarted = performance.now();
   if (!value && paused) {
     const elapsed = performance.now() - pauseStarted;
     if (screen === "countdown" || launchCountdown.cue===0) launchCountdown.shift(elapsed);
@@ -1168,10 +1168,15 @@ function frame(time: number) {
       }
     }
   if (!paused && (screen === "countdown" || screen === "battle" && launchCountdown.cue===0)) {
-    const action=launchCountdown.step(time,cue=>sound.countdownReady?sound.countdown(cue):null);
+    const action=launchCountdown.step(time,cue=>sound.countdownReady?sound.countdown(cue,launchCountdown.progress(time)>=2.45):null);
     if(action==='show'){
       if(launchCountdown.cue===0)startBattle();
       else{const msg=byId('battle-message')!,cue=launchCountdown.cue;msg.dataset.count=String(cue);msg.innerHTML=`<i class="count-ring" aria-hidden="true"></i><strong class="count-beat">${cue}</strong><span>READY TO LAUNCH</span>`;}
+    }
+    const launchAge=launchCountdown.takeLaunch(time);
+    if(launchAge!==null&&battle){
+      const msg=byId('battle-message')!;msg.dataset.launchAge=String(launchAge);msg.classList.remove('awaiting-launch');msg.insertAdjacentHTML('afterbegin','<i class="launch-streaks" aria-hidden="true"></i>');
+      msg.getAnimations({subtree:true}).forEach(a=>a.currentTime=launchAge*1000);arena?.launch(battle,launchAge,realDt);
     }
   }
   if (active && battle) {
@@ -1198,7 +1203,8 @@ function frame(time: number) {
           if (event.type === "dash") {
             const msg = byId("battle-message");
             if (msg) {
-              msg.innerHTML = '<span class="dash-message">XTREME DASH</span>';
+              const top=battle.tops[event.player];
+              msg.innerHTML = `<span class="dash-message">XTREME DASH<small>${event.player+1}P ${SPIN[top.bey.spin].arrow} ${SPIN[top.bey.spin].label} · ${safe(top.bey.bit)}</small></span>`;
               dashMessageUntil=battle.time+.65;
             }
           }
