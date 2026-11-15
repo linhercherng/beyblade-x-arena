@@ -44,12 +44,14 @@ export class Sound {
   volume = 0.6;
   requested: MusicMode | null = null;
   playing: Playing | null = null;
+  private musicTails=new Map<AudioBufferSourceNode,GainNode>();
   private pending: MusicMode | null = null;
   private revision = 0;
   private buffers = new Map<MusicMode, Promise<AudioBuffer>>();
   private failed = new Set<MusicMode>();
   private offsets = new Map<MusicMode, number>();
   private strikes: AudioBuffer[] = [];
+  private tones=new Map<OscillatorNode,GainNode>();
   private impacts = new Map<AudioBufferSourceNode,GainNode>();
   private impactTails = new Map<AudioBufferSourceNode,GainNode>();
   private lastImpact = -Infinity;
@@ -120,6 +122,8 @@ export class Sound {
     for(const v of this.frictionVoices.values()){v.filter.disconnect();v.gain.disconnect();v.pan.disconnect();}this.frictionVoices.clear();
     for(const gain of this.cueTails.values())gain.disconnect();this.cueTails.clear();
     for(const gain of this.voiceTails.values())gain.disconnect();this.voiceTails.clear();
+    for(const gain of this.musicTails.values())gain.disconnect();this.musicTails.clear();
+    for(const gain of this.tones.values())gain.disconnect();this.tones.clear();
     for(const rotor of this.rotors){rotor.gain.gain.cancelScheduledValues(now);rotor.gain.gain.setValueAtTime(0,now);}
     this.lastImpact=-Infinity;this.lastDash=[-Infinity,-Infinity];
   }
@@ -273,13 +277,16 @@ export class Sound {
     return this.buffers.get(mode)!;
   }
   private fadeOut(seconds: number) {
+    if(!this.ctx)return;
+    const now=this.ctx.currentTime;
+    if(seconds<.5)for(const [source,gain]of this.musicTails){gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+seconds);source.stop(now+seconds);}
     const old = this.playing;
-    if (!old || !this.ctx) return;
-    const now = this.ctx.currentTime;
+    if (!old) return;
     this.offsets.set(old.mode, (old.offset + now - old.startedAt) % old.duration);
     old.gain.gain.cancelAndHoldAtTime(now);
     old.gain.gain.linearRampToValueAtTime(0, now + seconds);
     old.source.stop(now + seconds);
+    this.musicTails.set(old.source,old.gain);
     this.playing = null;
   }
   private async transition(mode: MusicMode | null) {
@@ -298,6 +305,9 @@ export class Sound {
     try {
       const buffer = await this.buffer(mode);
       if (revision !== this.revision || !this.ready) return;
+      // 前一次交叉淡出完成前只保留最新請求，避免跨場堆疊曲目。
+      await Promise.all([...this.musicTails.keys()].map(source=>new Promise<void>(resolve=>source.addEventListener('ended',()=>resolve(),{once:true}))));
+      if(revision!==this.revision||!this.ready)return;
       const now = this.ctx.currentTime;
       const duration = Math.min(buffer.duration, tracks[mode].duration);
       let offset = this.offsets.get(mode) ?? 0;
@@ -313,7 +323,7 @@ export class Sound {
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(1, now + 0.5);
       source.connect(gain).connect(this.music);
-      source.onended = () => { source.disconnect(); gain.disconnect(); };
+      source.onended = () => { source.disconnect(); gain.disconnect();this.musicTails.delete(source); };
       source.start(now, offset % duration);
       this.playing = { mode, source, gain, startedAt: now, offset, duration };
     } catch (error) {
@@ -343,7 +353,8 @@ export class Sound {
     gain.gain.setValueAtTime(volume, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
     osc.connect(gain).connect(this.sfx);
-    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+    this.tones.set(osc,gain);
+    osc.onended = () => { osc.disconnect(); gain.disconnect();this.tones.delete(osc); };
     osc.start();
     osc.stop(now + duration);
   }
@@ -427,7 +438,7 @@ export class Sound {
     this.duckMusic(.18,.22/speed,.12/speed);
   }
   private stopCues() {
-    if (!this.ctx) return;
+    if (!this.ctx||!this.cues.size) return;
     const now = this.ctx.currentTime;
     for(const [source,gain]of this.cueTails){source.stop(now);source.disconnect();gain.disconnect();this.sources.delete(source);}this.cueTails.clear();
     this.cues.forEach((gain, source) => {
@@ -484,8 +495,8 @@ export class Sound {
     // 後來的擦撞不能縮短終結或慢放材質尾音的退讓。
     p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(this.musicDuckLevel,now+.004);p.setValueAtTime(this.musicDuckLevel,this.musicDuckUntil);p.setTargetAtTime(1,this.musicDuckUntil,release);
   }
-  private restoreDuck(){this.musicDuckUntil=-Infinity;this.musicDuckLevel=1;if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
-  stopEffects() {this.stopVoice();this.stopImpacts();this.stopDashes();this.stopCues();this.stopFriction();this.clearFrictionDuck();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  private restoreDuck(release=.12){this.musicDuckUntil=-Infinity;this.musicDuckLevel=1;if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,release);}}
+  stopEffects() {this.stopVoice();this.stopImpacts();this.stopDashes();this.stopCues();if(this.ctx){const now=this.ctx.currentTime;for(const [source,gain]of this.tones){gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);source.stop(now+.015);}}this.stopFriction();this.clearFrictionDuck();this.replayAccent=null;this.setReplay(null);this.restoreDuck(this.requested===null?.04:.12);}
   private duckFriction(level:number,hold:number){
     if(!this.ctx||!this.frictionDuck)return;
     const now=this.ctx.currentTime,speed=this.replayStage?HIGHLIGHT_RATE:1,p=this.frictionDuck.gain;
@@ -524,8 +535,8 @@ export class Sound {
   }
   private stopVoice(){
     if(!this.ctx)return;const now=this.ctx.currentTime,voice=this.voicePlayback;
-    for(const [source,gain]of this.voiceTails){source.stop(now);source.disconnect();gain.disconnect();this.sources.delete(source);}this.voiceTails.clear();
     if(!voice&&now>this.voiceDuckUntil)return;
+    for(const [source,gain]of this.voiceTails){source.stop(now);source.disconnect();gain.disconnect();this.sources.delete(source);}this.voiceTails.clear();
     if(voice&&!voice.complete)voice.cancelled=true;
     this.voicePlayback=null;this.voiceDuckUntil=-Infinity;
     if(voice)for(const playing of [voice,voice.accent])if(playing){playing.gain.gain.cancelAndHoldAtTime(now);playing.gain.gain.linearRampToValueAtTime(0,now+.015);playing.source.stop(now+.015);this.voiceTails.set(playing.source,playing.gain);}
@@ -604,6 +615,7 @@ export class Sound {
     const frictionLevel=this.updateFriction(friction,active,!this.muted&&(active||mode==='results')&&mode!==null&&mode!=='menu'&&this.replayStage!=='impact'&&this.replayStage!=='decision'),mix=1/(1+20*frictionLevel);
     if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
     if(mode===null||mode==="menu") { this.stopVoice();this.stopDashes();this.stopImpacts();this.clearFrictionDuck();this.replayAccent=null;this.setReplay(null); }
+    if(mode===null&&this.requested!==null)this.restoreDuck(.04);
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if(mode!==this.requested||Math.abs(mix-this.frictionMix)>.01||mix===1&&this.frictionMix!==1){
       const seconds=mix<this.frictionMix ? .08 : .18;this.frictionMix=mix;
