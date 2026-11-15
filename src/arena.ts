@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
 import{stadiumSurface,stadiumNormal}from"./stadium-surface.ts";
 import{BowlContact}from"./bey-contact.ts";
+import{frictionFrame,type FrictionFrame}from'./friction.ts';
 import{beyEffects,effectMode,effectVertices,hitBey,collisionAccent,finishAccent,type BeyEffects}from"./bey-effects.ts";
 import { impactProfile, impactShake, contactFeedback, contactRecoil } from "./impact.ts";
 import { dashVisual, hasRail, railLatch } from "./dash.ts";
@@ -99,6 +100,9 @@ export function renderPixelRatio(
   );
 }
 export class Arena {
+  friction:FrictionFrame[]=[frictionFrame(1,0,0,0),frictionFrame(1,0,0,1)];
+  private frictionUp=new THREE.Vector3();
+  private frictionNormal=new THREE.Vector3();
   needsRender=true;
   renderer: THREE.WebGLRenderer;
   scene = new THREE.Scene();
@@ -441,6 +445,7 @@ export class Arena {
     this.landingRings.forEach((ring,i)=>{const t=b.tops[i];this.placeFloorRing(ring,t.x,t.z);});
   }
   private resetEffects() {
+    this.friction=this.friction.map((_,i)=>frictionFrame(1,0,0,i));
     this.launchAt=-Infinity;this.spinContactAt=-Infinity;this.renderer.domElement.dataset.spinContact="none";
     this.highlightImpactActive=false;
     this.finishRate=1;this.finishShock=this.finishZoom=0;
@@ -738,6 +743,7 @@ export class Arena {
     this.models.forEach((g, i) => {
       const t = battle?.tops[i];
       this.traitRings[i].visible=false;
+      this.friction[i]=frictionFrame(1,0,0,i);
       if (t) {
         const pose = poses![i], rotation=-pose.rotation, spin=t.bey.spin==="L"?1:-1,
           lean = spinLean(pose.tilt, pose.rotation, i,pose.rpm);
@@ -832,6 +838,12 @@ export class Arena {
         }
         const fx=g.userData.effects as BeyEffects,aura=this.traitRings[i],hit=Math.max(0,1-(this.time-g.userData.effectHitAt)/.42),style=effectMode(fx,speed,Math.max(pose.tilt,Math.hypot(pose.axisX??0,pose.axisZ??0)));
         aura.userData.mode=style;
+        if(!opening&&(!battle!.result||resting)){
+          stadiumNormal(pose.x,pose.z,this.frictionNormal);this.frictionUp.set(0,1,0).applyQuaternion(g.quaternion);
+          const tilt=Math.acos(THREE.MathUtils.clamp(this.frictionUp.dot(this.frictionNormal),-1,1));
+          this.friction[i]=frictionFrame(pose.rpm,tilt,pose.rotation,i,resting?(this.reduced?2:finishElapsed):null,g.userData.stop?.rpm??0);
+          this.friction[i].pan=this.soundPan(g.position.x,g.position.z);this.friction[i].cutoff=fx.rubber?900:fx.metal?2300:1500;
+        }
         const terminal=battle!.result?finishAccent(fx,battle!.result.finish,finishElapsed,this.reduced):null,drive=Math.max(dash.intensity,terminal?.glow??0),modelScale=(g.userData.contact as BowlContact).scale;
         aura.visible=!this.reduced&&!opening&&(terminal?terminal.glow>0:pose.rpm>.08);
         if(aura.visible){

@@ -1295,6 +1295,7 @@ function frame(time: number) {
       finished: !!battle?.result,
       matchPoint: !!match && Math.max(...match.scores) >= 3 }),
     !paused&&(screen==='countdown'||screen==='battle'&&launchCountdown.cue===0),
+    arena?.friction??null,
   );
   if(time-audioUiAt>=200){audioUiAt=time;updateAudioStatus();}
   deviceLog.frame(time,!paused&&!document.hidden&&!!arena&&(screen==="battle"||screen==="replay"));

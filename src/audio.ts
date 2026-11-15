@@ -10,6 +10,8 @@ import { musicVolume, type MusicMode } from "./music-state.ts";
 import { impactProfile, impactSamples, musicLevel, contactFeedback } from "./impact.ts";
 import { dashSamples, hasRail } from "./dash.ts";
 import { replayMix, replayAccentSamples, type ReplayStage } from "./replay-audio.ts";
+import{frictionSamples,type FrictionFrame}from'./friction.ts';
+import{HIGHLIGHT_RATE}from'./highlight.ts';
 
 type Playing = {
   mode: MusicMode;
@@ -19,6 +21,7 @@ type Playing = {
   offset: number;
   duration: number;
 };
+type FrictionVoice={source:AudioBufferSourceNode;gain:GainNode;filter:BiquadFilterNode;pan:StereoPannerNode;closing:boolean};
 
 export class Sound {
   ctx: AudioContext | null = null;
@@ -63,13 +66,15 @@ export class Sound {
   private dashBuffers = new Map<boolean,AudioBuffer>();
   private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
   private lastDash = [-Infinity,-Infinity];
+  private frictionBuffer:AudioBuffer|null=null;
+  private frictionVoices=new Map<number,FrictionVoice>();
   private resumeRejected=false;
   get status(){return audioStatus({available:typeof AudioContext!=="undefined",muted:this.muted,context:this.ctx?.state??null,sessionInterrupted:this.session?.state==="interrupted",background:this.background,recovering:this.recovering,resumeAge:this.lastResume===-Infinity?null:performance.now()-this.lastResume,rejected:this.resumeRejected,musicFailed:!!this.requested&&this.volume>0&&this.failed.has(this.requested)});}
   private events:{atMs:number;kind:string}[]=[];
   private note(kind:string){this.events.push({atMs:Math.round(performance.now()),kind});if(this.events.length>60)this.events.shift();}
   diagnostics(){return {status:this.status,state:this.ctx?.state??(typeof AudioContext==="undefined"?"unavailable":"not-started"),ready:this.ready,session:this.session?.state??null,
     muted:this.muted,musicVolume:this.volume,contextTime:this.ctx?.currentTime??null,sampleRate:this.ctx?.sampleRate??null,sources:this.sources.size,
-    music:this.playing?.mode??null,buffers:this.buffers.size,rotors:this.rotors.length,events:this.events.map(e=>({...e}))};}
+    music:this.playing?.mode??null,buffers:this.buffers.size,rotors:this.rotors.length,friction:this.frictionVoices.size,events:this.events.map(e=>({...e}))};}
   onInterruption:(()=>void)|null=null;
   private session:(EventTarget&{readonly state?:string})|undefined;
   private clockTime=-1;
@@ -104,6 +109,7 @@ export class Sound {
     this.revision++;this.pending=null;this.fadeOut(0);this.stopEffects();
     // 包含交叉淡出中的配樂與短音效，避免凍結的聲源在恢復時一起響起。
     for(const source of this.sources){source.stop(now);source.disconnect();}this.sources.clear();
+    for(const v of this.frictionVoices.values()){v.filter.disconnect();v.gain.disconnect();v.pan.disconnect();}this.frictionVoices.clear();
     for(const rotor of this.rotors){rotor.gain.gain.cancelScheduledValues(now);rotor.gain.gain.setValueAtTime(0,now);}
     this.lastImpact=-Infinity;this.lastDash=[-Infinity,-Infinity];
   }
@@ -176,6 +182,7 @@ export class Sound {
         buffer.getChannelData(0).set(samples);
         return buffer;
       });
+      const friction=frictionSamples(this.ctx.sampleRate);this.frictionBuffer=this.ctx.createBuffer(1,friction.length,this.ctx.sampleRate);this.frictionBuffer.getChannelData(0).set(friction);
       // 在使用者啟用音訊時預熱，避免第一次衝刺在交戰迴圈內合成波形。
       for(const grip of [false,true]) {
         const samples=dashSamples(this.ctx.sampleRate,grip);
@@ -461,7 +468,27 @@ export class Sound {
     if(!slowReplay)this.speakVoice(this.announcementBuffers.get(kind));
   }
   private restoreDuck(){if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
-  stopEffects() {this.stopVoice();this.stopImpacts();this.stopDashes();this.stopCues();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  stopEffects() {this.stopVoice();this.stopImpacts();this.stopDashes();this.stopCues();this.stopFriction();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
+  private stopFriction(){
+    if(!this.ctx)return;const now=this.ctx.currentTime;
+    for(const v of this.frictionVoices.values())if(!v.closing){v.closing=true;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.025);v.source.stop(now+.025);}
+  }
+  private updateFriction(frames:readonly FrictionFrame[]|null,active:boolean,enabled:boolean){
+    if(!this.ctx||!this.sfx||!this.frictionBuffer)return;const now=this.ctx.currentTime;
+    for(let i=0;i<2;i++){
+      const f=frames?.[i],playing=enabled&&!!f&&(f.phase==='settle'||active&&f.phase==='spin');let v=this.frictionVoices.get(i);
+      if(!playing){if(v&&!v.closing){v.closing=true;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.025);v.source.stop(now+.025);}continue;}
+      if(v?.closing)continue;
+      if(!v){
+        const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),filter=this.ctx.createBiquadFilter(),pan=this.ctx.createStereoPanner();source.buffer=this.frictionBuffer;source.loop=true;filter.type='lowpass';filter.Q.value=.55;gain.gain.value=0;source.connect(filter).connect(gain).connect(pan).connect(this.sfx);v={source,gain,filter,pan,closing:false};this.frictionVoices.set(i,v);
+        const voice=v;source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();pan.disconnect();if(this.frictionVoices.get(i)===voice)this.frictionVoices.delete(i);};source.start(now,now%this.frictionBuffer.duration);
+      }
+      v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(Number.isFinite(f!.level)?Math.max(0,Math.min(.25,f!.level)):0,now+.025);
+      v.source.playbackRate.setTargetAtTime((Number.isFinite(f!.rate)?Math.max(.5,Math.min(1.25,f!.rate)):1)*(this.replayStage?HIGHLIGHT_RATE:1),now,.035);
+      v.filter.frequency.setTargetAtTime(Number.isFinite(f!.cutoff)?Math.max(500,Math.min(4000,f!.cutoff)):1500,now,.035);
+      v.pan.pan.setTargetAtTime(Number.isFinite(f!.pan)?Math.max(-.8,Math.min(.8,f!.pan)):0,now,.04);
+    }
+  }
   private stopVoice(){
     if(!this.ctx)return;const now=this.ctx.currentTime,voice=this.voicePlayback;
     if(!voice&&now>this.voiceDuckUntil)return;
@@ -530,6 +557,7 @@ export class Sound {
     active: boolean,
     mode: MusicMode | null,
     waitingForCountdown=false,
+    friction:readonly FrictionFrame[]|null=null,
   ) {
     if (!this.ready || !this.ctx) return;
     const wall=performance.now(),clock=this.ctx.currentTime;
@@ -539,6 +567,7 @@ export class Sound {
     else if(sampleGap>=1000&&!this.clockGapGrace){this.clockWall=wall;this.clockGapGrace=true;}
     // 路由切換可能沒有事件且仍回報running；只在預期有聲音時檢查停住的時鐘。
     else if(!this.muted&&(this.sources.size>0||active||waitingForCountdown)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
+    this.updateFriction(friction,active,!this.muted&&(active||mode==='results')&&mode!==null&&mode!=='menu'&&this.replayStage!=='impact'&&this.replayStage!=='decision');
     if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
     if(mode===null||mode==="menu") { this.stopVoice();this.stopDashes();this.stopImpacts();this.replayAccent=null;this.setReplay(null); }
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
