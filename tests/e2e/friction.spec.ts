@@ -21,3 +21,16 @@ test('背景與輸出裝置中斷清除舊摩擦聲，手勢恢復只建立雙�
  await page.goto('/tests/fixtures/friction.html');await page.locator('#slow').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);await page.locator('#background').click();expect((await metrics(page)).voices).toHaveLength(0);await page.locator('#foreground').click();await page.waitForTimeout(80);expect((await metrics(page)).voices).toHaveLength(0);await page.locator('#resume').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);
  await page.evaluate(()=>{for(let i=0;i<4;i++)navigator.mediaDevices.dispatchEvent(new Event('devicechange'));});expect((await metrics(page)).voices).toHaveLength(0);await page.locator('#resume').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);expect((await metrics(page)).peak).toBeLessThan(.95);
 });
+
+
+test('正式遊戲離開盤面後清除低幀率殘留的摩擦狀態',async({page})=>{
+ await page.addInitScript(()=>Object.defineProperty(crypto,'getRandomValues',{value:(a:Uint32Array)=>{a.fill(7181);return a;}}));await page.goto('/');
+ await page.evaluate(async()=>{
+  const {Arena}=await import('/src/arena.ts'),{Sound}=await import('/src/audio.ts'),w=window as any,draw=Arena.prototype.draw,update=Sound.prototype.update;w.frictionGame={forced:0};
+  Arena.prototype.draw=function(...args:any[]){const result=draw.apply(this,args);if(args[1]?.result){w.frictionGame.forced++;this.friction[1]={phase:'settle',level:.2,rate:.6,cutoff:1500,pan:0};}return result;};
+  Sound.prototype.update=function(...args:any[]){const result=update.apply(this,args);Object.assign(w.frictionGame,{screen:document.querySelector('#app')?.getAttribute('data-screen'),frames:args[4]??null,voices:this.frictionVoices.size,mix:this.frictionMix,ready:this.countdownReady});return result;};
+ });
+ await page.keyboard.press('Space');await expect.poll(()=>page.evaluate(()=>(window as any).frictionGame.ready)).toBe(true);await page.locator('[data-action="quick-battle"]').click();await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:12000});while(await page.locator('[data-action="speed"]').textContent()!=='4×')await page.locator('[data-action="speed"]').click();
+ await expect(page.locator('#highlight-panel,[data-action="next-round"],[data-action="rematch"]').first()).toBeVisible({timeout:45000});if(await page.locator('#highlight-panel').isVisible())await page.locator('[data-action="skip-highlight"]').click();
+ await expect(page.locator('[data-action="next-round"],[data-action="rematch"]')).toBeVisible();expect(await page.evaluate(()=>(window as any).frictionGame.forced)).toBeGreaterThan(0);await expect.poll(()=>page.evaluate(()=>(window as any).frictionGame.frames)).toBeNull();await expect.poll(()=>page.evaluate(()=>(window as any).frictionGame.voices)).toBe(0);await expect.poll(()=>page.evaluate(()=>(window as any).frictionGame.mix)).toBe(1);
+});
