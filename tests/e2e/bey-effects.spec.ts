@@ -1,7 +1,7 @@
 import{test,expect}from'@playwright/test';import{writeFileSync}from'node:fs';
 const metrics=(page:import('@playwright/test').Page)=>page.evaluate(()=>(window as any).effectMetrics());
 test('依陀螺特性顯示掃刃、護環、氣流與切換，暫停穩定且不改物理',async({page})=>{
- const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:1200,height:800});await page.goto('/tests/fixtures/bey-effects.html');
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize(process.env.CI?{width:640,height:480}:{width:1200,height:800});await page.goto('/tests/fixtures/bey-effects.html');
  for(const pair of ['attack','defense','balance','special']){await page.locator('#'+pair).click();await page.locator('#hit').click();const m=await metrics(page);expect(m.rings.every((r:any)=>r.visible)).toBe(true);expect(m.rings[0].color).not.toBe(m.rings[1].color);expect(m.stable).toBe(true);expect(m.particles).toBeLessThanOrEqual(360);expect(m.calls).toBeLessThan(140);
  if(pair==='defense'){expect(m.rings.map((r:any)=>r.mode)).toEqual(['defense','stamina']);expect(m.waves).toEqual(['triangle','sine']);}
  if(pair==='balance'){expect(m.rings[0].mode).toBe('defense');await page.locator('#switch').click();await expect.poll(async()=>(await metrics(page)).rings[0].mode).toBe('attack');}

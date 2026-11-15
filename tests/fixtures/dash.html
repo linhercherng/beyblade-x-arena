@@ -24,6 +24,7 @@ if(capture){let t=0;while(t<capture){const dt=Math.min(1/120,capture-t);move(dt)
 });
 function frame(t){const dt=Math.min(.05,(t-last)/1000||0);if(last&&frames.length<600)frames.push(t-last);last=t;if(!paused)move(dt);arena.draw(paused?0:dt,battle);sound.update(battle,!paused,paused?null:mode);
 if(meters){const s=rms(meters[0]),m=rms(meters[1]);if(s.rms>peakSfx){peakSfx=s.rms;musicAtPeak=m.rms;}peakMix=Math.max(peakMix,rms(meters[2]).peak);}requestAnimationFrame(frame);}
+window.endDash=()=>{paused=true;move(1);arena.draw(1,battle);};
 window.drawDoesNotMutate=()=>{const before=JSON.stringify(battle);arena.draw(0,battle);return JSON.stringify(battle)===before;};
 window.dashMetrics=()=>({time:arena.time,particles:arena.particles.length,flashes:arena.impactFlashes.filter(f=>f.material.opacity>0).length,ribbons:arena.dashRibbons.map(r=>({visible:r.visible,count:r.geometry.drawRange.count,points:Array.from(r.geometry.attributes.position.array).slice(0,r.geometry.drawRange.count*3)})),geometryStable:ids.join() ===[...arena.dashRibbons,...arena.trails].map(o=>o.geometry.uuid).join(),rail:arena.models.map(g=>g.userData.contact.railPoint.toArray()),model:arena.models.map(g=>g.position.toArray()),quaternion:arena.camera.quaternion.toArray(),voices:sound.dashVoices.size,duck:sound.musicDuck?.gain.value??1,playing:sound.playing?.mode,rms:meters?rms(meters[2]).rms:0,peakSfx,musicAtPeak,peakMix,calls:arena.renderer.info.render.calls,frames});requestAnimationFrame(frame);
 </script></html>
