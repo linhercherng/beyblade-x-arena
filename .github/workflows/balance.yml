@@ -27,7 +27,7 @@ jobs:
       - run: npx playwright test tests/e2e/bey-identity.spec.ts
       - run: npx playwright test tests/e2e/contact-render.spec.ts tests/e2e/finish-identity.spec.ts tests/e2e/contact-feedback.spec.ts tests/e2e/slope.spec.ts
       - run: npx playwright test tests/e2e/low-spin.spec.ts
-      - run: npx playwright test tests/e2e/friction.spec.ts tests/e2e/audio-route.spec.ts tests/e2e/finish-material.spec.ts
+      - run: npx playwright test tests/e2e/friction.spec.ts tests/e2e/audio-route.spec.ts tests/e2e/finish-material.spec.ts tests/e2e/finish-handoff.spec.ts
       - run: npx playwright test tests/e2e/spin.spec.ts --grep 真實3D
       - run: npx playwright test tests/e2e/opening-sync.spec.ts --grep "長畫格|已落盤"
       - run: npm run balance:check

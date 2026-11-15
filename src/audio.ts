@@ -31,6 +31,8 @@ export class Sound {
   sfx: GainNode | null = null;
   music: GainNode | null = null;
   musicDuck: GainNode | null = null;
+  private musicDuckUntil=-Infinity;
+  private musicDuckLevel=1;
   private replayGain: GainNode | null = null;
   private replayFilter: BiquadFilterNode | null = null;
   private replayStage: ReplayStage | null = null;
@@ -59,6 +61,7 @@ export class Sound {
   private voiceMusicDuck:GainNode|null=null;
   private voiceSfxDuck:GainNode|null=null;
   private voiceDuckUntil=-Infinity;
+  private voiceTails=new Map<AudioBufferSourceNode,GainNode>();
   private voiceReadyAt=0;
   get countdownReady(){return this.muted||typeof AudioContext==='undefined'||this.ready&&!!this.ctx&&this.ctx.currentTime>=this.voiceReadyAt;}
   private cueBuffers = new Map<string, AudioBuffer>();
@@ -116,6 +119,7 @@ export class Sound {
     for(const source of this.sources){source.stop(now);source.disconnect();}this.sources.clear();
     for(const v of this.frictionVoices.values()){v.filter.disconnect();v.gain.disconnect();v.pan.disconnect();}this.frictionVoices.clear();
     for(const gain of this.cueTails.values())gain.disconnect();this.cueTails.clear();
+    for(const gain of this.voiceTails.values())gain.disconnect();this.voiceTails.clear();
     for(const rotor of this.rotors){rotor.gain.gain.cancelScheduledValues(now);rotor.gain.gain.setValueAtTime(0,now);}
     this.lastImpact=-Infinity;this.lastDash=[-Infinity,-Infinity];
   }
@@ -371,10 +375,7 @@ export class Sound {
       // 先完成4ms配樂壓低，再起音，避免強拍遮住撞擊瞬態。
       this.duckFriction(dashHit?.28:.55,dashHit?.16:.08);
       source.start(now+.008);
-      const duck = this.musicDuck.gain;
-      duck.cancelAndHoldAtTime(now);
-      duck.linearRampToValueAtTime(Math.min(duck.value, dashHit?.18:profile.duck), now + .004);
-      duck.setTargetAtTime(1, now + (dashHit?.15:.08)/speed, .085/speed);
+      this.duckMusic(dashHit?.18:profile.duck,(dashHit?.15:.08)/speed,.085/speed);
     }
     if (e.type === "dash") this.playDash(e,cameraPan,battle);
     if (e.type === "shout") {
@@ -423,11 +424,7 @@ export class Sound {
     source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();pan.disconnect();if(this.dashVoices.get(e.player)?.source===source)this.dashVoices.delete(e.player);};
     this.duckFriction(grip?.6:.45,.22);
     source.start(now+.008);
-    if(this.musicDuck) {
-      const duck=this.musicDuck.gain;duck.cancelAndHoldAtTime(now);
-      duck.linearRampToValueAtTime(Math.min(duck.value,.18),now+.004);
-      duck.setTargetAtTime(1,now+.22/speed,.12/speed);
-    }
+    this.duckMusic(.18,.22/speed,.12/speed);
   }
   private stopCues() {
     if (!this.ctx) return;
@@ -471,20 +468,23 @@ export class Sound {
     source.onended = () => { source.disconnect();filter?.disconnect(); gain.disconnect();pan?.disconnect();this.cuePans.delete(source);this.cues.delete(source);this.cueTails.delete(source); };
     if(['burst','over','extreme','spin'].includes(kind))this.duckFriction(.4,.18);
     source.start(now+.008);
-    if (this.musicDuck) {
-      const duck = this.musicDuck.gain;
-      duck.cancelAndHoldAtTime(now);
-      duck.linearRampToValueAtTime(Math.min(duck.value,.25), now + .004);
-      const duration=slowReplay?source.buffer.duration/initialRate:source.buffer.duration+(1-initialRate)*FINISH_RECOVERY/2;
-      duck.setTargetAtTime(1, now+.008+duration, .12);
-    }
+    const duration=slowReplay?source.buffer.duration/initialRate:source.buffer.duration+(1-initialRate)*FINISH_RECOVERY/2;
+    this.duckMusic(slowReplay?.12:.25,.008+duration);
   }
   finish(result: Result, initialRate=1, slowReplay=false, cameraPan=0,battle?:Battle) {
     const kind=result.winner===null?'draw':result.finish;
     this.playCue(kind,initialRate,slowReplay,cameraPan,battle&&result.winner!==null?beyEffects(battle.tops[1-result.winner].bey):undefined);
     if(!slowReplay)this.speakVoice(this.announcementBuffers.get(kind));
   }
-  private restoreDuck(){if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
+  private duckMusic(level:number,hold:number,release=.12){
+    if(!this.ctx||!this.musicDuck)return;
+    const now=this.ctx.currentTime,p=this.musicDuck.gain;
+    if(now>=this.musicDuckUntil)this.musicDuckLevel=1;
+    this.musicDuckLevel=Math.min(this.musicDuckLevel,level,p.value);this.musicDuckUntil=Math.max(this.musicDuckUntil,now+hold);
+    // 後來的擦撞不能縮短終結或慢放材質尾音的退讓。
+    p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(this.musicDuckLevel,now+.004);p.setValueAtTime(this.musicDuckLevel,this.musicDuckUntil);p.setTargetAtTime(1,this.musicDuckUntil,release);
+  }
+  private restoreDuck(){this.musicDuckUntil=-Infinity;this.musicDuckLevel=1;if(this.ctx&&this.musicDuck){const now=this.ctx.currentTime;this.musicDuck.gain.cancelAndHoldAtTime(now);this.musicDuck.gain.setTargetAtTime(1,now,.04);}}
   stopEffects() {this.stopVoice();this.stopImpacts();this.stopDashes();this.stopCues();this.stopFriction();this.clearFrictionDuck();this.replayAccent=null;this.setReplay(null);this.restoreDuck();}
   private duckFriction(level:number,hold:number){
     if(!this.ctx||!this.frictionDuck)return;
@@ -524,10 +524,11 @@ export class Sound {
   }
   private stopVoice(){
     if(!this.ctx)return;const now=this.ctx.currentTime,voice=this.voicePlayback;
+    for(const [source,gain]of this.voiceTails){source.stop(now);source.disconnect();gain.disconnect();this.sources.delete(source);}this.voiceTails.clear();
     if(!voice&&now>this.voiceDuckUntil)return;
     if(voice&&!voice.complete)voice.cancelled=true;
     this.voicePlayback=null;this.voiceDuckUntil=-Infinity;
-    if(voice)for(const playing of [voice,voice.accent])if(playing){playing.gain.gain.cancelAndHoldAtTime(now);playing.gain.gain.linearRampToValueAtTime(0,now+.015);playing.source.stop(now+.015);}
+    if(voice)for(const playing of [voice,voice.accent])if(playing){playing.gain.gain.cancelAndHoldAtTime(now);playing.gain.gain.linearRampToValueAtTime(0,now+.015);playing.source.stop(now+.015);this.voiceTails.set(playing.source,playing.gain);}
     // Hold through the existing 180ms music fade so cancellation cannot cause a swell.
     for(const [node,release]of [[this.voiceMusicDuck,.06],[this.voiceSfxDuck,.18]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.setValueAtTime(p.value,now+.18);p.setTargetAtTime(1,now+.18,release);}
   }
@@ -541,14 +542,14 @@ export class Sound {
     const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain();
     source.buffer=buffer;gain.gain.value=.52;source.connect(gain).connect(this.master);
     let accentVoice:{source:AudioBufferSourceNode;gain:GainNode}|null=null;
-    if(accent?.buffer){const a=this.track(this.ctx.createBufferSource()),g=this.ctx.createGain();a.buffer=accent.buffer;a.playbackRate.value=accent.rate;g.gain.value=accent.gain;a.connect(g).connect(this.sfx);a.onended=()=>{a.disconnect();g.disconnect();if(playback.complete&&this.voicePlayback===playback)this.voicePlayback=null;};accentVoice={source:a,gain:g};}
+    if(accent?.buffer){const a=this.track(this.ctx.createBufferSource()),g=this.ctx.createGain();a.buffer=accent.buffer;a.playbackRate.value=accent.rate;g.gain.value=accent.gain;a.connect(g).connect(this.sfx);a.onended=()=>{a.disconnect();g.disconnect();this.voiceTails.delete(a);if(playback.complete&&this.voicePlayback===playback)this.voicePlayback=null;};accentVoice={source:a,gain:g};}
     const context=this.ctx,startAt=context.currentTime+.012;
     const playback={source,gain,accent:accentVoice,complete:false,cancelled:false,elapsed:()=>context.currentTime-startAt};this.voicePlayback=playback;
-    source.onended=()=>{playback.complete=true;source.disconnect();gain.disconnect();if(this.voicePlayback?.source===source&&(!accentVoice||accentVoice.source.buffer!.duration/accentVoice.source.playbackRate.value<=buffer.duration))this.voicePlayback=null;};
+    source.onended=()=>{playback.complete=true;source.disconnect();gain.disconnect();this.voiceTails.delete(source);if(this.voicePlayback?.source===source&&(!accentVoice||accentVoice.source.buffer!.duration/accentVoice.source.playbackRate.value<=buffer.duration))this.voicePlayback=null;};
     const now=this.ctx.currentTime;
     // Independent priority gains keep hit/replay duck recovery from masking speech.
-    this.voiceDuckUntil=now+buffer.duration+.23;
-    for(const [node,level]of [[this.voiceMusicDuck,.1],[this.voiceSfxDuck,.32]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(level,now+.008);p.setValueAtTime(level,now+buffer.duration+.06);p.linearRampToValueAtTime(1,this.voiceDuckUntil);}
+    this.voiceDuckUntil=startAt+buffer.duration+.06+1.08;
+    for(const [node,level,release]of [[this.voiceMusicDuck,.1,.12],[this.voiceSfxDuck,.32,.18]]as const)if(node){const p=node.gain;p.cancelAndHoldAtTime(now);p.linearRampToValueAtTime(level,now+.008);p.setValueAtTime(level,startAt+buffer.duration+.06);p.setTargetAtTime(1,startAt+buffer.duration+.06,release);}
     accentVoice?.source.start(startAt);source.start(startAt);
     return playback;
   }
