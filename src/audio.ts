@@ -10,7 +10,7 @@ import { musicVolume, type MusicMode } from "./music-state.ts";
 import { impactProfile, impactSamples, musicLevel, contactFeedback } from "./impact.ts";
 import { dashSamples, hasRail } from "./dash.ts";
 import { replayMix, replayAccentSamples, type ReplayStage } from "./replay-audio.ts";
-import{frictionSamples,type FrictionFrame}from'./friction.ts';
+import{frictionSamples,type FrictionFrame,type FrictionMaterial}from'./friction.ts';
 import{HIGHLIGHT_RATE}from'./highlight.ts';
 
 type Playing = {
@@ -21,7 +21,7 @@ type Playing = {
   offset: number;
   duration: number;
 };
-type FrictionVoice={source:AudioBufferSourceNode;gain:GainNode;filter:BiquadFilterNode;pan:StereoPannerNode;closing:boolean};
+type FrictionVoice={source:AudioBufferSourceNode;gain:GainNode;filter:BiquadFilterNode;pan:StereoPannerNode;closing:boolean;material:FrictionMaterial};
 
 export class Sound {
   ctx: AudioContext | null = null;
@@ -66,7 +66,7 @@ export class Sound {
   private dashBuffers = new Map<boolean,AudioBuffer>();
   private dashVoices = new Map<number,{source:AudioBufferSourceNode;gain:GainNode}>();
   private lastDash = [-Infinity,-Infinity];
-  private frictionBuffer:AudioBuffer|null=null;
+  private frictionBuffers=new Map<FrictionMaterial,AudioBuffer>();
   private frictionVoices=new Map<number,FrictionVoice>();
   private frictionMix=1;
   private resumeRejected=false;
@@ -183,7 +183,7 @@ export class Sound {
         buffer.getChannelData(0).set(samples);
         return buffer;
       });
-      const friction=frictionSamples(this.ctx.sampleRate);this.frictionBuffer=this.ctx.createBuffer(1,friction.length,this.ctx.sampleRate);this.frictionBuffer.getChannelData(0).set(friction);
+      for(const material of ['metal','plastic','rubber']as const){const friction=frictionSamples(this.ctx.sampleRate,material),buffer=this.ctx.createBuffer(1,friction.length,this.ctx.sampleRate);buffer.getChannelData(0).set(friction);this.frictionBuffers.set(material,buffer);}
       // 在使用者啟用音訊時預熱，避免第一次衝刺在交戰迴圈內合成波形。
       for(const grip of [false,true]) {
         const samples=dashSamples(this.ctx.sampleRate,grip);
@@ -475,19 +475,21 @@ export class Sound {
     for(const v of this.frictionVoices.values())if(!v.closing){v.closing=true;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.025);v.source.stop(now+.025);}
   }
   private updateFriction(frames:readonly FrictionFrame[]|null,active:boolean,enabled:boolean){
-    if(!this.ctx||!this.sfx||!this.frictionBuffer)return 0;const now=this.ctx.currentTime;let level=0;
+    if(!this.ctx||!this.sfx||!this.frictionBuffers.size)return 0;const now=this.ctx.currentTime;let level=0;
     for(let i=0;i<2;i++){
       const f=frames?.[i],playing=enabled&&!!f&&(f.phase==='settle'||active&&f.phase==='spin');let v=this.frictionVoices.get(i);
-      if(!playing){if(v&&!v.closing){v.closing=true;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.025);v.source.stop(now+.025);}continue;}
+      const material=f?.material==='metal'||f?.material==='rubber'?f.material:'plastic';
+      if(!playing||v&&v.material!==material){if(v&&!v.closing){v.closing=true;v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(0,now+.025);v.source.stop(now+.025);}continue;}
       if(v?.closing)continue;
       if(!v){
-        const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),filter=this.ctx.createBiquadFilter(),pan=this.ctx.createStereoPanner();source.buffer=this.frictionBuffer;source.loop=true;filter.type='lowpass';filter.Q.value=.55;gain.gain.value=0;source.connect(filter).connect(gain).connect(pan).connect(this.sfx);v={source,gain,filter,pan,closing:false};this.frictionVoices.set(i,v);
-        const voice=v;source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();pan.disconnect();if(this.frictionVoices.get(i)===voice)this.frictionVoices.delete(i);};source.start(now,now%this.frictionBuffer.duration);
+        const source=this.track(this.ctx.createBufferSource()),gain=this.ctx.createGain(),filter=this.ctx.createBiquadFilter(),pan=this.ctx.createStereoPanner();source.buffer=this.frictionBuffers.get(material)!;source.loop=true;filter.type='lowpass';filter.Q.value=material==='metal'?1.1:material==='rubber'?.8:.55;gain.gain.value=0;source.connect(filter).connect(gain).connect(pan).connect(this.sfx);v={source,gain,filter,pan,closing:false,material};this.frictionVoices.set(i,v);
+        const voice=v;source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();pan.disconnect();if(this.frictionVoices.get(i)===voice)this.frictionVoices.delete(i);};source.start(now,now%source.buffer.duration);
       }
       const target=Number.isFinite(f!.level)?Math.max(0,Math.min(.25,f!.level)):0;level=Math.max(level,target);
       v.gain.gain.cancelAndHoldAtTime(now);v.gain.gain.linearRampToValueAtTime(target,now+.025);
-      v.source.playbackRate.setTargetAtTime((Number.isFinite(f!.rate)?Math.max(.5,Math.min(1.25,f!.rate)):1)*(this.replayStage?HIGHLIGHT_RATE:1),now,.035);
-      v.filter.frequency.setTargetAtTime(Number.isFinite(f!.cutoff)?Math.max(500,Math.min(4000,f!.cutoff)):1500,now,.035);
+      const speed=this.replayStage?HIGHLIGHT_RATE:1;
+      v.source.playbackRate.setTargetAtTime((Number.isFinite(f!.rate)?Math.max(.5,Math.min(1.25,f!.rate)):1)*speed,now,.035);
+      v.filter.frequency.setTargetAtTime((Number.isFinite(f!.cutoff)?Math.max(500,Math.min(4000,f!.cutoff)):1500)*speed,now,.035);
       v.pan.pan.setTargetAtTime(Number.isFinite(f!.pan)?Math.max(-.8,Math.min(.8,f!.pan)):0,now,.04);
     }
     return level;

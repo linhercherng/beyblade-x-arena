@@ -841,8 +841,8 @@ export class Arena {
         if(!opening&&(!battle!.result||resting)){
           stadiumNormal(pose.x,pose.z,this.frictionNormal);this.frictionUp.set(0,1,0).applyQuaternion(g.quaternion);
           const tilt=Math.acos(THREE.MathUtils.clamp(this.frictionUp.dot(this.frictionNormal),-1,1));
-          this.friction[i]=frictionFrame(pose.rpm,tilt,pose.rotation,i,resting?(this.reduced?2:finishElapsed):null,g.userData.stop?.rpm??0);
-          this.friction[i].pan=this.soundPan(g.position.x,g.position.z);this.friction[i].cutoff=fx.rubber?900:fx.metal?2300:1500;
+          this.friction[i]=frictionFrame(pose.rpm,tilt,pose.rotation,i,resting?(this.reduced?2:finishElapsed):null,g.userData.stop?.rpm??0,fx.rubber?'rubber':fx.metal?'metal':'plastic');
+          this.friction[i].pan=this.soundPan(g.position.x,g.position.z);
         }
         const terminal=battle!.result?finishAccent(fx,battle!.result.finish,finishElapsed,this.reduced):null,drive=Math.max(dash.intensity,terminal?.glow??0),modelScale=(g.userData.contact as BowlContact).scale;
         aura.visible=!this.reduced&&!opening&&(terminal?terminal.glow>0:pose.rpm>.08);

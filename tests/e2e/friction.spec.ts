@@ -34,3 +34,20 @@ test('正式遊戲離開盤面後清除低幀率殘留的摩擦狀態',async({pa
  await expect(page.locator('#highlight-panel,[data-action="next-round"],[data-action="rematch"]').first()).toBeVisible({timeout:45000});if(await page.locator('#highlight-panel').isVisible())await page.locator('[data-action="skip-highlight"]').click();
  await expect(page.locator('[data-action="next-round"],[data-action="rematch"]')).toBeVisible();expect(await page.evaluate(()=>(window as any).frictionGame.forced)).toBeGreaterThan(0);await expect.poll(()=>page.evaluate(()=>(window as any).frictionGame.frames)).toBeNull();await expect.poll(()=>page.evaluate(()=>(window as any).frictionGame.voices)).toBe(0);await expect.poll(()=>page.evaluate(()=>(window as any).frictionGame.mix)).toBe(1);
 });
+
+
+for(const material of ['metal','plastic','rubber'])test(`${material}軸心使用專屬快取音色，擦盤側躺與慢放同步且不疊音`,async({page})=>{
+ await page.goto('/tests/fixtures/friction.html');await page.locator('#'+material).click();await expect.poll(async()=>(await metrics(page)).voices.filter((v:any)=>v.material===material&&!v.closing).length).toBe(2);const spin=await metrics(page);expect(spin.cache).toBe(3);expect(spin.frames.every((f:any)=>f.material===material)).toBe(true);expect(spin.voices.every((v:any)=>v.cached)).toBe(true);
+ await page.evaluate(()=>(window as any).frictionSound.beginReplay());await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);await expect.poll(async()=>(await metrics(page)).voices[0].rate).toBeCloseTo(.746*.55,3);
+ await expect.poll(async()=>{const m=await metrics(page);return Math.abs(m.voices[0].cutoff-m.frames[0].cutoff*.55)/m.frames[0].cutoff;}).toBeLessThan(.05);
+ const delta=await page.evaluate(()=>{const w=window as any,before=w.frictionMetrics().time;w.frictionStep(.4);return w.frictionMetrics().time-before;});expect(delta).toBeCloseTo(.4*.55,8);
+ await page.evaluate(()=>(window as any).frictionSound.setReplay('impact'));await expect.poll(async()=>(await metrics(page)).voices.length).toBe(0);const held=await page.evaluate(()=>{const w=window as any,before=w.frictionMetrics().time;w.frictionStep(.4);return w.frictionMetrics().time-before;});expect(held).toBe(0);
+ await page.evaluate(()=>(window as any).frictionSound.setReplay('tracking'));await expect.poll(async()=>(await metrics(page)).voices.filter((v:any)=>v.material===material&&!v.closing).length).toBe(2);const resumed=await metrics(page);await page.locator('#stop').click();await expect.poll(async()=>(await metrics(page)).frames[1].phase).toBe('settle');expect((await metrics(page)).voices.find((v:any)=>v.player===1)?.id).toBe(resumed.voices[1].id);
+ await page.evaluate(()=>(window as any).frictionStep(4));await expect.poll(async()=>(await metrics(page)).voices.length).toBe(0);expect((await metrics(page)).frames[1].phase).toBe('off');expect((await metrics(page)).peak).toBeLessThan(.95);expect((await metrics(page)).stable).toBe(true);
+});
+
+test('連續切換軸心材質等待舊聲源淡出，不重建快取或疊加同一玩家聲音',async({page})=>{
+ await page.goto('/tests/fixtures/friction.html');await page.locator('#metal').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(2);
+ for(const material of ['rubber','plastic','metal','rubber']){await page.locator('#'+material).click();await expect.poll(async()=>(await metrics(page)).voices.filter((v:any)=>v.material===material&&!v.closing).length).toBe(2);expect((await metrics(page)).voices.length).toBeLessThanOrEqual(2);expect((await metrics(page)).cache).toBe(3);}
+ await page.locator('#skip').click();await expect.poll(async()=>(await metrics(page)).voices.length).toBe(0);expect((await metrics(page)).peak).toBeLessThan(.95);
+});

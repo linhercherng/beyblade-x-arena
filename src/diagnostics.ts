@@ -1,4 +1,4 @@
-export const GAME_VERSION='0.32.0';
+export const GAME_VERSION='0.33.0';
 export const DEVICE_CASES={bluetooth:'藍牙耳機切換',wired:'耳機拔插',call:'來電中斷後恢復',background:'背景／鎖屏後恢復',heat:'連玩15分鐘後發熱／降速'} as const;
 type Status='untested'|'pass'|'fail';
 export type GpuSample={geometries:number;textures:number;programs:number;drawCalls:number;triangles:number;pixels:number};
