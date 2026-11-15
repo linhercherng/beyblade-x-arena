@@ -2,13 +2,14 @@ import * as THREE from "three";
 import { createStadium } from "./stadium.ts";
 import{stadiumSurface,stadiumNormal}from"./stadium-surface.ts";
 import{BowlContact}from"./bey-contact.ts";
+import{beyEffects,effectMode,effectVertices,hitBey,type BeyEffects}from"./bey-effects.ts";
 import { impactProfile, impactShake } from "./impact.ts";
 import { dashVisual, hasRail } from "./dash.ts";
 import { DashHitPlayback, hitZoomFactor } from "./dash-hit.ts";
 import { exitPose, burstPose, finishPlayback, FINISH_COLORS } from "./finish.ts";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import type { Bey } from "./catalog.ts";
-import { BEYS } from "./catalog.ts";
+import { BEYS,TYPE } from "./catalog.ts";
 import { beyModel, modelSpec } from "./bey-model.ts";
 import {
   interpolatePose,
@@ -137,6 +138,7 @@ export class Arena {
   floorUp = new THREE.Vector3(0,1,0);
   floorRotation = new THREE.Quaternion();
   ringRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),Math.PI/2);
+  traitRings: THREE.Mesh[] = [];
   trails: THREE.Line[] = [];
   trailPositions: number[][] = [[], []];
   trailTimes: number[][] = [[], []];
@@ -287,6 +289,9 @@ export class Arena {
       line.frustumCulled = false;
       this.scene.add(line);
       this.trails.push(line);
+      const auraGeometry=new THREE.BufferGeometry();auraGeometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(72*18),3).setUsage(THREE.DynamicDrawUsage));
+      const aura=new THREE.Mesh(auraGeometry,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,toneMapped:false,side:THREE.DoubleSide}));aura.userData.centers=new Float32Array(72*6);
+      aura.frustumCulled=false;aura.visible=false;this.scene.add(aura);this.traitRings.push(aura);
       const ribbonGeometry=new THREE.BufferGeometry();
       ribbonGeometry.setAttribute("position",new THREE.BufferAttribute(new Float32Array(30*18),3).setUsage(THREE.DynamicDrawUsage));
       ribbonGeometry.setAttribute("color",new THREE.BufferAttribute(new Float32Array(30*24),4).setUsage(THREE.DynamicDrawUsage));
@@ -394,11 +399,16 @@ export class Arena {
         }
       });
     });
-    this.models = beys.map((b) => {
+    this.models = beys.map((b,i) => {
       const texture = new THREE.TextureLoader().load(modelSpec(b).photo.src,()=>{this.needsRender=true;});
       const g = beyModel(b, texture);
         g.userData.spin=b.spin;
       g.userData.contact=new BowlContact(g);
+      const fx=beyEffects(b),spec=modelSpec(b);g.userData.effects=fx;g.userData.effectHitAt=-Infinity;g.userData.effectHeight=spec.bitHeight+spec.ratchetHeight+spec.bladeThickness*.5;
+      const color=(this.traitRings[i].material as THREE.MeshBasicMaterial).color.set(fx.color),hsl=color.getHSL({h:0,s:0,l:0});
+      if(hsl.s<.3)color.set(TYPE[b.type].color);else color.setHSL(hsl.h,Math.max(.55,hsl.s),Math.max(.38,Math.min(.58,hsl.l)));
+      (this.trails[i].material as THREE.LineBasicMaterial).color.copy((this.traitRings[i].material as THREE.LineBasicMaterial).color);
+      (this.dashRibbons[i].userData.tint as THREE.Color).copy((this.traitRings[i].material as THREE.LineBasicMaterial).color);
       const parts = g.userData.parts as THREE.Group[], links = g.userData.partLinks as number[];
       g.userData.partFloors = [0, 1, 2].map(link => {
         const floors = parts.flatMap((part, i) => links[i] === link ? [new THREE.Box3().setFromObject(part).min.y] : []);
@@ -424,7 +434,8 @@ export class Arena {
     this.finishRate=1;this.finishShock=this.finishZoom=0;
     this.hitPlayback.reset();this.hitRing.visible=false;
     (this.hitRing.material as THREE.MeshBasicMaterial).color.set("#b8f6ff");
-    this.models.forEach(g=>{g.userData.lean={x:0,z:0};g.userData.contact.reset();(g.userData.parts as THREE.Group[]).forEach(p=>{p.position.set(0,0,0);p.rotation.set(0,0,0);});});
+    this.models.forEach(g=>{g.userData.lean={x:0,z:0};g.userData.contact.reset();g.userData.effectHitAt=-Infinity;(g.userData.parts as THREE.Group[]).forEach(p=>{p.position.set(0,0,0);p.rotation.set(0,0,0);});});
+    this.traitRings.forEach(r=>r.visible=false);
     this.trailPositions = [[], []];
     this.trailTimes = [[], []];
     this.dashStates = [null,null];
@@ -478,6 +489,9 @@ export class Arena {
   event(e: BattleEvent, battle?: Battle): boolean {
     const dashHit=battle ? this.hitPlayback.trigger(e,battle,this.time) : false;
     if (e.type === "hit") {
+      this.models.forEach(g=>g.userData.effectHitAt=this.time);
+      const lead=battle?beyEffects(hitBey(battle)):null;
+      const colors=this.models.map(g=>(g.userData.effects as BeyEffects).color);
       const profile = impactProfile(dashHit ? Math.max(10,e.strength*1.35) : e.strength);
       if(dashHit) {
         profile.shake*=1.5;
@@ -493,7 +507,7 @@ export class Arena {
         const flare = this.impactFlashes.find(f => f.userData.life <= 0)
           ?? this.impactFlashes.reduce((a, b) => a.userData.life < b.userData.life ? a : b);
         flare.position.set(e.x, height, e.z);
-        (flare.material as THREE.SpriteMaterial).color.set(dashHit?"#d7faff":"#ffb044");
+        (flare.material as THREE.SpriteMaterial).color.set(lead?.color??(dashHit?"#d7faff":"#ffb044")).lerp(new THREE.Color("#ffffff"),.4);
         flare.userData.life = flare.userData.totalLife = .065 + profile.tier * .025;
         flare.userData.size = .3 + profile.gain * .55;
       }
@@ -501,16 +515,16 @@ export class Arena {
       for (let i = 0; i < count; i++) {
         const a = i * 2.39996 + e.time;
         const life = this.reduced ? .08 : .12 + profile.tier * .055 + (i % 4) * .025;
-        const speed = this.reduced ? 0 : (.7 + profile.gain) * (1 + (i % 4) * .65);
+        const speed = this.reduced ? 0 : (.7 + profile.gain) * (1 + (i % 4) * .65)*(lead?.type==="attack"?1.12:1);
         this.particles.push({
           p: new THREE.Vector3(e.x, height, e.z),
           v: new THREE.Vector3(
             Math.cos(a) * speed,
-            this.reduced ? 0 : .7 + (i % 5) * .35,
+            this.reduced ? 0 : (lead?.type==="defense"?.3:.7) + (i % 5) * .35,
             Math.sin(a) * speed,
           ),
           life, totalLife: life,
-          color: new THREE.Color(dashHit ? i%3 ? "#8eefff" : "#ffffff" : i % 3 ? "#ffbd60" : "#fff5d2"),
+          color: new THREE.Color(battle?(i%3?colors[i%2]:"#fff5d2"):dashHit ? i%3 ? "#8eefff" : "#ffffff" : i % 3 ? "#ffbd60" : "#fff5d2"),
         });
       }
     }
@@ -690,6 +704,7 @@ export class Arena {
     this.camera.rotateX(kick.y);
     this.models.forEach((g, i) => {
       const t = battle?.tops[i];
+      this.traitRings[i].visible=false;
       if (t) {
         const pose = poses![i], rotation=-pose.rotation, spin=t.bey.spin==="L"?1:-1,
           lean = spinLean(pose.tilt, pose.rotation, i);
@@ -767,13 +782,28 @@ export class Arena {
             pulse.scale.setScalar(loser ? 1+Math.min(1,elapsed)*1.2 : 1.18);
           }
         }
+        const fx=g.userData.effects as BeyEffects,aura=this.traitRings[i],hit=Math.max(0,1-(this.time-g.userData.effectHitAt)/.42),style=effectMode(fx,speed,Math.max(pose.tilt,Math.hypot(pose.axisX??0,pose.axisZ??0)));
+        aura.userData.mode=style;
+        aura.visible=!this.reduced&&!opening&&!battle!.result&&pose.rpm>.08;
+        if(aura.visible){
+          const positions=aura.geometry.getAttribute('position') as THREE.BufferAttribute;
+          const centers=aura.userData.centers as Float32Array;effectVertices(fx,style,this.time,hit,centers);
+          const width=.006+hit*.012+dash.intensity*.008;
+          for(let segment=0;segment<72;segment++)for(let v=0;v<6;v++){
+            const end=RIBBON_POINT[v],side=RIBBON_SIDE[v],at=segment*6+end*3,x=centers[at],z=centers[at+2],r=Math.max(.01,Math.hypot(x,z));
+            positions.setXYZ(segment*6+v,x+x/r*width*side,centers[at+1],z+z/r*width*side);
+          }
+          aura.geometry.setDrawRange(0,72*6);positions.needsUpdate=true;
+          aura.position.copy(g.position);aura.quaternion.copy(g.quaternion);aura.translateY(g.userData.effectHeight);
+          (aura.material as THREE.MeshBasicMaterial).opacity=Math.min(.82,(style==='attack'?.08+speed*.035:style==='stamina'?.08+pose.rpm*.18:.035)+hit*.7+dash.intensity*.22);
+        }
         const path = this.trailPositions[i];
         const times=this.trailTimes[i];
         if (dt > 0 && !opening && !battle!.result && (this.time-(times.at(-1)??-Infinity)>=1/90)) {
           path.push(g.position.x, g.position.y + 0.22, g.position.z);
           times.push(this.time);
         }
-        while(path.length>90 || (times.length>1&&this.time-times[0]>.38)) {path.splice(0,3);times.shift();}
+        while(path.length>90 || (times.length>1&&this.time-times[0]>fx.trail)) {path.splice(0,3);times.shift();}
         const line = this.trails[i];
         const positions = line.geometry.getAttribute(
           "position",
@@ -791,7 +821,7 @@ export class Arena {
           const dx=path[(segment+1)*3]-path[segment*3],dz=path[(segment+1)*3+2]-path[segment*3+2],len=Math.max(.001,Math.hypot(dx,dz));
           for(let v=0;v<6;v++){
             const point=segment+RIBBON_POINT[v],sign=RIBBON_SIDE[v],fade=(point/(path.length/3-1))**2;
-            const width=(.012+fade*.14)*dash.intensity;
+            const width=(.012+fade*(fx.rubber?.19:.14)*fx.grip)*dash.intensity;
             rp.setXYZ(vertex,path[point*3]-dz/len*width*sign,path[point*3+1],path[point*3+2]+dx/len*width*sign);
             rc.setXYZW(vertex,tint.r,tint.g,tint.b,fade*dash.intensity);vertex++;
           }

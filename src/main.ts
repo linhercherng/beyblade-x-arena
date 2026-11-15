@@ -509,7 +509,7 @@ function beginHighlight() {
   if(!battle||!arena||arena.reduced)return false;
   highlight=highlightRecorder.clip(battle);if(!highlight)return false;
   const first=highlight.advance(0);sound.beginReplay();arena.beginHighlight(first.battle);
-  for(const event of first.events){const dashHit=arena.event(event,first.battle);sound.event(event,dashHit,arena.soundPan(event.x,event.z));}
+  for(const event of first.events){const dashHit=arena.event(event,first.battle);sound.event(event,dashHit,arena.soundPan(event.x,event.z),first.battle);}
   const message=byId("battle-message")!;message.classList.remove("finish-overlay");message.innerHTML="";
   const kind=battle.result!.finish,hint=kind==="burst"?"三段分離":kind==="over"?"側盤出界":"前方出口";
   message.insertAdjacentHTML("afterend",`<section id="highlight-panel" class="highlight-panel" aria-label="終結精彩重播" style="--finish-color:${FINISH_COLORS[kind]}"><div><span class="eyebrow">HIGHLIGHT REPLAY</span><span id="highlight-type" class="highlight-type">${FINISH[kind].label} · ${hint}</span><strong id="highlight-moment" aria-live="polite">精彩重播 · 最後一擊</strong><small id="highlight-shot">追擊鏡位 · 0.55× 慢動作</small></div>${btn("跳過重播 →","skip-highlight","primary")}<div class="highlight-progress" aria-hidden="true"><i id="highlight-progress"></i></div></section>`);
@@ -1194,7 +1194,7 @@ function frame(time: number) {
         if(!replay)highlightRecorder.record(battle);
         for (const event of battle.events) {
           const dashHit=arena?.event(event,battle) ?? false;
-          sound.event(event,dashHit);
+          sound.event(event,dashHit,undefined,battle);
           if (event.type === "dash") {
             const msg = byId("battle-message");
             if (msg) {
@@ -1234,7 +1234,7 @@ function frame(time: number) {
       const target=frame.phase==="finish"?arena?.models[1-battle.result!.winner!]?.position:frame.hold==="impact"?frame.impact:null;
       const pan=arena&&target?arena.soundPan(target.x,target.z):0;
       sound.setReplay(frame.hold==="impact"?"impact":frame.hold==="finish"?"decision":frame.phase==="finish"?"finish":"tracking",pan);
-      for(const event of frame.events){const dashHit=arena?.event(event,frame.battle)??false;sound.event(event,dashHit,arena?.soundPan(event.x,event.z));}
+      for(const event of frame.events){const dashHit=arena?.event(event,frame.battle)??false;sound.event(event,dashHit,arena?.soundPan(event.x,event.z),frame.battle);}
       if(frame.phase==="finish"&&!highlightFinishing){
         highlightFinishing=true;arena?.showHighlightFinish(frame.battle);
         const shot=byId("highlight-shot");if(shot)shot.textContent="終結追蹤鏡位 · 0.55× 慢動作";
