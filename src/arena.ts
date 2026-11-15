@@ -14,6 +14,7 @@ import { beyModel, modelSpec } from "./bey-model.ts";
 import {
   interpolatePose,
   spinLean,
+  stopMotion,
   entryPose,
   damping,
   type TopPose,
@@ -129,6 +130,8 @@ export class Arena {
   shakeAge = 1;
   private contactHits:{at:number;feedback:ReturnType<typeof contactFeedback>}[]=[];
   private spinContactPower=0;
+  private stopQuaternion=new THREE.Quaternion();
+  private stopRoll=new THREE.Quaternion();
   eventFlash = 0;
   particles: Particle[] = [];
   particleGeometry = new THREE.BufferGeometry();
@@ -443,7 +446,7 @@ export class Arena {
     this.finishRate=1;this.finishShock=this.finishZoom=0;
     this.hitPlayback.reset();this.hitRing.visible=false;
     (this.hitRing.material as THREE.MeshBasicMaterial).color.set("#b8f6ff");
-    this.models.forEach(g=>{g.userData.lean={x:0,z:0};g.userData.contact.reset();g.userData.effectHitAt=-Infinity;(g.userData.parts as THREE.Group[]).forEach(p=>{p.position.set(0,0,0);p.rotation.set(0,0,0);});});
+    this.models.forEach(g=>{g.userData.lean={x:0,z:0};delete g.userData.stop;delete g.userData.renderRpm;g.userData.contact.reset();g.userData.effectHitAt=-Infinity;(g.userData.parts as THREE.Group[]).forEach(p=>{p.position.set(0,0,0);p.rotation.set(0,0,0);});});
     this.traitRings.forEach(r=>r.visible=false);
     this.trailPositions = [[], []];
     this.trailTimes = [[], []];
@@ -579,6 +582,7 @@ export class Arena {
     this.finishCameraPosition.copy(this.camera.position);this.finishCameraFocus.copy(this.cameraFocus);
     this.hitPlayback.reset();this.hitRing.visible=false;
     this.finished = b;
+    if(b.result.finish==='spin')this.models.forEach(g=>delete g.userData.stop);
     this.dashStates=[null,null];this.dashRibbons.forEach(r=>r.visible=false);
     this.finishTime = this.time;
     const result = b.result, kind = result.winner === null ? "draw" : result.finish;this.finishTint.set(FINISH_COLORS[kind]);
@@ -591,7 +595,7 @@ export class Arena {
     const losers = result.winner === null ? [0, 1] : [1 - result.winner];
     for (const index of losers) {
       const top = b.tops[index], start = this.particles.length;
-      if(!chained)this.event({type: "hit", x: top.x, z: top.z, strength: kind === "draw" ? 1 : kind === "burst" || kind === "extreme" ? 14 : 4, player:index, time:b.time},b);
+      if(!chained&&result.finish!=='spin')this.event({type: "hit", x: top.x, z: top.z, strength: kind === "draw" ? 1 : kind === "burst" || kind === "extreme" ? 14 : 4, player:index, time:b.time},b);
       for (let i=start;i<this.particles.length;i++){
         const p=this.particles[i];p.owner=index;p.curl=this.reduced?0:collisionAccent(this.models[index].userData.effects,b.tops[0].bey.spin!==b.tops[1].bey.spin).curl;
         p.color.copy((this.traitRings[index].material as THREE.MeshBasicMaterial).color).lerp(this.finishTint,.35);
@@ -736,7 +740,7 @@ export class Arena {
       this.traitRings[i].visible=false;
       if (t) {
         const pose = poses![i], rotation=-pose.rotation, spin=t.bey.spin==="L"?1:-1,
-          lean = spinLean(pose.tilt, pose.rotation, i);
+          lean = spinLean(pose.tilt, pose.rotation, i,pose.rpm);
         if(pose.axisX!==undefined){lean.x+=(pose.axisZ??0)*.65;lean.z-=pose.axisX*.65;}
         const state=this.dashStates[i],dash=dashVisual(state?this.time-state.at:Infinity,this.reduced);
         const separation=Math.hypot(poses![0].x-poses![1].x,poses![0].z-poses![1].z);
@@ -760,11 +764,13 @@ export class Arena {
         if(!this.reduced&&!battle!.result&&!opening)for(const h of this.contactHits){const r=contactRecoil(h.feedback,i,this.time-h.at);recoil.x+=r.x;recoil.z+=r.z;}
         const recoilScale=Math.min(1,.18/Math.max(.001,Math.hypot(recoil.x,recoil.z)));recoil.x*=recoilScale;recoil.z*=recoilScale;
         const grip=state&&latch>0?{x:state.x,z:state.z,weight:latch}:undefined;
+        const resting=battle!.result?.finish==='spin'&&(battle!.result.winner===null||battle!.result.winner!==i);
         // Three.js 正 Y 角從上方看為逆時針，顯示角與物理圈數反號。
-        contact.place(pose.x,pose.z,currentLean.x+recoil.x,
+        if(!resting)contact.place(pose.x,pose.z,currentLean.x+recoil.x,
           currentLean.z+recoil.z+(opening?.height??0)*.025*(i?-1:1),
           rotation-(opening?.rotation??0),dt,grip);
         if(grip&&state){state.x=grip.x;state.z=grip.z;}
+        if(!battle!.result)g.userData.renderRpm=pose.rpm;
         const ground=g.position.y;g.position.y+=opening?.height??0;
         if (opening && opening.pulse > 0) {
           const pulse = this.landingRings[i];
@@ -795,9 +801,16 @@ export class Arena {
             });
             settleBurstParts(g, this.finishBounds, this.finishLift, this.finishInverse);
           } else if (loser && result.finish === "spin") {
-            this.floorRotation.setFromAxisAngle(this.floorUp.set(0,0,1),Math.PI/2*Math.min(1,this.reduced?1:elapsed/1.1));
-            g.quaternion.premultiply(this.floorRotation);this.floorUp.set(0,1,0);
-            settleOnBowl(g,this.finishBounds);
+            if(!g.userData.stop){
+              if(g.userData.renderRpm===undefined)contact.place(pose.x,pose.z,currentLean.x,currentLean.z,rotation,0);
+              const from=g.quaternion.clone(),up=new THREE.Vector3(0,1,0).applyQuaternion(from),normal=new THREE.Vector3(),side=up.clone();stadiumNormal(pose.x,pose.z,normal);side.addScaledVector(normal,-side.dot(normal));
+              if(side.lengthSq()<.001){side.set(-pose.x,0,-pose.z);if(side.lengthSq()<.001)side.set(Math.cos(i*1.7),0,Math.sin(i*1.7));side.projectOnPlane(normal);}
+              side.normalize();const axis=new THREE.Vector3().crossVectors(up,side);if(axis.lengthSq()<.001)axis.copy(normal);axis.normalize();
+              g.userData.stop={from,to:new THREE.Quaternion().setFromUnitVectors(up,side).multiply(from),axis,rpm:g.userData.renderRpm??pose.rpm};
+            }
+            const rest=g.userData.stop,motion=stopMotion(elapsed,rest.rpm,this.reduced);
+            this.stopQuaternion.copy(rest.from).slerp(rest.to,motion.fall);this.stopRoll.setFromAxisAngle(rest.axis,motion.rock);this.stopQuaternion.premultiply(this.stopRoll);this.stopRoll.setFromAxisAngle(this.floorUp,spin*motion.spin);this.stopQuaternion.multiply(this.stopRoll);
+            contact.rest(pose.x,pose.z,this.stopQuaternion);
           } else if (loser) {
             const flight = exitPose(result.finish as "over" | "extreme", elapsed, {x:pose.x,y:ground,z:pose.z}, this.reduced);
             g.position.set(flight.x, flight.y, flight.z);
@@ -805,7 +818,7 @@ export class Arena {
             g.rotateY(this.reduced ? 0 : spin*Math.min(elapsed,.95)*13);
             keepAboveFloor(g, .105, this.finishBounds);
           } else if (!this.reduced) {
-            g.rotateY(spin*20*(1-Math.exp(-elapsed*1.4))/1.4);
+            g.rotateY(spin*(result.finish==='spin'?Math.min(20,pose.rpm*65):20)*(1-Math.exp(-elapsed*1.4))/1.4);
           }
           if (result.winner !== null) {
             const pulse = this.landingRings[i], mat = pulse.material as THREE.MeshBasicMaterial;
@@ -813,7 +826,7 @@ export class Arena {
             mat.color.copy((this.traitRings[i].material as THREE.MeshBasicMaterial).color);if(loser)mat.color.lerp(this.finishTint,.35);
             mat.opacity = loser ? Math.max(0,.55-elapsed*.3) : .5;
             if(loser&&["over","extreme"].includes(result.finish)){pulse.position.set(g.position.x,.115,g.position.z);pulse.quaternion.copy(this.ringRotation);}
-            else this.placeFloorRing(pulse,g.position.x,g.position.z);
+            else this.placeFloorRing(pulse,result.finish==='spin'?pose.x:g.position.x,result.finish==='spin'?pose.z:g.position.z);
             pulse.scale.setScalar(loser ? 1+Math.min(1,elapsed)*1.2 : 1.18);
           }
         }

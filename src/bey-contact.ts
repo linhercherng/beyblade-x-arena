@@ -56,6 +56,14 @@ export class BowlContact {
   this.frame.copy(this.attitude);
   if(weight>0){this.target.set(nx*Math.sin(.24),Math.cos(.24),nz*Math.sin(.24));this.bank.setFromUnitVectors(this.up,this.target);this.frame.slerp(this.bank,weight);}
   this.spin.setFromAxisAngle(this.up,rotation);this.model.quaternion.copy(this.frame).multiply(this.spin);
+  this.support(x,z,grip);
+ }
+ rest(x:number,z:number,orientation:Quaternion){
+  this.model.scale.setScalar(this.scale);this.model.quaternion.copy(orientation);this.support(x,z);
+ }
+ private support(x:number,z:number,grip?:{x:number;z:number;weight:number}){
+  const weight=grip?.weight??0,gr=grip?Math.hypot(grip.x,grip.z):1,nx=grip?grip.x/gr:0,nz=grip?grip.z/gr:0;
+  let px=x,pz=z;
   this.point.copy(this.center).applyQuaternion(this.model.quaternion);
   const baseX=x-this.point.x,baseZ=z-this.point.z;
   px=baseX+(grip?grip.x-baseX:0)*weight;pz=baseZ+(grip?grip.z-baseZ:0)*weight;

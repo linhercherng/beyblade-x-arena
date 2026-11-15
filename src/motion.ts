@@ -48,9 +48,14 @@ export function interpolatePose(
       axisZ:(previous.axisZ??current.axisZ??0)+((current.axisZ??0)-(previous.axisZ??current.axisZ??0))*a}),
   };
 }
-export function spinLean(tilt: number, rotation: number, player: number) {
-  if (tilt === 0) return { x: 0, z: 0 };
-  const lean = Math.min(0.28, Math.max(0, tilt) * 0.26),
+export function spinLean(tilt: number, rotation: number, player: number,rpm=1) {
+  const slow=Math.max(0,Math.min(1,(.32-rpm)/.32));
+  if (tilt === 0&&slow===0) return { x: 0, z: 0 };
+  const lean = Math.min(0.28, Math.max(0, tilt) * 0.26)+slow*slow*.3,
     phase = rotation * 0.12 + player * 1.7;
   return { x: Math.sin(phase) * lean, z: Math.cos(phase) * lean };
+}
+export function stopMotion(age:number,rpm:number,reduced=false){
+  const t=reduced?2:Math.max(0,age),u=Math.min(1,t/1.2),turn=Math.min(1,t/.9),rock=Math.max(0,Math.min(1,(t-.7)/.9));
+  return{fall:u*u*(3-2*u),spin:Math.max(0,Math.min(.12,rpm))*65*.9/3*(1-Math.pow(1-turn,3)),rock:rock===0||rock===1?0:Math.sin(rock*.9*24)*.045*Math.pow(1-rock,2)};
 }
