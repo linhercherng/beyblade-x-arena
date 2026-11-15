@@ -25,7 +25,6 @@ export function dashSamples(sampleRate: number, grip = true) {
   for(let i=0;i<samples.length;i++)samples[i]*=.82/peak;
   return samples;
 }
-import {GATE_HALF_ANGLES} from "./physics.ts";
 export function hasRail(x:number,z:number) {
   if(!Number.isFinite(x)||!Number.isFinite(z)||Math.hypot(x,z)<.01)return false;
   const a=Math.atan2(z,x);
