@@ -1,5 +1,5 @@
 import{test,expect,type Page}from'@playwright/test';import{musicLevel}from'../../src/impact.ts';
-async function open(p:Page){await p.goto('/tests/fixtures/audio.html');await p.locator('#results').click();await expect.poll(()=>p.evaluate(()=>(window as any).audioSound.countdownReady)).toBe(true);await expect.poll(()=>p.evaluate(()=>(window as any).audioSound.playing?.mode)).toBe('results');await p.waitForTimeout(550);}
+async function open(p:Page){await p.goto('/tests/fixtures/audio.html');await p.locator('#results').click();await expect.poll(()=>p.evaluate(()=>{const s=(window as any).audioSound;return s.countdownReady?'ready':JSON.stringify(s.diagnostics());})).toBe('ready');await expect.poll(()=>p.evaluate(()=>(window as any).audioSound.playing?.mode)).toBe('results');await p.waitForTimeout(550);}
 
 test('配樂歸零後快速恢復，舊曲尾音先結束，不被新音量喚回',async({page})=>{
  await open(page);await page.evaluate(()=>{const w=window as any,s=w.audioSound,old=s.playing.source;w.retiredEnded=false;old.addEventListener('ended',()=>w.retiredEnded=true);s.setMusicVolume(0);s.update(null,false,'results');s.setMusicVolume(1);});
@@ -18,6 +18,12 @@ test('快速連續調音量以最後設定為準，跨曲目保持增益與儲�
 
 test('配樂音量歸零仍可播放新語音，重新開啟不補播過去語音',async({page})=>{
  await open(page);await page.locator('#volume').fill('0');await expect.poll(()=>page.evaluate(()=>(window as any).audioMetrics().loops)).toBe(0);await page.evaluate(()=>{const w=window as any;w.spoken=(window as any).audioSound.countdown(3);});await expect.poll(()=>page.evaluate(()=>(window as any).audioMetrics().rms)).toBeGreaterThan(.003);await expect.poll(()=>page.evaluate(()=>(window as any).spoken.complete)).toBe(true);await page.locator('#volume').fill('.4');await expect.poll(()=>page.evaluate(()=>(window as any).audioMetrics().loops)).toBe(1);expect(await page.evaluate(()=>(window as any).audioSound.voicePlayback)).toBe(null);
+});
+
+test('調高音量後立即靜音，有效配樂增益不先反升',async({page})=>{
+ await open(page);await page.evaluate(()=>(window as any).audioSound.setMusicVolume(.1));await expect.poll(()=>page.evaluate(()=>(window as any).audioSound.music.gain.value)).toBeCloseTo(.07,3);
+ // 校準訊號讓原生增益持續運作，避免舊曲停止後的閒置讀值掩蓋升音排程。
+ const level=await page.evaluate(async()=>{const s=(window as any).audioSound,read=()=>s.music.gain.value*s.master.gain.value,calibration=s.ctx.createConstantSource();calibration.offset.value=.1;calibration.connect(s.music);calibration.start();await new Promise(resolve=>setTimeout(resolve,20));s.setMusicVolume(1);s.toggle();s.update(null,false,'results');const before=read(),samples:number[]=[];for(let i=0;i<18;i++){samples.push(read());await new Promise(resolve=>setTimeout(resolve,5));}await new Promise(resolve=>setTimeout(resolve,200));const tailGain=s.music.gain.value;calibration.stop();return{before,max:Math.max(...samples),tailGain};});console.log('Mute envelope',JSON.stringify(level));expect(level.max).toBeLessThanOrEqual(level.before*1.1);expect(level.tailGain).toBeLessThan(.005);expect(await page.evaluate(()=>(window as any).audioSound.volume)).toBe(1);
 });
 
 test('正式音量與靜音設定跨單人雙人、選隊及重新載入保持一致',async({page})=>{

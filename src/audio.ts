@@ -250,7 +250,7 @@ export class Sound {
     } catch {
       /* 音效偏好寫入失敗不阻止操作。 */
     }
-    if(!this.muted)this.setMusicGain(this.requested,.04,true);
+    this.setMusicGain(this.requested,.04,!this.muted);
     if (this.master && this.ctx) {
       this.master.gain.cancelAndHoldAtTime(this.ctx.currentTime);
       this.master.gain.setTargetAtTime(
@@ -276,7 +276,7 @@ export class Sound {
     p.cancelAndHoldAtTime(now);
     // 先收掉舊曲尾音；後續滑桿或換場也不能提前掀起增益。
     if(this.musicResumeAt>now)p.setTargetAtTime(0,now,.005);
-    p.setTargetAtTime(musicLevel(this.volume,mode)*this.frictionMix,Math.max(now,this.musicResumeAt),seconds);
+    p.setTargetAtTime(musicLevel(this.volume,this.muted?null:mode)*this.frictionMix,Math.max(now,this.musicResumeAt),seconds);
   }
   private buffer(mode: MusicMode) {
     if (!this.buffers.has(mode)) {
