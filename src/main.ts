@@ -245,6 +245,7 @@ function title(eyebrow: string, h: string, description: string, side = "") {
 function home() {
   practiceId=null;replayIndex=null;
   clearHighlight();
+  sound.stopEffects();
   screen = "home";
   battle = null;
   replay = null;
@@ -300,6 +301,7 @@ function catalog() {
   );
 }
 function startTeam() {
+  clearHighlight();sound.stopEffects();
   practiceId=null;
   battle = null;
   replay = null;
