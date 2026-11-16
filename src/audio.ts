@@ -45,6 +45,7 @@ export class Sound {
   requested: MusicMode | null = null;
   playing: Playing | null = null;
   private musicTails=new Map<AudioBufferSourceNode,GainNode>();
+  private musicResumeAt=-Infinity;
   private pending: MusicMode | null = null;
   private revision = 0;
   private buffers = new Map<MusicMode, Promise<AudioBuffer>>();
@@ -116,6 +117,7 @@ export class Sound {
     this.recovering=true;this.resumeRejected=false;this.recovery++;this.lastResume=-Infinity;
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
+    this.musicResumeAt=-Infinity;
     this.revision++;this.pending=null;this.fadeOut(0);this.stopEffects();
     // 包含交叉淡出中的配樂與短音效，避免凍結的聲源在恢復時一起響起。
     for(const source of this.sources){source.stop(now);source.disconnect();}this.sources.clear();
@@ -248,6 +250,7 @@ export class Sound {
     } catch {
       /* 音效偏好寫入失敗不阻止操作。 */
     }
+    if(!this.muted)this.setMusicGain(this.requested,.04,true);
     if (this.master && this.ctx) {
       this.master.gain.cancelAndHoldAtTime(this.ctx.currentTime);
       this.master.gain.setTargetAtTime(
@@ -258,10 +261,22 @@ export class Sound {
     }
   }
   setMusicVolume(value: number) {
+    const before=this.volume;
     this.volume = musicVolume(value);
     try { localStorage.setItem("spinforge-music-volume", String(this.volume)); } catch { /* 暫存設定。 */ }
-    if (this.ctx && this.music)
-      this.music.gain.setTargetAtTime(musicLevel(this.volume, this.requested)*this.frictionMix, this.ctx.currentTime, 0.04);
+    this.setMusicGain(this.requested,.04,before===0&&this.volume>0);
+  }
+  private setMusicGain(mode:MusicMode|null,seconds:number,reopening=false){
+    if(!this.ctx||!this.music)return;
+    const now=this.ctx.currentTime,p=this.music.gain;
+    if(reopening&&this.musicTails.size){
+      for(const [source,gain]of this.musicTails){gain.gain.cancelAndHoldAtTime(now);gain.gain.linearRampToValueAtTime(0,now+.015);source.stop(now+.015);}
+      this.musicResumeAt=Math.max(this.musicResumeAt,now+.02);
+    }
+    p.cancelAndHoldAtTime(now);
+    // 先收掉舊曲尾音；後續滑桿或換場也不能提前掀起增益。
+    if(this.musicResumeAt>now)p.setTargetAtTime(0,now,.005);
+    p.setTargetAtTime(musicLevel(this.volume,mode)*this.frictionMix,Math.max(now,this.musicResumeAt),seconds);
   }
   private buffer(mode: MusicMode) {
     if (!this.buffers.has(mode)) {
@@ -619,7 +634,7 @@ export class Sound {
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if(mode!==this.requested||Math.abs(mix-this.frictionMix)>.01||mix===1&&this.frictionMix!==1){
       const seconds=mix<this.frictionMix ? .08 : .18;this.frictionMix=mix;
-      this.music?.gain.cancelAndHoldAtTime(this.ctx.currentTime);this.music?.gain.setTargetAtTime(musicLevel(this.volume,mode)*mix,this.ctx.currentTime,seconds);
+      this.setMusicGain(mode,seconds);
     }
     this.rotors.forEach((r, i) => {
       const top=battle?.tops[i],fx=top?beyEffects(top.bey):null;
