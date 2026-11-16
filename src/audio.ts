@@ -634,7 +634,7 @@ export class Sound {
     if (mode !== this.requested && (mode === null || mode === "menu")) this.stopCues();
     if(mode!==this.requested||Math.abs(mix-this.frictionMix)>.01||mix===1&&this.frictionMix!==1){
       const seconds=mix<this.frictionMix ? .08 : .18;this.frictionMix=mix;
-      this.setMusicGain(mode,seconds);
+      this.setMusicGain(mode,seconds,this.requested===null&&mode!==null);
     }
     this.rotors.forEach((r, i) => {
       const top=battle?.tops[i],fx=top?beyEffects(top.bey):null;

@@ -1,3 +1,4 @@
+import{installProbe}from'./audio-probe.ts';
 import {test,expect} from '@playwright/test';
 import {writeFileSync} from 'node:fs';
 test.afterEach(async({page},info)=>{
@@ -10,20 +11,6 @@ test.afterEach(async({page},info)=>{
  await (await pending).saveAs(`artifacts/p1-audio-game-events-${info.line}.json`);
 });
 test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:1080}});
-async function installProbe(page:import('@playwright/test').Page){
-  await page.addInitScript(()=>{
-    const original=window.AudioContext;
-    (window as any).AudioContext=class extends original{
-      constructor(...args:ConstructorParameters<typeof AudioContext>){
-        super(...args);const ctx=this,createGain=this.createGain.bind(this),createSource=this.createBufferSource.bind(this),sources=new Set<AudioBufferSourceNode>();
-        let analyser:AnalyserNode,master:GainNode;
-        this.createGain=()=>{const gain=createGain();if(!master){master=gain;analyser=ctx.createAnalyser();master.connect(analyser);}return gain;};
-        this.createBufferSource=()=>{const source=createSource(),disconnect=source.disconnect.bind(source);sources.add(source);source.addEventListener('ended',()=>sources.delete(source));source.disconnect=()=>{sources.delete(source);disconnect();};return source;};
-        (window as any).audioProbe={ctx,metrics:()=>{const values=new Float32Array(analyser.fftSize);analyser.getFloatTimeDomainData(values);return {state:ctx.state,master:master.gain.value,loops:[...sources].filter(s=>s.loop).length,rms:Math.sqrt(values.reduce((s,v)=>s+v*v,0)/values.length)};}};
-      }
-    };
-  });
-}
 // 原生Chrome音訊圖量測；背景事件注入不代表iPhone鎖屏硬體驗證。
 test('正式雙人流程：背景恢復維持暫停，觸控或鍵盤繼續後音訊只恢復一份',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
