@@ -1,4 +1,10 @@
 import{test,expect}from'@playwright/test';import{installAnnouncerProbe}from'./announcer-probe.ts';import clips from'../../src/countdown-voice-data.json' with{type:'json'};
+import{writeFileSync}from'node:fs';
+test.setTimeout(process.env.CI?360000:180000);
+test.afterEach(async({page},info)=>{
+ if(info.status===info.expectedStatus)return;
+ const path=info.outputPath('round-state.json');writeFileSync(path,JSON.stringify(await page.evaluate(()=>{const w=window as any,c=w.latestSpeech?.context;return{screen:document.querySelector('#app')?.getAttribute('data-screen'),round:document.querySelector('h1')?.textContent,timer:document.querySelector('[role="timer"]')?.textContent,paused:!document.querySelector<HTMLElement>('#pause-overlay')?.hidden,notice:document.querySelector('#audio-notice')?.textContent,announced:w.announced,cues:w.launchCues,audio:c?{state:c.state,clock:c.currentTime}:null};}),null,2));await info.attach('round-state',{path,contentType:'application/json'});
+});
 const lengths=Object.fromEntries(Object.entries(clips).map(([key,data])=>[Buffer.from(data,'base64').length/2,Number(key)]));
 test('正式單人勝負播報中立即再戰，舊語音收尾且下一場倒數完整只播一次',async({page})=>{
  await page.setViewportSize({width:640,height:480});await page.emulateMedia({reducedMotion:'reduce'});await installAnnouncerProbe(page);

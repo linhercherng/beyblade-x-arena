@@ -27,6 +27,7 @@ test('來電AudioSession中斷期間按鍵不恢復，結束後等待手勢再�
 test('沒有裝置事件且running時鐘停住會清理，手動恢復後只保留一份配樂',async({page})=>{
   await page.goto('/tests/fixtures/audio.html');await page.locator('#battle').click();
   await expect.poll(async()=>(await metrics(page)).loops).toBe(1);
+  await expect.poll(()=>page.evaluate(()=>(window as any).audioSound.countdownReady)).toBe(true);
   await page.evaluate(async()=>{
     const s=(window as any).audioSound,ctx=s.ctx,resume=ctx.resume.bind(ctx);
     Object.defineProperty(ctx,'state',{configurable:true,get:()=> 'running'});

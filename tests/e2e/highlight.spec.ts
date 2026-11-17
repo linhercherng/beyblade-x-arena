@@ -1,6 +1,13 @@
 import{test,expect,type Page}from'@playwright/test';import{writeFileSync}from'node:fs';
+test.afterEach(async({page},info)=>{
+ if(info.status===info.expectedStatus||page.isClosed())return;
+ const path=info.outputPath('highlight-state.json');
+ const state=await page.evaluate(()=>{const w=window as any,c=document.querySelector('canvas'),g=c?.getContext('webgl2'),d=g?.getExtension('WEBGL_debug_renderer_info');return{url:location.href,screen:document.querySelector('#app')?.getAttribute('data-screen'),phase:document.querySelector('#phase')?.textContent,frames:w.highlightFrameCount?.(),sound:w.highlightSound?.diagnostics(),canvas:c?{width:c.width,height:c.height,renderer:g?.getParameter(d?d.UNMASKED_RENDERER_WEBGL:g.RENDERER)}:null};});
+ writeFileSync(path,JSON.stringify(state,null,2));await info.attach('highlight-state',{path,contentType:'application/json'});
+});
 const metrics=(p:Page)=>p.evaluate(()=>(window as any).highlightMetrics());
 const fixture='/tests/fixtures/highlight.html'+(process.env.CI?'?software-gpu':'');
+const audioFixture='/tests/fixtures/highlight.html?audio-only'+(process.env.CI?'&software-gpu':'');
 test('全場視角追蹤時整段盤體與接盤均完整入框',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.goto(fixture);await page.locator('#whole').click();
  for(const kind of ['over','extreme','burst']){await page.locator('#'+kind).click();await page.locator('#sweep').click();const m=await metrics(page);expect(m.maxBoardExtent).toBeLessThan(1);expect(m.maxExtent).toBeLessThan(1);expect(m.sourceStable).toBe(true);}
@@ -25,13 +32,20 @@ test('三種終結精彩重播具追擊與終結鏡位，插值與暫停連續�
  }
  expect(errors).toEqual([]);
 });
-test('手機精彩重播可跳過並清理音效，持續播放取樣不超出資源上限',async({page})=>{
+test('手機精彩重播持續播放取樣不超出資源上限',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.goto(fixture);await page.locator('#extreme').click();
  if(process.env.CI)await expect.poll(()=>page.evaluate(()=>(window as any).highlightFrameCount())).toBeGreaterThan(50);else await page.waitForTimeout(2000);
  const m=await metrics(page),frames=m.frames.slice(15).sort((a:number,b:number)=>a-b);expect(m.renderProfile.softwareGpu).toBe(!!process.env.CI);if(process.env.CI){expect(m.renderProfile.pixelRatio).toBe(.25);expect(m.renderProfile.width).toBe(Math.floor(390*.25));expect(m.renderProfile.height).toBe(Math.floor(844*.25));}
- expect(frames.length).toBeGreaterThan(35);expect(frames[Math.floor(frames.length*.95)]).toBeLessThan(100);expect(m.particles).toBeLessThanOrEqual(360);expect(m.geometryStable).toBe(true);expect(m.peak).toBeLessThan(.95);
- await page.locator('#extreme').click();await page.locator('#finish').click();await expect.poll(async()=>(await metrics(page)).cueRates[0]).toBeCloseTo(.55,4);await page.locator('#skip').click();await expect(page.locator('#phase')).toHaveText('已跳過');const skipped=await metrics(page);expect(skipped.shot).toBe(null);expect(skipped.cues+skipped.impacts+skipped.dashes).toBe(0);expect(skipped.sourceStable).toBe(true);
  writeFileSync(process.env.CI?'artifacts/highlight-software-gpu-v0420.json':'artifacts/highlight-performance-v0150.json',JSON.stringify({profile:m.renderProfile,samples:frames.length,median:frames[Math.floor(frames.length*.5)],p95:frames[Math.floor(frames.length*.95)],peak:m.peak,geometryStable:m.geometryStable},null,2));
+ expect(m.renderProfile.audioOnly).toBe(false);expect(frames.length).toBeGreaterThan(35);expect(frames.every((n:number)=>Number.isFinite(n)&&n>0)).toBe(true);
+ if(!process.env.CI)expect(frames[Math.floor(frames.length*.95)]).toBeLessThan(100);
+ expect(m.particles).toBeLessThanOrEqual(360);expect(m.geometryStable).toBe(true);expect(m.peak).toBeLessThan(.95);
+});
+test('手機精彩重播終結音效可跳過並清理受測聲源',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto(audioFixture);await page.locator('#whole').click();
+ await expect.poll(()=>page.evaluate(()=>(window as any).highlightSound.countdownReady)).toBe(true);
+ await page.locator('#extreme').click();expect((await metrics(page)).renderProfile.audioOnly).toBe(true);
+ await page.locator('#finish').click();await expect.poll(async()=>(await metrics(page)).cueRates[0]).toBeCloseTo(.55,4);await page.locator('#skip').click();await expect(page.locator('#phase')).toHaveText('已跳過');const skipped=await metrics(page);expect(skipped.shot).toBe(null);expect(skipped.cues+skipped.impacts+skipped.dashes).toBe(0);expect(skipped.sourceStable).toBe(true);
 });
 test('實際遊戲自動精彩重播可暫停並一鍵跳過，只結算原結果一次',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:390,height:844});await page.addInitScript(()=>{Object.defineProperty(crypto,'getRandomValues',{value:(a:Uint32Array)=>{a.fill(7181);return a;}});});

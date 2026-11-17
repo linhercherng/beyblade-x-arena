@@ -1,4 +1,9 @@
 import {test,expect} from '@playwright/test';
+import{writeFileSync}from'node:fs';
+test.afterEach(async({page},info)=>{
+ if(info.status===info.expectedStatus||page.isClosed())return;
+ const path=info.outputPath('finish-audio.json');writeFileSync(path,JSON.stringify(await page.evaluate(()=>({url:location.href,sound:(window as any).finishSound?.diagnostics(),metrics:(window as any).finishMetrics?.()})),null,2));await info.attach('finish-audio',{path,contentType:'application/json'});
+});
 const metrics=(page:import('@playwright/test').Page)=>page.evaluate(()=>(window as any).finishMetrics());
 test('爆裂分離、越界側盤、極限前盤有不同且有限的落點，暫停不漂移',async({page})=>{
  await page.setViewportSize({width:1200,height:800});await page.goto('/tests/fixtures/finish.html');
