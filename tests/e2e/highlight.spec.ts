@@ -1,22 +1,23 @@
 import{test,expect,type Page}from'@playwright/test';import{writeFileSync}from'node:fs';
 const metrics=(p:Page)=>p.evaluate(()=>(window as any).highlightMetrics());
+const fixture='/tests/fixtures/highlight.html'+(process.env.CI?'?software-gpu':'');
 test('全場視角追蹤時整段盤體與接盤均完整入框',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/highlight.html');await page.locator('#whole').click();
+ await page.setViewportSize({width:390,height:844});await page.goto(fixture);await page.locator('#whole').click();
  for(const kind of ['over','extreme','burst']){await page.locator('#'+kind).click();await page.locator('#sweep').click();const m=await metrics(page);expect(m.maxBoardExtent).toBeLessThan(1);expect(m.maxExtent).toBeLessThan(1);expect(m.sourceStable).toBe(true);}
 });
 test('撞擊與終結定格不推進動作，鏡頭可追蹤，手動暫停仍精確凍結',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/highlight.html');await page.locator('#extreme').click();await page.locator('#impact').click();const hit=await metrics(page);expect(hit.moment).toBe('impact');await expect(page.locator('#phase')).toHaveText('關鍵撞擊 · 定格回看');
+ await page.setViewportSize({width:390,height:844});await page.goto(fixture);await page.locator('#extreme').click();await page.locator('#impact').click();const hit=await metrics(page);expect(hit.moment).toBe('impact');await expect(page.locator('#phase')).toHaveText('關鍵撞擊 · 定格回看');
  await page.locator('#tiny').click();const tracked=await metrics(page);expect(tracked.motionDt).toBe(0);expect(tracked.positions).toEqual(hit.positions);expect(tracked.camera).not.toEqual(hit.camera);await page.waitForTimeout(120);expect((await metrics(page)).camera).toEqual(tracked.camera);
  await page.screenshot({path:'artifacts/highlight-impact-hold-mobile-v0160.png'});
  await page.locator('#terminal').click();const finish=await metrics(page);expect(finish.moment).toBe('finish');expect(finish.motionDt).toBe(0);await expect(page.locator('#phase')).toHaveText('極限終結 · 決勝瞬間');await page.locator('#tiny').click();expect((await metrics(page)).positions).toEqual(finish.positions);expect((await metrics(page)).sourceStable).toBe(true);
  await page.screenshot({path:'artifacts/highlight-finish-hold-mobile-v0160.png'});
 });
 test('手機完整精彩重播的追擊與終結全段不裁切模型',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/highlight.html');
+ await page.setViewportSize({width:390,height:844});await page.goto(fixture);
  for(const kind of ['over','burst','extreme']){await page.locator('#'+kind).click();await page.locator('#sweep').click();const m=await metrics(page);expect(m.maxExtent).toBeLessThan(1);expect(m.geometryStable).toBe(true);expect(m.sourceStable).toBe(true);}
 });
 test('三種終結精彩重播具追擊與終結鏡位，插值與暫停連續且原結果不變',async({page})=>{
- const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:1200,height:800});await page.goto('/tests/fixtures/highlight.html');
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:1200,height:800});await page.goto(fixture);
  for(const kind of ['burst','over','extreme']){
   await page.locator('#'+kind).click();await page.waitForTimeout(350);await page.locator('#pause').click();const frozen=await metrics(page);expect(frozen.shot).toBe('approach');expect(frozen.duration).toBeLessThanOrEqual(7.9);await page.waitForTimeout(100);expect((await metrics(page)).age).toBe(frozen.age);expect((await metrics(page)).camera).toEqual(frozen.camera);
   await page.screenshot({path:`artifacts/highlight-${kind}-approach-v0150.png`});await page.locator('#finish').click();const f=await metrics(page);expect(f.shot).toBe('finish');expect(f.geometryStable).toBe(true);expect(f.sourceStable).toBe(true);expect(f.bounds.every((v:number[])=>Math.abs(v[0])<1&&Math.abs(v[1])<1)).toBe(true);await page.screenshot({path:`artifacts/highlight-${kind}-finish-v0150.png`});
@@ -25,9 +26,12 @@ test('三種終結精彩重播具追擊與終結鏡位，插值與暫停連續�
  expect(errors).toEqual([]);
 });
 test('手機精彩重播可跳過並清理音效，持續播放取樣不超出資源上限',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto('/tests/fixtures/highlight.html');await page.locator('#extreme').click();await page.waitForTimeout(2000);const m=await metrics(page),frames=m.frames.slice(15).sort((a:number,b:number)=>a-b);expect(frames.length).toBeGreaterThan(35);expect(frames[Math.floor(frames.length*.95)]).toBeLessThan(100);expect(m.particles).toBeLessThanOrEqual(360);expect(m.geometryStable).toBe(true);expect(m.peak).toBeLessThan(.95);
- await page.locator('#finish').click();await expect.poll(async()=>(await metrics(page)).cueRates[0]).toBeCloseTo(.55,4);await page.locator('#skip').click();await expect(page.locator('#phase')).toHaveText('已跳過');const skipped=await metrics(page);expect(skipped.shot).toBe(null);expect(skipped.cues+skipped.impacts+skipped.dashes).toBe(0);expect(skipped.sourceStable).toBe(true);
- writeFileSync('artifacts/highlight-performance-v0150.json',JSON.stringify({samples:frames.length,median:frames[Math.floor(frames.length*.5)],p95:frames[Math.floor(frames.length*.95)],peak:m.peak,geometryStable:m.geometryStable},null,2));
+ await page.setViewportSize({width:390,height:844});await page.goto(fixture);await page.locator('#extreme').click();
+ if(process.env.CI)await expect.poll(()=>page.evaluate(()=>(window as any).highlightFrameCount())).toBeGreaterThan(50);else await page.waitForTimeout(2000);
+ const m=await metrics(page),frames=m.frames.slice(15).sort((a:number,b:number)=>a-b);expect(m.renderProfile.softwareGpu).toBe(!!process.env.CI);if(process.env.CI){expect(m.renderProfile.pixelRatio).toBe(.25);expect(m.renderProfile.width).toBe(Math.floor(390*.25));expect(m.renderProfile.height).toBe(Math.floor(844*.25));}
+ expect(frames.length).toBeGreaterThan(35);expect(frames[Math.floor(frames.length*.95)]).toBeLessThan(100);expect(m.particles).toBeLessThanOrEqual(360);expect(m.geometryStable).toBe(true);expect(m.peak).toBeLessThan(.95);
+ await page.locator('#extreme').click();await page.locator('#finish').click();await expect.poll(async()=>(await metrics(page)).cueRates[0]).toBeCloseTo(.55,4);await page.locator('#skip').click();await expect(page.locator('#phase')).toHaveText('已跳過');const skipped=await metrics(page);expect(skipped.shot).toBe(null);expect(skipped.cues+skipped.impacts+skipped.dashes).toBe(0);expect(skipped.sourceStable).toBe(true);
+ writeFileSync(process.env.CI?'artifacts/highlight-software-gpu-v0420.json':'artifacts/highlight-performance-v0150.json',JSON.stringify({profile:m.renderProfile,samples:frames.length,median:frames[Math.floor(frames.length*.5)],p95:frames[Math.floor(frames.length*.95)],peak:m.peak,geometryStable:m.geometryStable},null,2));
 });
 test('實際遊戲自動精彩重播可暫停並一鍵跳過，只結算原結果一次',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:390,height:844});await page.addInitScript(()=>{Object.defineProperty(crypto,'getRandomValues',{value:(a:Uint32Array)=>{a.fill(7181);return a;}});});

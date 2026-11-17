@@ -26,7 +26,8 @@ test('凹碗上的停轉光環貼合盤面，接盤光環保留原高度',async(
 });
 
 test('終結及勝負音效可播放，暫停及靜音取消尚未結束的演出音效',async({page})=>{
- await page.goto('/tests/fixtures/finish.html');
+ await page.goto('/tests/fixtures/finish.html?audio-only');await page.locator('#special').click();
+ await expect.poll(()=>page.evaluate(()=>(window as any).finishSound.countdownReady)).toBe(true);expect((await metrics(page)).audioOnly).toBe(true);
  for(const kind of ['burst','over','extreme','spin','draw','victory','defeat']){
   await page.locator('#'+kind).click();expect((await metrics(page)).cues).toBeGreaterThan(0);await expect.poll(async()=>(await metrics(page)).peak).toBeGreaterThan(.005);
  }
