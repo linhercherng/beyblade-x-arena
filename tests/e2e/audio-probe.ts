@@ -1,6 +1,7 @@
 export async function installProbe(page:import('@playwright/test').Page){
   await page.addInitScript(()=>{
     const original=window.AudioContext;
+    if(typeof original!=='function')return;
     (window as any).AudioContext=class extends original{
       constructor(...args:ConstructorParameters<typeof AudioContext>){
         super(...args);const ctx=this,createGain=this.createGain.bind(this),createSource=this.createBufferSource.bind(this),sources=new Set<AudioBufferSourceNode>();

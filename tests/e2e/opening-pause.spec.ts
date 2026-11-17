@@ -2,12 +2,12 @@ import{test,expect}from'@playwright/test';
 test.setTimeout(45000);
 
 // 故障注入：RAF空窗後第一個回呼保留舊音訊時鐘，之後恢復原生時鐘。
-for(const mode of ['cpu','local'])test(`${mode}開場取樣空窗不誤觸暫停，恢復後完成倒數再進入對戰`,async({page})=>{
+for(const mode of ['cpu','local'])test(`${mode}已啟用音訊的開場取樣空窗不誤觸暫停，恢復後完成倒數再進入對戰`,async({page})=>{
  await page.addInitScript(()=>{
   const w=window as any,Original=AudioContext,request=window.requestAnimationFrame.bind(window);
   let held=false,releaseClock=false,prepareNext=false,prepared:()=>void,clock=0,ctx:AudioContext,pending:FrameRequestCallback[]=[];
   w.freezeClock=false;
-  w.AudioContext=class extends Original{constructor(){super();ctx=this;}get currentTime(){return w.freezeClock?clock:super.currentTime;}};
+  w.AudioContext=class extends Original{constructor(){super();ctx=this;w.openingContext=this;}get currentTime(){return w.freezeClock?clock:super.currentTime;}};
   const frame=(cb:FrameRequestCallback)=>request(time=>{
    if(held){pending.push(cb);return;}
    const starting=prepareNext&&document.querySelector<HTMLElement>('#app')?.dataset.screen==='countdown';if(starting){prepareNext=false;clock=ctx.currentTime;w.freezeClock=true;}
@@ -17,7 +17,12 @@ for(const mode of ['cpu','local'])test(`${mode}開場取樣空窗不誤觸暫停
   w.holdOpening=(value:boolean)=>{held=value;if(!value){releaseClock=true;for(const cb of pending.splice(0))frame(cb);}};
   w.armOpeningGap=()=>{prepareNext=true;w.openingPrepared=new Promise<void>(resolve=>prepared=resolve);};
  });
- await page.goto('/');if(mode==='local')await page.locator('[data-action="mode"][data-value="local"]').click();
+ await page.goto('/',{waitUntil:'domcontentloaded'});await page.locator(`[data-action="mode"][data-value="${mode}"]`).click();
+ // 冷啟動另有直接開局測試；此處先建立正常音訊，隔離RAF空窗與原生中斷。
+ await page.getByLabel('配樂設定',{exact:true}).click();await page.getByRole('button',{name:'恢復音訊',exact:true}).click();
+ const resumedAt=await page.evaluate(()=>(window as any).openingContext.currentTime);
+ await expect.poll(()=>page.evaluate(at=>{const c=(window as any).openingContext;return c.state==='running'&&c.currentTime>=at+.3;},resumedAt)).toBe(true);
+ await expect(page.locator('#audio-notice')).toBeHidden();await page.getByLabel('配樂設定',{exact:true}).click();
  await page.evaluate(()=>(window as any).armOpeningGap());await page.locator('[data-action="quick-battle"]').click();
  await page.evaluate(()=>(window as any).openingPrepared);await page.waitForTimeout(1600);
  await page.evaluate(()=>(window as any).holdOpening(false));await page.waitForTimeout(50);

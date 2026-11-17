@@ -90,6 +90,7 @@ export class Sound {
   private session:(EventTarget&{readonly state?:string})|undefined;
   private clockTime=-1;
   private clockWall=0;
+  private startupWall=0;
   private clockSampleWall=0;
   private clockGapGrace=false;
   private background=false;
@@ -132,7 +133,7 @@ export class Sound {
   private restore(){
     if(!this.ctx||!this.master||this.background||this.ctx.state!=="running"||!this.recovering||this.session?.state==="interrupted")return;
     this.resumeRejected=false;this.note("restored");
-    this.recovering=false;this.clockGapGrace=false;this.clockTime=this.ctx.currentTime;this.clockWall=this.clockSampleWall=performance.now();
+    this.recovering=false;this.clockGapGrace=false;this.clockTime=this.ctx.currentTime;this.startupWall=this.clockWall=this.clockSampleWall=performance.now();
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);this.master.gain.setValueAtTime(0,now);
     this.master.gain.linearRampToValueAtTime(this.muted?0:.65,now+.25);
@@ -622,11 +623,13 @@ export class Sound {
     if (!this.ready || !this.ctx) return;
     const wall=performance.now(),clock=this.ctx.currentTime;
     const sampleGap=wall-this.clockSampleWall;this.clockSampleWall=wall;
+    // 首次淡入前可能只走一個區塊；啟動期限不隨零星tick延長，恢復後仍用1秒保護。
+    const starting=this.recovery===0&&clock<this.voiceReadyAt;
     if(clock!==this.clockTime){this.clockTime=clock;this.clockWall=wall;this.clockGapGrace=false;}
     // 同一時鐘只寬限一次取樣空窗，避免開場誤判，也不讓低幀率掩蓋真停滯。
     else if(sampleGap>=1000&&!this.clockGapGrace){this.clockWall=wall;this.clockGapGrace=true;}
     // 路由切換可能沒有事件且仍回報running；只在預期有聲音時檢查停住的時鐘。
-    else if(!this.muted&&(this.sources.size>0||active||waitingForCountdown)&&wall-this.clockWall>1000){this.interrupt("clock-stalled");return;}
+    if(!this.muted&&(this.sources.size>0||active||waitingForCountdown)&&wall-(starting?this.startupWall:this.clockWall)>(starting?10000:1000)){this.interrupt("clock-stalled");return;}
     const frictionLevel=this.updateFriction(friction,active,!this.muted&&(active||mode==='results')&&mode!==null&&mode!=='menu'&&this.replayStage!=='impact'&&this.replayStage!=='decision'),mix=1/(1+20*frictionLevel);
     if(!active&&mode===null&&this.requested===null&&!this.pending&&!this.sources.size)return;
     if(mode===null||mode==="menu") { this.stopVoice();this.stopDashes();this.stopImpacts();this.clearFrictionDuck();this.replayAccent=null;this.setReplay(null); }

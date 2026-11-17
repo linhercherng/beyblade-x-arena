@@ -10,7 +10,7 @@ concurrency:
 jobs:
   balance:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -21,6 +21,7 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test tests/e2e/opening-pause.spec.ts tests/e2e/p2.spec.ts tests/e2e/countdown-voice.spec.ts tests/e2e/launch-presentation.spec.ts tests/e2e/finish-voice.spec.ts tests/e2e/countdown-load.spec.ts
+      - run: npx playwright test tests/e2e/audio-game.spec.ts tests/e2e/finish.spec.ts tests/e2e/highlight.spec.ts tests/e2e/round-audio.spec.ts
       - run: npx playwright test tests/e2e/stadium.spec.ts --grep 戰鬥模型
       - run: npx playwright test tests/e2e/dash.spec.ts --grep 齒軌咬合亮點
       - run: npx playwright test tests/e2e/bey-effects.spec.ts --grep 依陀螺特性
