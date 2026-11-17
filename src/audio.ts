@@ -104,7 +104,7 @@ export class Sound {
   private interrupt(reason="context-interrupted"){
     this.note(reason);
     if(!this.ctx)return;
-    const notify=!this.recovering&&!this.muted;
+    const notify=!this.recovering;
     this.silence();
     if(notify)this.onInterruption?.();
   }

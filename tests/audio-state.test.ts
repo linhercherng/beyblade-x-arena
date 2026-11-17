@@ -7,3 +7,9 @@ test('音訊狀態區分正常、等待手勢、恢復中、逾時重試與中�
 test('尊重靜音、缺少能力與已關閉狀態，配樂失敗不冒稱全部無聲',()=>{
  assert.equal(audioStatus({...base,muted:true}),'muted');assert.equal(audioStatus({...base,available:false}),'unavailable');assert.equal(audioStatus({...base,context:'closed'}),'closed');assert.equal(audioStatus({...base,context:null}),'waiting');assert.equal(audioStatus({...base,musicFailed:true}),'music-error');
 });
+
+test('靜音不掩蓋來電中斷，通話結束後仍回到靜音狀態',()=>{
+ const state={...base,muted:true,sessionInterrupted:true};
+ assert.equal(audioStatus(state),'interrupted');assert.equal(state.muted,true);
+ assert.equal(audioStatus({...state,sessionInterrupted:false}),'muted');
+});
