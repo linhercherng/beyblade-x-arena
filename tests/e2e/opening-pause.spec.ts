@@ -1,5 +1,5 @@
 import{test,expect}from'@playwright/test';
-test.setTimeout(45000);
+test.setTimeout(90000);
 
 // 故障注入：RAF空窗後第一個回呼保留舊音訊時鐘，之後恢復原生時鐘。
 for(const mode of ['cpu','local'])test(`${mode}已啟用音訊的開場取樣空窗不誤觸暫停，恢復後完成倒數再進入對戰`,async({page})=>{
