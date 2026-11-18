@@ -2,10 +2,10 @@ import {test,expect} from '@playwright/test';
 test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
 test.afterEach(async({page},info)=>{
  if(info.status===info.expectedStatus)return;
- await page.screenshot({path:'artifacts/p0-failure-v0206.png',fullPage:true}).catch(()=>{});
+ await page.screenshot({path:'artifacts/p0-failure-v0206.png',fullPage:true,timeout:2000}).catch(()=>{});
  try{
-  await page.locator('.music-controls').evaluate((node:HTMLDetailsElement)=>node.open=true);await page.getByRole('button',{name:'裝置檢查',exact:true}).click();
-  const pending=page.waitForEvent('download');await page.getByRole('button',{name:'匯出檢查紀錄',exact:true}).click();await (await pending).saveAs('artifacts/p0-failure-report-v0206.json');
+  if(!await page.locator('.device-check').isVisible()){await page.locator('.music-controls').evaluate((node:HTMLDetailsElement)=>node.open=true);await page.getByRole('button',{name:'裝置檢查',exact:true}).click({timeout:1500});}
+  const [file]=await Promise.all([page.waitForEvent('download',{timeout:2000}),page.locator('.device-check [data-action="device-export"]').click({timeout:1500})]);await file.saveAs('artifacts/p0-failure-report-v0206.json');
  }catch{}
 });
 test('暫停後停止重複GPU繪製，改變尺寸仍重繪且恢復後繼續渲染',async({page})=>{
@@ -55,11 +55,20 @@ for(const check of ['audio','timing'])test(`無RAF暫停恢復：${check==='audi
     window.requestAnimationFrame=cb=>request(time=>{if(held)pending.push(cb);else cb(time);});
     (window as any).holdFrames=(value:boolean)=>{held=value;if(!value)for(const cb of pending.splice(0))request(cb);};
   });
-  await page.goto('/');await page.getByLabel('配樂設定').tap();await page.getByRole('button',{name:'裝置檢查',exact:true}).tap();await page.getByRole('button',{name:'開始新紀錄',exact:true}).tap();
+  await page.goto('/');
+  await page.evaluate(async()=>{
+    const module='/src/diagnostics.ts',{DeviceCheck}=await import(module),frame=DeviceCheck.prototype.frame,w=window as any;
+    w.resumeDeviceSamples=[];w.captureResumeDevice=false;
+    DeviceCheck.prototype.frame=function(now:number,active:boolean){frame.call(this,now,active);w.deviceSnapshot=()=>this.report(performance.now());if(active&&w.captureResumeDevice){w.resumeDeviceSamples.push(this.report(performance.now()));if(w.resumeDeviceSamples.length===2)w.captureResumeDevice=false;}};
+  });
+  await page.getByLabel('配樂設定').tap();await page.getByRole('button',{name:'裝置檢查',exact:true}).tap();await page.getByRole('button',{name:'開始新紀錄',exact:true}).tap();
   await page.locator('[data-action="quick-battle"]').tap();await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:12000});await page.waitForTimeout(300);
-  await page.evaluate(()=>(window as any).holdFrames(true));await page.waitForTimeout(100);await page.locator('#pause-button').tap();await page.waitForTimeout(1500);if(check==='audio')expect(await page.evaluate(()=>(window as any).liveLoops())).toBe(0);await page.locator('#pause-overlay [data-action="pause"]').tap();
-  await page.evaluate(()=>(window as any).holdFrames(false));await page.waitForTimeout(100);
+  await page.evaluate(()=>(window as any).holdFrames(true));await page.waitForTimeout(100);await page.locator('#pause-button').tap();const paused=await page.evaluate(()=>(window as any).deviceSnapshot());await page.waitForTimeout(1500);if(check==='audio')expect(await page.evaluate(()=>(window as any).liveLoops())).toBe(0);
+  const frozen=await page.evaluate(()=>(window as any).deviceSnapshot());for(const key of ['activeMs','frames','maxFrameMs'])expect(frozen[key]).toBe(paused[key]);
+  await page.locator('#pause-overlay [data-action="pause"]').tap();await page.evaluate(()=>{(window as any).captureResumeDevice=true;(window as any).holdFrames(false);});
+  await expect.poll(()=>page.evaluate(()=>(window as any).resumeDeviceSamples.length)).toBe(2);const [first,second]=await page.evaluate(()=>(window as any).resumeDeviceSamples);for(const key of ['activeMs','frames','maxFrameMs'])expect(first[key]).toBe(paused[key]);expect(second.frames).toBe(first.frames+1);expect(second.activeMs).toBeGreaterThan(first.activeMs);
   await page.getByLabel('配樂設定').tap();await page.getByRole('button',{name:'裝置檢查',exact:true}).tap();
   const download=page.waitForEvent('download');await page.getByRole('button',{name:'匯出檢查紀錄',exact:true}).tap();const file=await download,fs=await import('node:fs/promises');const report=JSON.parse(await fs.readFile((await file.path())!,'utf8'));
-  expect(report.activeMs).toBeLessThan(1200);expect(report.maxFrameMs).toBeLessThan(1000);
+  await fs.writeFile(`artifacts/p0-no-raf-${check}-${process.env.CI?'software':'native'}-v0430.json`,JSON.stringify({paused,first,second,report},null,2));
+  if(!process.env.CI)expect(report.activeMs).toBeLessThan(1200);expect(report.maxFrameMs).toBeLessThan(1000);
 });
