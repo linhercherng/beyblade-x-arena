@@ -1,6 +1,20 @@
 import { test, expect, type Page } from "@playwright/test";
 import { mkdirSync, readFileSync } from "node:fs";
+import{installProbe}from'./audio-probe.ts';
 const action = (page: Page, a: string) => page.locator(`[data-action="${a}"]`);
+test.afterEach(async({page},info)=>{
+ if(info.status===info.expectedStatus)return;
+ try{
+  const before=await page.evaluate(()=>{const w=window as any;return{audio:w.audioProbe?{...w.audioProbe.metrics(),time:w.audioProbe.ctx.currentTime}:null,screen:document.querySelector('#app')?.getAttribute('data-screen'),paused:!!document.querySelector('#pause-overlay:not([hidden])'),timer:document.querySelector('#battle-time')?.textContent,notice:document.querySelector('#audio-notice-text')?.textContent};});
+  await info.attach('native-state-before-controls',{body:JSON.stringify(before),contentType:'application/json'});
+  await info.attach('screen-before-controls',{body:await page.screenshot({fullPage:true,timeout:2000}),contentType:'image/png'});
+ }catch{}
+ try{
+  await page.locator('.music-controls').evaluate((node:HTMLDetailsElement)=>node.open=true);await page.getByRole('button',{name:'裝置檢查',exact:true}).click({timeout:1500});
+  const [file]=await Promise.all([page.waitForEvent('download',{timeout:2000}),page.getByRole('button',{name:'匯出檢查紀錄',exact:true}).click({timeout:1500})]);
+  await info.attach('device-check-after-controls',{path:(await file.path())!,contentType:'application/json'});
+ }catch{}
+});
 test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -60,6 +74,7 @@ test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
   expect(errors).toEqual([]);
 });
 for (const version of [1, 2, 3, 4, 5]) test(`已發布v${version}戰績匯入後仍使用舊引擎正確重播`, async ({ page }) => {
+  await installProbe(page);
   const m = JSON.parse(readFileSync(`tests/fixtures/v${version}-match.json`, "utf8"));
   const count = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
   const profile = {
@@ -72,6 +87,9 @@ for (const version of [1, 2, 3, 4, 5]) test(`已發布v${version}戰績匯入後
     highs: [],
   };
   await page.goto("/");
+  await page.getByLabel('配樂設定',{exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>(window as any).audioProbe.metrics().rms)).toBeGreaterThan(.001);
+  const clock=await page.evaluate(()=>(window as any).audioProbe.ctx.currentTime);await expect.poll(()=>page.evaluate(()=>(window as any).audioProbe.ctx.currentTime)).toBeGreaterThan(clock+.3);await expect(page.locator('#audio-notice')).toBeHidden();
   await action(page, "stats").click();
   await page.locator("#backup-file").setInputFiles({
     name: `v${version}.json`,
@@ -85,6 +103,8 @@ for (const version of [1, 2, 3, 4, 5]) test(`已發布v${version}戰績匯入後
   await expect(insight).toContainText('發射力量');await expect(insight).toContainText('因果占比');
   await expect(insight.locator('tbody tr').first()).toContainText(Math.round(m.rounds[0].inputs[0].power*100)+'%');
   await action(page, "replay").first().click();
+  const replaySpeed=action(page,'speed');await expect(replaySpeed).toHaveText('1×');
+  if(process.env.CI){await replaySpeed.click();await replaySpeed.click();await expect(replaySpeed).toHaveText('4×');}
   const signatures=page.getByRole('group',{name:'陀螺旋向與軸心特徵'});
   await expect(signatures.locator('span')).toHaveCount(2);
   for(const span of await signatures.locator('span').all())await expect(span).toContainText((await span.getAttribute('data-spin'))==='L'?'左迴旋':'右迴旋');

@@ -1,6 +1,6 @@
 import{test,expect,type Page}from'@playwright/test';import{writeFileSync}from'node:fs';
 const fixture='/tests/fixtures/finish-chain.html'+(process.env.CI?'?software-gpu':'');
-const metrics=(page:Page)=>page.evaluate(()=>(window as any).chainMetrics());
+const metrics=(page:Page,withBounds=true)=>page.evaluate(bounds=>(window as any).chainMetrics(bounds),withBounds);
 for(const mobile of [false,true])test(`${mobile?'手機':'桌機'}衝刺命中接三種終結保留鏡位，暫停不跳動且落點穩定`,async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize(mobile?{width:390,height:844}:{width:1200,height:800});await page.goto(fixture);
  for(const kind of ['burst','over','extreme']){
@@ -13,9 +13,9 @@ for(const mobile of [false,true])test(`${mobile?'手機':'桌機'}衝刺命中�
  await page.locator('#terminal').click();expect((await metrics(page)).rate).toBeLessThan(1);expect(errors).toEqual([]);
 });
 test('終結音效從慢速恢復、交叉淡化，暫停與靜音取消殘留尾音',async({page})=>{
- await page.goto(fixture);await page.locator('#extreme').click();await expect.poll(async()=>(await metrics(page)).cached).toBe(true);const start=await metrics(page);expect(start.rate).toBeLessThan(1);expect(start.cached).toBe(true);await expect.poll(async()=>(await metrics(page)).peak).toBeGreaterThan(.01);await expect.poll(async()=>(await metrics(page)).cueRates[0]??1).toBe(1);expect((await metrics(page)).peak).toBeLessThan(.95);
- await page.locator('#extreme').click();await page.locator('#pause').click();await expect.poll(async()=>(await metrics(page)).cues).toBe(0);expect((await metrics(page)).tails).toBe(0);
- await page.locator('#burst').click();await page.locator('#mute').click();await expect.poll(async()=>(await metrics(page)).cues).toBe(0);expect((await metrics(page)).tails).toBe(0);
+ const audioMetrics=()=>metrics(page,false);await page.goto(fixture+(process.env.CI?'&audio-only':''));await page.locator('#extreme').click();await expect.poll(async()=>(await audioMetrics()).cached).toBe(true);const start=await audioMetrics();expect(start.renderProfile.audioOnly).toBe(!!process.env.CI);expect(start.rate).toBeLessThan(1);expect(start.cached).toBe(true);await expect.poll(async()=>(await audioMetrics()).peak).toBeGreaterThan(.01);await expect.poll(async()=>(await audioMetrics()).cueRates[0]??1).toBe(1);expect((await audioMetrics()).peak).toBeLessThan(.95);
+ await page.locator('#extreme').click();await page.locator('#pause').click();await expect.poll(async()=>(await audioMetrics()).cues).toBe(0);expect((await audioMetrics()).tails).toBe(0);
+ await page.locator('#burst').click();await page.locator('#mute').click();await expect.poll(async()=>(await audioMetrics()).cues).toBe(0);expect((await audioMetrics()).tails).toBe(0);
 });
 test('減少動態不啟用慢速交接，全場選擇保留；手機實際幀間隔及粒子有界',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(fixture);await page.locator('#burst').click();await expect.poll(async()=>(await metrics(page)).cached).toBe(true);expect((await metrics(page)).rate).toBe(1);

@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
+const fixture='/tests/fixtures/impact.html'+(process.env.CI?'?software-gpu':'');
 import { writeFileSync } from "node:fs";
 const metrics = (page: import("@playwright/test").Page) => page.evaluate(() => (window as any).impactMetrics());
 
 test("碰撞有亮芯、拖尾與短震動，密集事件有上限，暫停凍結", async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 800 });
-  await page.goto("/tests/fixtures/impact.html");
+  await page.goto(fixture);
   await page.locator("#capture").click();
   await page.locator("#heavy").click();
   await expect.poll(async () => (await metrics(page)).streaks).toBeGreaterThan(0);
@@ -20,7 +21,7 @@ test("碰撞有亮芯、拖尾與短震動，密集事件有上限，暫停凍�
 });
 
 test("最大配樂音量時重擊仍在前景，短暫壓低配樂後恢復且無削波", async ({ page }) => {
-  await page.goto("/tests/fixtures/impact.html");
+  await page.goto(fixture+(process.env.CI?'&audio-only':''));
   await page.locator("#bgm").click();
   await page.locator("#volume").fill("1");
   await expect.poll(async () => (await metrics(page)).playing).toBe("battle");
@@ -28,7 +29,7 @@ test("最大配樂音量時重擊仍在前景，短暫壓低配樂後恢復且�
   await page.locator("#heavy").click();
   await expect.poll(async () => (await metrics(page)).peakSfx).toBeGreaterThan(.03);
   await page.waitForTimeout(80);
-  const hit = await metrics(page);
+  const hit = await metrics(page);expect(hit.renderProfile.audioOnly).toBe(!!process.env.CI);
   expect(hit.peakSfx).toBeGreaterThan(hit.musicAtPeak * 1.5);
   expect(hit.minDuck).toBeLessThan(.8);
   expect(hit.music).toBeLessThanOrEqual(.43);
@@ -43,7 +44,7 @@ test("最大配樂音量時重擊仍在前景，短暫壓低配樂後恢復且�
 test("減少動態效果不震動或閃光，手機火花數量受控", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/tests/fixtures/impact.html");
+  await page.goto(fixture);
   await page.locator("#heavy").click();
   await page.waitForTimeout(80);
   const hit = await metrics(page);

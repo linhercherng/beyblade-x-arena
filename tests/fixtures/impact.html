@@ -2,11 +2,11 @@
 <style>body{margin:0;background:#101927;color:#e9edf2;font:16px sans-serif}header{position:absolute;top:16px;left:20px;z-index:2}button{padding:8px 16px;margin:4px}#stage{height:100vh}small{display:block;margin:8px;color:#adbccc}</style>
 <header>碰撞回饋：蒼龍神劍／深淵魔鯊<br><button id="light">輕擦</button><button id="medium">碰撞</button><button id="heavy">重擊</button><button id="rapid">密集重擊</button><button id="bgm">交戰配樂</button><button id="capture">擷取下一次碰撞</button><button id="pause">暫停畫面</button><button id="mute">靜音</button><input id="volume" aria-label="配樂音量" type="range" min="0" max="1" step=".1" value=".6"><small>隔離聲光驗證，不修改正式物理或戰績；點選按鈕啟用聲音</small></header><div id="stage"></div>
 <script type="module">
-import { Arena } from "/src/arena.ts";
+import{fixtureProfile}from"./render-profile.ts";import { Arena } from "/src/arena.ts";
 import { Sound } from "/src/audio.ts";
 import { BEYS } from "/src/catalog.ts";
 import { createBattle } from "/src/physics.ts";
-const arena = new Arena(), sound = new Sound();
+const arena = new Arena(), sound = new Sound(), profile=fixtureProfile(arena);
 arena.setBeys([BEYS[0],BEYS[11]]); arena.attach(document.querySelector("#stage"),"battle");
 const battle = createBattle(BEYS[0],BEYS[11],[{power:.9,lane:1,angle:0},{power:.9,lane:1,angle:0}],13);
 battle.tops.forEach((t,i)=>{ t.x=i?.43:-.43; t.z=0; });
@@ -43,7 +43,7 @@ function frame(time){
  }peakMix=Math.max(peakMix,rms(meters[2]).peak);}
  requestAnimationFrame(frame);
 }
-window.impactMetrics=()=>({particles:arena.particles.length,shake:arena.shake,reduced:arena.reduced,
+window.impactMetrics=()=>({renderProfile:profile.info(),particles:arena.particles.length,shake:arena.shake,reduced:arena.reduced,
  streaks:arena.sparkStreaks?.geometry.drawRange.count??0, flashes:arena.impactFlashes?.filter(f=>f.material.opacity>0).length??0,
  duck:sound.musicDuck?.gain.value??1,music:sound.music?.gain.value??0,playing:sound.playing?.mode,
  peakSfx,musicAtPeak,peakMix,minDuck,quaternion:arena.camera.quaternion.toArray()});

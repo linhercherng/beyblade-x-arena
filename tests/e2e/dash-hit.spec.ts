@@ -1,7 +1,7 @@
 import{test,expect,type Page}from'@playwright/test';
 const fixture='/tests/fixtures/dash-hit.html'+(process.env.CI?'?software-gpu':'');
 import{writeFileSync}from'node:fs';
-const metrics=(p:Page)=>p.evaluate(()=>(window as any).hitMetrics());
+const metrics=(p:Page,withBounds=true)=>p.evaluate(bounds=>(window as any).hitMetrics(bounds),withBounds);
 test('衝刺命中慢動作、近鏡及衝擊環，暫停精確凍結且恢復正常',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:1200,height:800});await page.goto(fixture);
  await page.locator('#capture').click();const m=await metrics(page);expect(m.accepted).toBe(1);expect(m.sample.scale).toBeLessThan(.3);expect(m.ring.visible).toBe(true);expect(m.distance).toBeLessThan(m.baseline);
@@ -10,11 +10,11 @@ test('衝刺命中慢動作、近鏡及衝擊環，暫停精確凍結且恢復�
  await page.locator('#pause').click();await expect.poll(async()=>(await metrics(page)).sample.scale).toBe(1);await expect.poll(async()=>(await metrics(page)).ring.visible).toBe(false);expect(errors).toEqual([]);
 });
 test('命中音效在最大配樂前景，暫停及靜音取消尾音，終結優先',async({page})=>{
- await page.goto(fixture);await page.locator('#bgm').click();await page.locator('#normal').click();await expect.poll(async()=>(await metrics(page)).playing).toBe('battle');await page.waitForTimeout(650);
- await page.locator('#play').click();const priority=await metrics(page);expect(priority.impactRates.some((r:number)=>Math.abs(r-.8)<.001)).toBe(true);await expect.poll(async()=>(await metrics(page)).peakSfx).toBeGreaterThan(.02);const m=await metrics(page);expect(m.peakSfx).toBeGreaterThan(m.musicAtPeak*1.5);expect(m.peakMix).toBeLessThan(.95);
- await page.locator('#pause').click();expect((await metrics(page)).impacts).toBe(0);
- await page.locator('#play').click();await page.locator('#mute').click();expect((await metrics(page)).impacts).toBe(0);
- await page.locator('#play').click();await page.locator('#finish').click();const f=await metrics(page);expect(f.sample.scale).toBe(1);await expect.poll(async()=>(await metrics(page)).ring.visible).toBe(false);
+ const audioMetrics=()=>metrics(page,false);await page.goto(fixture+(process.env.CI?'&audio-only':''));await page.locator('#bgm').click();await page.locator('#normal').click();await expect.poll(async()=>(await audioMetrics()).playing).toBe('battle');await page.waitForTimeout(650);
+ await page.locator('#play').click();const priority=await audioMetrics();expect(priority.renderProfile.audioOnly).toBe(!!process.env.CI);writeFileSync(process.env.CI?'artifacts/dash-hit-priority-software-v0430.json':'artifacts/dash-hit-priority-native-v0430.json',JSON.stringify(priority,null,2));expect(priority.impactRates.some((r:number)=>Math.abs(r-.8)<.001)).toBe(true);await expect.poll(async()=>(await audioMetrics()).peakSfx).toBeGreaterThan(.02);const m=await audioMetrics();expect(m.peakSfx).toBeGreaterThan(m.musicAtPeak*1.5);expect(m.peakMix).toBeLessThan(.95);
+ await page.locator('#pause').click();await expect.poll(async()=>(await audioMetrics()).impacts).toBe(0);
+ await page.locator('#play').click();await page.locator('#mute').click();expect((await audioMetrics()).impacts).toBe(0);
+ await page.locator('#play').click();await page.locator('#finish').click();const f=await audioMetrics();expect(f.sample.scale).toBe(1);await expect.poll(async()=>(await audioMetrics()).ring.visible).toBe(false);
  writeFileSync('artifacts/dash-hit-audio-v0130.json',JSON.stringify(m,null,2));
 });
 test('手機持續密集命中幀時間及資源有界，近鏡不裁切陀螺',async({page})=>{
