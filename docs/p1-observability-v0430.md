@@ -83,3 +83,5 @@ Game整合案例失敗會先附加控制操作前的原生音訊／畫面狀態�
 其餘兩項的有效對戰總時間為1868ms／1935ms，包含合法的前後UI操作，不能直接用1200ms判斷暫停段是否計入。案例透過只呼叫原方法一次的DeviceCheck.frame觀測，要求1500ms暫停期間及恢復第一個有效幀的activeMs、frames、maxFrameMs完全不變，第二個有效幀再增加計數；原生另保留1200ms總時間與1000ms最長幀門檻，CI保留1000ms與精確區間檢查。失敗蒐證重用已開啟的檢查視窗並限制等待時間，避免在modal背後點入口耗掉180秒。
 
 另一輪雲端的全寬／全螢幕版面例在12秒轉場等待後仍顯示One、對戰時間0且未暫停；該例CI改等待30秒，原生仍12秒。此等待僅為版面驗收前提，1440／390寬度、高度、全螢幕、中文與不溢出檢查不變；精確倒數、發射同步和對決時計仍由各自原門檻驗收。
+
+後續雲端106項通過後，比分動畫的凍結基準從950ms至966.7ms相差一畫格。Web Animations的pause task是非同步，playState可先為paused；案例改等待所有原生animation.ready、確認無pending且仍paused後才取基準，再保持精確時間相等與真正恢復檢查，沒有容許額外漂移或再次自行暫停。依據：[Web Animations current ready promise與pending pause task](https://drafts.csswg.org/web-animations-1/#the-current-ready-promise)。

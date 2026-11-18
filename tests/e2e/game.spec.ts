@@ -202,7 +202,8 @@ async function playMatch(page: Page, local = false) {
       await expect(page.locator('#pause-overlay')).toBeVisible();
       expect(await page.evaluate(()=>{const p=(window as any).finishAnimationProbe;return p.running&&p.animation.playState==='paused';})).toBe(true);
       await page.evaluate(()=>(window as any).releaseFinishPause());
-      const times = await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime));
+      const times = await page.locator(".finish-card").evaluate(async el => {const animations=el.getAnimations({subtree:true});await Promise.all(animations.map(a=>a.ready));return animations.map(a=>a.currentTime);});
+      expect(await page.evaluate(()=>{const a=(window as any).finishAnimationProbe.animation;return a.pending||a.playState!=='paused';})).toBe(false);
       await expect(page.locator(".finish-victor")).toContainText(/WIN|出場順序/);
       expect(await page.locator(".finish-card").evaluate(el => el.getBoundingClientRect().right <= innerWidth)).toBe(true);
       await page.screenshot({ path: local ? "artifacts/finish-live-mobile-v080.png" : "artifacts/finish-live-desktop-v080.png" });
