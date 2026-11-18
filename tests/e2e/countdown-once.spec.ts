@@ -31,7 +31,21 @@ test('文字觀測忽略空裝飾，但保留同批次重複文字寫入與清�
  expect(rest.map((e:any)=>e.text)).toEqual(['GO SHOOT!','GO SHOOT!','','GO SHOOT!','GO SHOOT!']);
 });
 test('GO開場提示隨暫停凍結，恢復後才消失且不會再出現',async({page})=>{
- await page.goto('/');for(const a of ['play','quick','confirm-team','begin-match'])await action(page,a).first().click();await page.keyboard.press('Space');await expect(page.locator('#battle-message .shoot')).toBeVisible({timeout:12000});await action(page,'pause').first().click();
- const time=await page.locator('#battle-time').innerText();await page.waitForTimeout(1000);await expect(page.locator('#battle-time')).toHaveText(time);await expect(page.locator('#battle-message .shoot')).toBeVisible();
- await page.locator('#pause-overlay [data-action="pause"]').click();await expect(page.locator('#battle-message .shoot')).toHaveCount(0);await page.waitForTimeout(250);await expect(page.locator('#battle-message .shoot')).toHaveCount(0);
+ await page.addInitScript(()=>{
+  const w=window as any,request=window.requestAnimationFrame.bind(window),pending:FrameRequestCallback[]=[];let armed=true,resumed=0;
+  window.requestAnimationFrame=cb=>request(time=>{if(armed&&document.querySelector('#battle-message[data-launch-age] .shoot'))pending.push(cb);else{if(!armed)resumed++;cb(time);}});
+  w.goPauseFrames=()=>({held:pending.length,resumed});
+  w.releaseGoPause=()=>{armed=false;for(const cb of pending.splice(0))window.requestAnimationFrame(cb);};
+ });
+ try{
+  await page.goto('/');for(const a of ['play','quick','confirm-team','begin-match'])await action(page,a).first().click();await page.keyboard.press('Space');
+  await expect.poll(()=>page.evaluate(()=>(window as any).goPauseFrames().held),{timeout:12000}).toBeGreaterThan(0);
+  await expect(page.locator('#battle-message .shoot')).toBeVisible();await expect(page.locator('#pause-overlay')).toBeHidden();expect(parseFloat(await page.locator('#battle-time').innerText())).toBeLessThan(1.1);
+  await action(page,'pause').first().click();await expect(page.locator('#pause-overlay')).toBeVisible();
+  // 放行後由遊戲暫停維持凍結，不能讓測試的RAF攔截替產品通過斷言。
+  await page.evaluate(()=>(window as any).releaseGoPause());
+  const time=await page.locator('#battle-time').innerText();await page.waitForTimeout(1000);const frames=await page.evaluate(()=>(window as any).goPauseFrames());expect(frames.held).toBe(0);expect(frames.resumed).toBeGreaterThanOrEqual(2);
+  await expect(page.locator('#battle-time')).toHaveText(time);await expect(page.locator('#battle-message .shoot')).toBeVisible();
+  await page.locator('#pause-overlay [data-action="pause"]').click();await expect(page.locator('#battle-message .shoot')).toHaveCount(0);await page.waitForTimeout(250);await expect(page.locator('#battle-message .shoot')).toHaveCount(0);
+ }finally{await page.evaluate(()=>(window as any).releaseGoPause?.()).catch(()=>{});}
 });
