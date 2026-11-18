@@ -133,8 +133,11 @@ async function buildTeam(page: Page) {
 }
 async function playMatch(page: Page, local = false) {
   await page.evaluate(()=>{
-    const w=window as any,request=window.requestAnimationFrame.bind(window),pending:FrameRequestCallback[]=[];let armed=true,resumed=0;
-    window.requestAnimationFrame=cb=>request(time=>{if(armed&&document.querySelector('.finish-card'))pending.push(cb);else{if(!armed)resumed++;cb(time);}});
+    const w=window as any,request=window.requestAnimationFrame.bind(window),pending:FrameRequestCallback[]=[],inputPending:FrameRequestCallback[]=[];let armed=true,resumed=0,inputArmed=false,inputResumed=0;
+    window.requestAnimationFrame=cb=>request(time=>{if(inputArmed&&document.querySelector('#app[data-screen="battle"]'))inputPending.push(cb);else if(armed&&document.querySelector('.finish-card'))pending.push(cb);else{if(!armed)resumed++;if(!inputArmed)inputResumed++;cb(time);}});
+    w.armBattleInput=()=>{inputArmed=true;inputResumed=0;};
+    w.battleInputFrames=()=>({held:inputPending.length,resumed:inputResumed});
+    w.releaseBattleInput=()=>{inputArmed=false;for(const cb of inputPending.splice(0))window.requestAnimationFrame(cb);};
     w.finishPauseFrames=()=>({held:pending.length,resumed});
     w.releaseFinishPause=()=>{armed=false;for(const cb of pending.splice(0))window.requestAnimationFrame(cb);};
   });
@@ -142,6 +145,7 @@ async function playMatch(page: Page, local = false) {
   let rounds = 0;
   while (rounds++ < 14) {
     await expect(action(page, "lock").first()).toBeVisible();
+    await page.evaluate(()=>(window as any).armBattleInput());
     if(local)await page.getByRole("group",{name:"1P 傾斜方向"}).getByRole("button",{name:"外切",exact:true}).click();
     else await page.getByLabel("1P 傾斜方向").selectOption("1");
     await page.getByLabel("1P 發射傾角").press("End");
@@ -163,6 +167,15 @@ async function playMatch(page: Page, local = false) {
       "battle",
       { timeout: 12000 },
     );
+    // Capture the real battle input window before slow camera/screenshot work can finish a round.
+    try{
+      await expect.poll(()=>page.evaluate(()=>(window as any).battleInputFrames().held)).toBeGreaterThan(0);
+      await page.keyboard.press("Space");
+      await expect(action(page, "shout").first()).toBeDisabled();
+      if(local){await page.keyboard.press("Enter");await expect(action(page,"shout").nth(1)).toBeDisabled();}
+    }finally{await page.evaluate(()=>(window as any).releaseBattleInput());}
+    await expect.poll(()=>page.evaluate(()=>(window as any).battleInputFrames().resumed)).toBeGreaterThanOrEqual(2);
+    expect(await page.evaluate(()=>(window as any).battleInputFrames().held)).toBe(0);
     if (
       (await action(page, "close-up").getAttribute("aria-pressed")) !== "true"
     )
@@ -180,12 +193,6 @@ async function playMatch(page: Page, local = false) {
       });
     }
     await action(page, "close-up").click();
-    await page.keyboard.press("Space");
-    await expect(action(page, "shout").first()).toBeDisabled();
-    if (local) {
-      await page.keyboard.press("Enter");
-      await expect(action(page, "shout").nth(1)).toBeDisabled();
-    }
     // 展示時長可切換 4 倍，但模擬仍採同一固定步長。
     while ((await action(page, "speed").textContent()) !== "4×")
       await action(page, "speed").click();
