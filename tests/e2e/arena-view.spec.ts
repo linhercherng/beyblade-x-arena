@@ -17,7 +17,7 @@ test("中文名稱可搜尋，戰鬥全寬放大且可切換全螢幕", async ({
   await action("begin-match").click();
   await page.keyboard.press("Space");
   await expect(page.locator("#app")).toHaveAttribute("data-screen", "battle", {
-    timeout: 12000,
+    timeout: process.env.CI ? 30000 : 12000,
   });
   await action("pause").first().click();
   await expect(page.locator(".sidebar")).toBeHidden();
