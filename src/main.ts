@@ -699,7 +699,7 @@ function deviceCheck(){
 }
 function deviceReport():DeviceReport{return {...deviceLog.report(performance.now()),userAgent:navigator.userAgent,viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},audio:sound.diagnostics()};}
 function saveDeviceDraft(){
-  const report=deviceReport();if(!report.running&&!report.elapsedMs)return;
+  if(!deviceLog.hasRecord)return;const report=deviceReport();
   deviceDraftFailed=!deviceDraft.save(report);deviceDraftAt=performance.now();
   if(!deviceDraftFailed)savedDeviceDraft=deviceDraft.load();
 }
@@ -714,7 +714,7 @@ function updateDeviceCheck(){
   const exportSaved=document.querySelector<HTMLButtonElement>('[data-action=device-draft-export]'),clearSaved=document.querySelector<HTMLButtonElement>('[data-action=device-draft-clear]');
   if(exportSaved)exportSaved.disabled=!savedDeviceDraft;if(clearSaved)clearSaved.disabled=!savedDeviceDraft||deviceLog.running;
   const audioState=({running:audio.ready?"運作中":"等待恢復",suspended:"已暫停",interrupted:"中斷中",closed:"已關閉",unavailable:"此瀏覽器未提供",["not-started"]:"尚未啟用"} as Record<string,string>)[audio.state]??audio.state;
-  panel.textContent=`${r.running?"紀錄中":r.elapsedMs?"已停止":"尚未紀錄"} · 經過 ${seconds(r.elapsedMs)}\n有效對戰 ${seconds(r.activeMs)} · ${r.frames} 幀\n平均 ${r.fps?.toFixed(1)??"—"} FPS · 近期 ${r.recentFps?.toFixed(1)??"—"} FPS\n95% 幀間隔 ${r.p95AtLeast1000Ms?"≥ 1000":"≤ "+(r.p95FrameMs??"—")} ms\n幾何 ${r.gpu?.geometries??"—"} · 貼圖 ${r.gpu?.textures??"—"} · 程式 ${r.gpu?.programs??"—"}\nJS記憶體 ${r.heapBytes===null?"此瀏覽器未提供":"約 "+(r.heapBytes/1048576).toFixed(1)+" MB"}\n音訊 ${audioState} · 聲源 ${audio.sources} · 配樂 ${Math.round(audio.musicVolume*100)}%${audio.muted?" · 靜音":""}`;
+  panel.textContent=`${r.running?"紀錄中":deviceLog.hasRecord?"已停止":"尚未紀錄"} · 經過 ${seconds(r.elapsedMs)}\n有效對戰 ${seconds(r.activeMs)} · ${r.frames} 幀\n平均 ${r.fps?.toFixed(1)??"—"} FPS · 近期 ${r.recentFps?.toFixed(1)??"—"} FPS\n95% 幀間隔 ${r.p95AtLeast1000Ms?"≥ 1000":"≤ "+(r.p95FrameMs??"—")} ms\n幾何 ${r.gpu?.geometries??"—"} · 貼圖 ${r.gpu?.textures??"—"} · 程式 ${r.gpu?.programs??"—"}\nJS記憶體 ${r.heapBytes===null?"此瀏覽器未提供":"約 "+(r.heapBytes/1048576).toFixed(1)+" MB"}\n音訊 ${audioState} · 聲源 ${audio.sources} · 配樂 ${Math.round(audio.musicVolume*100)}%${audio.muted?" · 靜音":""}`;
 }
 function help() {
   byId("modal-root")!.innerHTML =

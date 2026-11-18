@@ -19,6 +19,7 @@ export class DeviceCheck{
   private peakHeapBytes:number|null=null;
   checks=Object.fromEntries(Object.keys(DEVICE_CASES).map(k=>[k,'untested'])) as Record<keyof typeof DEVICE_CASES,Status>;
   get running(){return this.started!==null&&this.ended===null;}
+  get hasRecord(){return this.started!==null;}
   start(now:number){
     this.windows=[];this.windowAt=now;this.windowFrames=this.windowMs=0;
     this.started=now;this.ended=null;this.last=null;this.bins.fill(0);this.frames=this.activeMs=this.maxFrameMs=0;

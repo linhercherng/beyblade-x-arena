@@ -43,3 +43,7 @@ test('儲存空間或權限拒絕不影響遊戲，原草稿保持完整',()=>{
  const d=new diagnostics.DiagnosticDraft(()=>({...storage,setItem:()=>{throw Error('quota');}}));assert.equal(d.save(report()),false);assert.deepEqual([...entries],before);
  const denied=new diagnostics.DiagnosticDraft(()=>{throw Error('SecurityError');});assert.equal(denied.load(),null);assert.equal(denied.save(report()),false);assert.equal(denied.clear(),false);
 });
+test('同一毫秒開始並停止仍有紀錄，保存後不誤標成尚未停止',()=>{
+ const log=new DeviceCheck();assert.equal(log.hasRecord,false);log.start(0);log.stop(0);assert.equal(log.hasRecord,true);
+ const {make}=drafts(),d=make();assert.equal(d.save({...report(),...log.report(0)}),true);assert.equal(d.load()!.interrupted,false);assert.equal(d.load()!.report.elapsedMs,0);
+});

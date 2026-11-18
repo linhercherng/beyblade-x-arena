@@ -5,11 +5,11 @@ test("低速旋轉實際渲染連續、暫停精確且軌跡不重建幾何", as
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.setViewportSize({ width: 960, height: 640 });
-  await page.goto("/tests/fixtures/motion.html");
+  await page.goto("/tests/fixtures/motion.html"+(process.env.CI?"?software-gpu":""));
   await expect(page.locator("canvas")).toBeVisible();
-  await page.waitForTimeout(5500);
+  if(process.env.CI)await expect.poll(()=>page.evaluate(()=>(window as any).motionFrameCount()),{timeout:30000}).toBeGreaterThan(60);else await page.waitForTimeout(5500);
   const metrics = await page.evaluate(() => (window as any).motionMetrics());
-  expect(metrics.geometryStable).toBe(true);
+  expect(metrics.renderProfile.softwareGpu).toBe(!!process.env.CI);expect(metrics.geometryStable).toBe(true);
   expect(metrics.deltas.length).toBeGreaterThan(60);
   expect(metrics.deltas.filter((d: number) => d === 0).length).toBeLessThan(
     metrics.deltas.length * 0.03,
@@ -19,10 +19,10 @@ test("低速旋轉實際渲染連續、暫停精確且軌跡不重建幾何", as
   );
   const sorted = metrics.frames.slice().sort((a: number, b: number) => a - b);
   writeFileSync(
-    "artifacts/motion-metrics.json",
+    process.env.CI?"artifacts/motion-software-v0430.json":"artifacts/motion-metrics.json",
     JSON.stringify(
       {
-        frames: sorted.length,
+        profile:metrics.renderProfile,frames: sorted.length,
         medianFrameMs: sorted[Math.floor(sorted.length * 0.5)],
         p95FrameMs: sorted[Math.floor(sorted.length * 0.95)],
         stationaryFrames: metrics.deltas.filter((d: number) => d === 0).length,

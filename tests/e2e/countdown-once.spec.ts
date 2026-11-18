@@ -1,5 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
 import{writeFileSync}from'node:fs';
+if(process.env.CI)test.use({viewport:{width:640,height:480}});
 const action=(p:Page,a:string)=>p.locator(`[data-action="${a}"]`);
 const observeOpening=()=>{
  (window as any).openingUpdates=[];

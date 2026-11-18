@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+if(process.env.CI)test.use({viewport:{width:640,height:480}});
 test('低幀率下對決時鐘仍跟隨實際經過時間',async({page})=>{
   await page.addInitScript(()=>{
     const request=window.requestAnimationFrame.bind(window);

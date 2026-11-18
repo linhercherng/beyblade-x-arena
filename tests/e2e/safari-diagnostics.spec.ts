@@ -1,5 +1,5 @@
 import{test,expect}from'@playwright/test';
-test.use({hasTouch:true});
+test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
 test('觸控裝置檢查可匯出且不把未測試硬體標成通過',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/');
  await page.getByLabel('配樂設定').tap();await page.getByRole('button',{name:'裝置檢查',exact:true}).tap();await page.getByRole('button',{name:'開始新紀錄',exact:true}).tap();
