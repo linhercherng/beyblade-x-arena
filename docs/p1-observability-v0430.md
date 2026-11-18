@@ -87,3 +87,7 @@ Game整合案例失敗會先附加控制操作前的原生音訊／畫面狀態�
 後續雲端106項通過後，比分動畫的凍結基準從950ms至966.7ms相差一畫格。Web Animations的pause task是非同步，playState可先為paused；案例改等待所有原生animation.ready、確認無pending且仍paused後才取基準，再保持精確時間相等與真正恢復檢查，沒有容許額外漂移或再次自行暫停。依據：[Web Animations current ready promise與pending pause task](https://drafts.csswg.org/web-animations-1/#the-current-ready-promise)。
 
 另次CI完整賽事播報例已到1P勝利結算（5場、模擬總時間131.6秒），最後等待勝負播報結束時用完整案180秒預算。CI多回合總執行預算統一為360秒（沿用既有再戰例的CI預算），原生仍180秒；各局部12／30／45秒等待、10秒輪詢與所有同步／音量／對決時長門檻不變，不作重試。此為測試總預算，不代表產品效能改善。
+
+再輪CI前108項通過（含兩個完整賽事與動畫ready），暫停鍵盤例卻在恢復後讀固定Three時已觀察到Two、One與GO。該例現在擷取Escape真正暫停時的3／2／1，原3500ms阻塞後仍須同拍；恢復按鈕的document bubble listener於遊戲#app handler之後同步記錄countdown狀態，MutationObserver跨畫面重建記錄剩餘數字直到GO，保留原10秒進入對戰條件。流程序列只略過相鄰同值；嚴格重複文字寫入仍由countdown-once獨立驗證。
+
+另以忽略目錄內的延遲暫停副本驗證Two恢復分支，實際記錄為2→1→GO；正常分支為3→2→1→GO，皆保留同一3500ms凍結與真實鍵盤／按鈕流程。

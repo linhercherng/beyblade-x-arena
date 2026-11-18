@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import{installProbe}from'./audio-probe.ts';
 const action = (page: Page, a: string) => page.locator(`[data-action="${a}"]`);
 test.afterEach(async({page},info)=>{
@@ -344,21 +344,29 @@ test("暫停時鍵盤不會繞過遮罩鎖定發射，恢復後可正常倒數",
   );
   await expect(page.locator("#pause-overlay")).toBeHidden();
   await page.keyboard.press("Escape");
+  await expect(page.locator('#pause-overlay')).toBeVisible();
+  await expect(page.locator('#app')).toHaveAttribute('data-screen','countdown');
+  const frozenCue=await page.locator('#battle-message .count-beat').innerText();expect(['3','2','1']).toContain(frozenCue);
   await page.evaluate(() => {
     const start = performance.now();
     while (performance.now() - start < 3500) {
       /* 模擬分頁停止 rAF */
     }
   });
+  await expect(page.locator('#battle-message .count-beat')).toHaveText(frozenCue);
+  await page.evaluate(()=>{
+    const w=window as any,values:string[]=[];const capture=()=>{const text=document.querySelector('#battle-message .count-beat,#battle-message .shoot')?.textContent;if(text&&text!==values.at(-1))values.push(text);};capture();
+    w.keyboardCountdownValues=values;w.keyboardCountdownObserver=new MutationObserver(capture);w.keyboardCountdownObserver.observe(document,{childList:true,characterData:true,subtree:true});
+    const resume=document.querySelector('#pause-overlay [data-action="pause"]')!;document.addEventListener('click',event=>{if(event.composedPath().includes(resume))w.keyboardCountdownResumedScreen=document.querySelector('#app')?.getAttribute('data-screen');},{once:true});
+  });
   await page.locator('#pause-overlay [data-action="pause"]').click();
-  await expect(page.locator("#app")).toHaveAttribute(
-    "data-screen",
-    "countdown",
-  );
-  await expect(page.locator("#battle-message strong")).toHaveText("3");
+  await expect.poll(()=>page.evaluate(()=>(window as any).keyboardCountdownResumedScreen)).toBe('countdown');
+  await expect(page.locator('#pause-overlay')).toBeHidden();
   await expect(page.locator("#app")).toHaveAttribute("data-screen", "battle", {
     timeout: 10000,
   });
+  const observed=await page.evaluate(()=>(window as any).keyboardCountdownValues);writeFileSync(`artifacts/keyboard-countdown-${process.env.CI?'software':'native'}-v0430.json`,JSON.stringify({frozenCue,observed},null,2));
+  expect(observed).toEqual([...['3','2','1'].slice(['3','2','1'].indexOf(frozenCue)),'GO SHOOT!']);await page.evaluate(()=>(window as any).keyboardCountdownObserver.disconnect());
 });
 test("瀏覽器禁用設定儲存時可啟動與切換音效", async ({ page }) => {
   const errors: string[] = [];
