@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import{holdFrameAt}from'./frame-hold.ts';
 test.use({ video: { mode: "on", size: { width: 1200, height: 800 } } });
 for (const local of [false, true])
   test(`${local ? "手機2P" : "桌機1P"}倒數中降下、暫停凍結，落盤後才開始計時`, async ({
@@ -7,6 +8,8 @@ for (const local of [false, true])
     const action = (a: string) => page.locator(`[data-action="${a}"]`);
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
+    await holdFrameAt(page,'#app[data-screen="countdown"] #stage canvas[data-opening="hover"]');
+    try{
     await page.setViewportSize(
       local ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
     );
@@ -33,8 +36,13 @@ for (const local of [false, true])
     }
     const canvas = page.locator("#stage canvas");
     await expect(canvas).toHaveAttribute("data-opening", "hover");
+    await expect.poll(()=>page.evaluate(()=>(window as any).stageFrameHold.state().held)).toBeGreaterThan(0);
     await expect(page.locator("#battle-time")).toHaveText("0.0 秒");
     await action("pause").first().click();
+    await expect(page.locator('#pause-overlay')).toBeVisible();
+    await page.evaluate(()=>(window as any).stageFrameHold.release());
+    await expect.poll(()=>page.evaluate(()=>(window as any).stageFrameHold.state().resumed)).toBeGreaterThanOrEqual(2);
+    expect(await page.evaluate(()=>(window as any).stageFrameHold.state().held)).toBe(0);
     const frozenPhase = await canvas.getAttribute("data-opening");
     expect(["hover", "drop", "bounce"]).toContain(frozenPhase);
     const count = await page.locator("#battle-message strong").textContent();
@@ -80,6 +88,7 @@ for (const local of [false, true])
         ? "artifacts/opening-mobile-v050.webm"
         : "artifacts/opening-v050.webm",
     );
+    }finally{await page.evaluate(()=>(window as any).stageFrameHold?.release()).catch(()=>{});}
   });
 test("減少動態效果省略降下與額外進動，倒數後仍正常開局", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });

@@ -15,6 +15,7 @@ test.afterEach(async({page},info)=>{
   await info.attach('device-check-after-controls',{path:(await file.path())!,contentType:'application/json'});
  }catch{}
 });
+
 test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -232,6 +233,7 @@ async function playMatch(page: Page, local = false) {
 test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備份", async ({
   page,
 }) => {
+  if(process.env.CI)test.setTimeout(600000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -272,7 +274,7 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   await expect(page.locator("h1")).toHaveText("對戰重播");
   await action(page, "speed").click();
   await action(page, "speed").click();
-  await expect(page.locator("#toast")).toContainText("結果與原對戰一致",{timeout:45000});
+  await expect(page.locator('#toast')).toContainText('結果與原對戰一致',{timeout:process.env.CI?90000:45000});await expect(action(page,'pause').first()).toContainText('從頭重播');
   await action(page,"exit").click();
   await expect(page.locator("h1")).toHaveText("每一場，都留下軌跡。");
   await page.locator("#backup-file").setInputFiles({
