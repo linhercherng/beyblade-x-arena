@@ -1,13 +1,14 @@
 import{spawn,execFileSync}from'node:child_process';
 import{mkdirSync,writeFileSync,readFileSync,readdirSync,createWriteStream}from'node:fs';
 import{join,resolve,dirname,relative}from'node:path';import{fileURLToPath}from'node:url';import{createHash}from'node:crypto';
-const steps=[{id:'core',args:['test']},{id:'browser',args:['run','test:e2e','--','--reporter=line,json']},{id:'balance',args:['run','balance:check']},{id:'build',args:['run','build']}];
+const steps=[{id:'core',args:['test']},{id:'browser',args:['run','test:e2e','--','--reporter=line,json','--max-failures=1']},{id:'balance',args:['run','balance:check']},{id:'build',args:['run','build']}];
 type Step=typeof steps[number];
 async function runCommand(step:Step,root:string,log:string):Promise<number>{
  const npm=process.env.npm_execpath;if(!npm)throw Error('請使用 npm run verify:release 執行');
  return new Promise((done,reject)=>{
   const output=createWriteStream(log),child=spawn(process.execPath,[npm,...step.args],{cwd:root,windowsHide:true,env:{...process.env,...(step.id==='browser'?{SPINFORGE_RELEASE_VERIFY:'1',PLAYWRIGHT_JSON_OUTPUT_NAME:join(dirname(log),'browser-results.json')}:{})},stdio:['ignore','pipe','pipe']});
   child.stdout.pipe(output,{end:false});child.stderr.pipe(output,{end:false});
+  child.stdout.pipe(process.stdout,{end:false});child.stderr.pipe(process.stderr,{end:false});
   child.on('error',error=>{output.end();reject(error);});child.on('close',code=>output.end(()=>done(code??-1)));
  });
 }
