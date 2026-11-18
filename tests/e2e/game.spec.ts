@@ -131,6 +131,12 @@ async function buildTeam(page: Page) {
   await action(page, "confirm-team").click();
 }
 async function playMatch(page: Page, local = false) {
+  await page.evaluate(()=>{
+    const w=window as any,request=window.requestAnimationFrame.bind(window),pending:FrameRequestCallback[]=[];let armed=true,resumed=0;
+    window.requestAnimationFrame=cb=>request(time=>{if(armed&&document.querySelector('.finish-card'))pending.push(cb);else{if(!armed)resumed++;cb(time);}});
+    w.finishPauseFrames=()=>({held:pending.length,resumed});
+    w.releaseFinishPause=()=>{armed=false;for(const cb of pending.splice(0))window.requestAnimationFrame(cb);};
+  });
   await action(page, "begin-match").click();
   let rounds = 0;
   while (rounds++ < 14) {
@@ -183,16 +189,30 @@ async function playMatch(page: Page, local = false) {
     while ((await action(page, "speed").textContent()) !== "4×")
       await action(page, "speed").click();
     if (rounds === 1) {
+      try{
+      await expect.poll(()=>page.evaluate(()=>(window as any).finishPauseFrames().held),{timeout:45000}).toBeGreaterThan(0);
       await expect(page.locator(".finish-card")).toBeVisible({ timeout: 45000 });
       await expect.poll(() => page.locator(".finish-score").evaluate(el => getComputedStyle(el).opacity)).toBe("1");
+      await action(page,'pause').first().evaluate(button=>button.addEventListener('click',()=>{
+        const animation=document.querySelector('.finish-score')!.getAnimations()[0],timing=animation.effect!.getTiming();
+        animation.currentTime=Number(timing.delay)+Number(timing.duration)/2;
+        (window as any).finishAnimationProbe={animation,running:animation.playState==='running'};
+      },{once:true,capture:true}));
       await action(page, "pause").first().click();
+      await expect(page.locator('#pause-overlay')).toBeVisible();
+      expect(await page.evaluate(()=>{const p=(window as any).finishAnimationProbe;return p.running&&p.animation.playState==='paused';})).toBe(true);
+      await page.evaluate(()=>(window as any).releaseFinishPause());
       const times = await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime));
       await expect(page.locator(".finish-victor")).toContainText(/WIN|出場順序/);
       expect(await page.locator(".finish-card").evaluate(el => el.getBoundingClientRect().right <= innerWidth)).toBe(true);
       await page.screenshot({ path: local ? "artifacts/finish-live-mobile-v080.png" : "artifacts/finish-live-desktop-v080.png" });
+      await expect.poll(()=>page.evaluate(()=>(window as any).finishPauseFrames().resumed)).toBeGreaterThanOrEqual(2);
+      expect(await page.evaluate(()=>(window as any).finishPauseFrames().held)).toBe(0);
       await page.waitForTimeout(100);
       expect(await page.locator(".finish-card").evaluate(el => el.getAnimations({subtree:true}).map(a => a.currentTime))).toEqual(times);
       await action(page, "pause").first().click();
+      await expect.poll(()=>page.evaluate(()=>(window as any).finishAnimationProbe.animation.playState)).not.toBe('paused');
+      }finally{await page.evaluate(()=>(window as any).releaseFinishPause?.()).catch(()=>{});}
     }
     await expect(
       page.locator('[data-action="next-round"], [data-action="rematch"]'),
