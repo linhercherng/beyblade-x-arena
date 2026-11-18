@@ -1,16 +1,17 @@
-name: Game balance and replay regression
+name: Game release verification
 on:
   push:
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: balance-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  balance:
+  release:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -18,26 +19,28 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
-      - run: npm test
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test tests/e2e/opening-pause.spec.ts tests/e2e/p2.spec.ts tests/e2e/countdown-voice.spec.ts tests/e2e/launch-presentation.spec.ts tests/e2e/finish-voice.spec.ts tests/e2e/countdown-load.spec.ts
-      - run: npx playwright test tests/e2e/stadium.spec.ts --grep 戰鬥模型
-      - run: npx playwright test tests/e2e/dash.spec.ts --grep 齒軌咬合亮點
-      - run: npx playwright test tests/e2e/bey-effects.spec.ts --grep 依陀螺特性
-      - run: npx playwright test tests/e2e/bey-identity.spec.ts
-      - run: npx playwright test tests/e2e/contact-render.spec.ts tests/e2e/finish-identity.spec.ts tests/e2e/contact-feedback.spec.ts tests/e2e/slope.spec.ts
-      - run: npx playwright test tests/e2e/low-spin.spec.ts
-      - run: npx playwright test tests/e2e/friction.spec.ts tests/e2e/audio-route.spec.ts tests/e2e/finish-material.spec.ts tests/e2e/finish-handoff.spec.ts tests/e2e/replay-transition.spec.ts tests/e2e/menu-audio.spec.ts tests/e2e/volume-controls.spec.ts tests/e2e/volume-lifecycle.spec.ts tests/e2e/route-preferences.spec.ts
-      - run: npx playwright test tests/e2e/spin.spec.ts --grep 真實3D
-      - run: npx playwright test tests/e2e/opening-sync.spec.ts --grep "長畫格|已落盤"
-      - run: npm run balance:check
-      - run: npm run build
-      - name: Preserve balance report
+      - run: npm run verify:release
+      - name: Preserve release evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-verification
+          path: |
+            artifacts/release-verification.json
+            artifacts/release-verification/
+            artifacts/highlight-software-gpu-v0420.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Preserve balance and model observations
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: balance-report
-          path: artifacts/balance-check.json
+          path: |
+            artifacts/balance-check.json
+            artifacts/balance-observation.json
+            artifacts/balance-observation.md
           if-no-files-found: warn
           retention-days: 14
       - name: Preserve browser failure context
@@ -45,35 +48,6 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: browser-failure-context
-          path: test-results/
-          if-no-files-found: ignore
-          retention-days: 14
-
-  audio-highlight:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test tests/e2e/audio-game.spec.ts tests/e2e/finish.spec.ts tests/e2e/highlight.spec.ts tests/e2e/round-audio.spec.ts
-      - name: Preserve software GPU profile
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: audio-highlight-profile
-          path: artifacts/highlight-software-gpu-v0420.json
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Preserve audio and highlight failures
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: audio-highlight-failure-context
           path: test-results/
           if-no-files-found: ignore
           retention-days: 14

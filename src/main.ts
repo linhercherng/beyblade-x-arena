@@ -2,7 +2,7 @@ import{beySignature}from'./bey-effects.ts';
 import{backupSummary}from'./backup-preview.ts';
 import{LaunchCountdown}from'./launch-countdown.ts';
 import{replayAt,replayMoments}from'./replay-navigation.ts';
-import {DeviceCheck,DEVICE_CASES,GAME_VERSION} from "./diagnostics.ts";
+import {DeviceCheck,DiagnosticDraft,DEVICE_CASES,GAME_VERSION,type DeviceReport} from "./diagnostics.ts";
 import {bindPlayerTouch} from "./player-touch.ts";
 import {combatProfile,TRAIT_NOTE} from "./combat-profiles.ts";
 import "./style.css";
@@ -67,6 +67,8 @@ import {
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const sound = new Sound();
 const deviceLog=new DeviceCheck();
+const deviceDraft=new DiagnosticDraft();
+let savedDeviceDraft=deviceDraft.load(),deviceDraftFailed=false,deviceDraftAt=0;
 let deviceSampleAt=0;
 let audioUiAt=0;
 let pausedFinishAnimations: Animation[] = [];
@@ -690,12 +692,27 @@ function updateReplayPosition(){
 }
 function deviceCheck(){
   if(["launch","countdown","battle","replay"].includes(screen))setPaused(true);
-  byId("modal-root")!.innerHTML=`<div class="modal-backdrop"><section class="help-modal device-check" role="dialog" aria-modal="true" aria-labelledby="device-title">${btn("×","close-modal","close-button",'aria-label="關閉裝置檢查"')}<div class="eyebrow">DEVICE CHECK</div><h2 id="device-title">手機與音訊檢查</h2><p>先開始紀錄，再繼續對戰。僅統計前景中未暫停的對戰；每分鐘保留幀率摘要，方便比較長時間表現。</p><pre id="device-check-summary"></pre><div class="device-actions">${btn(deviceLog.running?"停止紀錄":"開始新紀錄","device-record","primary")}${btn("匯出檢查紀錄","device-export","secondary")}${btn("恢復音訊","audio-recover","secondary")}${btn("測試聲音","device-tone","secondary")}</div><output id="device-tone-status" aria-live="polite"></output><p>實機項目請依實際聽感與操作勾選，不會自動判定通過。發熱請在連玩15分鐘後檢查。</p><div class="device-cases">${Object.entries(DEVICE_CASES).map(([key,label])=>`<label>${label}<select data-device-case="${key}" aria-label="${label}">${[["untested","未測試"],["pass","通過"],["fail","異常"]].map(([value,text])=>`<option value="${value}" ${deviceLog.checks[key as keyof typeof DEVICE_CASES]===value?"selected":""}>${text}</option>`).join("")}</select></label>`).join("")}</div><p class="muted">紀錄僅保留本次頁面，請匯出保存。內容含瀏覽器、資源數與最近音訊事件，不含戰績或錄音。瀏覽器無法量測手機溫度。</p></section></div>`;
+  byId("modal-root")!.innerHTML=`<div class="modal-backdrop"><section class="help-modal device-check" role="dialog" aria-modal="true" aria-labelledby="device-title">${btn("×","close-modal","close-button",'aria-label="關閉裝置檢查"')}<div class="eyebrow">DEVICE CHECK</div><h2 id="device-title">手機與音訊檢查</h2><p>先開始紀錄，再繼續對戰。僅統計前景中未暫停的對戰；每分鐘保留幀率摘要，方便比較長時間表現。</p><pre id="device-check-summary"></pre><div class="device-actions">${btn(deviceLog.running?"停止紀錄":"開始新紀錄","device-record","primary")}${btn("匯出檢查紀錄","device-export","secondary")}${btn("恢復音訊","audio-recover","secondary")}${btn("測試聲音","device-tone","secondary")}</div><output id="device-tone-status" aria-live="polite"></output><p>實機項目請依實際聽感與操作勾選，不會自動判定通過。發熱請在連玩15分鐘後檢查。</p><div class="device-cases">${Object.entries(DEVICE_CASES).map(([key,label])=>`<label>${label}<select data-device-case="${key}" aria-label="${label}">${[["untested","未測試"],["pass","通過"],["fail","異常"]].map(([value,text])=>`<option value="${value}" ${deviceLog.checks[key as keyof typeof DEVICE_CASES]===value?"selected":""}>${text}</option>`).join("")}</select></label>`).join("")}</div><p class="muted">紀錄每5秒及切換背景時保存於此瀏覽器；開始新紀錄會取代保存內容。重開後可匯出保存紀錄，不會自動續錄。內容含瀏覽器、資源數與最近音訊事件，不含戰績或錄音。瀏覽器無法量測手機溫度。</p></section></div>`;
+  const panel=byId('device-check-summary')!;
+  panel.insertAdjacentHTML('afterend',`<p id="device-draft-status"></p><div class="device-actions">${btn('匯出保存紀錄','device-draft-export','secondary',savedDeviceDraft?'':'disabled')}${btn('清除保存紀錄','device-draft-clear','secondary',savedDeviceDraft&&!deviceLog.running?'':'disabled')}</div>`);
   document.body.classList.add("modal-open");updateDeviceCheck();byId("modal-root")!.querySelector<HTMLButtonElement>("button")?.focus();
+}
+function deviceReport():DeviceReport{return {...deviceLog.report(performance.now()),userAgent:navigator.userAgent,viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},audio:sound.diagnostics()};}
+function saveDeviceDraft(){
+  const report=deviceReport();if(!report.running&&!report.elapsedMs)return;
+  deviceDraftFailed=!deviceDraft.save(report);deviceDraftAt=performance.now();
+  if(!deviceDraftFailed)savedDeviceDraft=deviceDraft.load();
+}
+function exportDeviceReport(report:object){
+  const url=URL.createObjectURL(new Blob([JSON.stringify({...report,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download=`spinforge-device-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function updateDeviceCheck(){
   const panel=byId("device-check-summary");if(!panel)return;
   const r=deviceLog.report(performance.now()),audio=sound.diagnostics(),seconds=(ms:number)=>Math.floor(ms/1000)+"秒";
+  const draftStatus=byId('device-draft-status');
+  if(draftStatus)draftStatus.textContent=deviceDraftFailed?'無法保存到此瀏覽器，請直接匯出檢查紀錄。':savedDeviceDraft?`上次保存：${new Date(savedDeviceDraft.savedAt).toLocaleString()} · v${savedDeviceDraft.report.version} · ${seconds(savedDeviceDraft.report.elapsedMs)}${savedDeviceDraft.interrupted?' · 當時尚未停止，重開後視為已中止':''}`:'尚無保存紀錄。';
+  const exportSaved=document.querySelector<HTMLButtonElement>('[data-action=device-draft-export]'),clearSaved=document.querySelector<HTMLButtonElement>('[data-action=device-draft-clear]');
+  if(exportSaved)exportSaved.disabled=!savedDeviceDraft;if(clearSaved)clearSaved.disabled=!savedDeviceDraft||deviceLog.running;
   const audioState=({running:audio.ready?"運作中":"等待恢復",suspended:"已暫停",interrupted:"中斷中",closed:"已關閉",unavailable:"此瀏覽器未提供",["not-started"]:"尚未啟用"} as Record<string,string>)[audio.state]??audio.state;
   panel.textContent=`${r.running?"紀錄中":r.elapsedMs?"已停止":"尚未紀錄"} · 經過 ${seconds(r.elapsedMs)}\n有效對戰 ${seconds(r.activeMs)} · ${r.frames} 幀\n平均 ${r.fps?.toFixed(1)??"—"} FPS · 近期 ${r.recentFps?.toFixed(1)??"—"} FPS\n95% 幀間隔 ${r.p95AtLeast1000Ms?"≥ 1000":"≤ "+(r.p95FrameMs??"—")} ms\n幾何 ${r.gpu?.geometries??"—"} · 貼圖 ${r.gpu?.textures??"—"} · 程式 ${r.gpu?.programs??"—"}\nJS記憶體 ${r.heapBytes===null?"此瀏覽器未提供":"約 "+(r.heapBytes/1048576).toFixed(1)+" MB"}\n音訊 ${audioState} · 聲源 ${audio.sources} · 配樂 ${Math.round(audio.musicVolume*100)}%${audio.muted?" · 靜音":""}`;
 }
@@ -828,9 +845,13 @@ app.addEventListener("click", (e) => {
       break;
     case "device-check":deviceCheck();break;
     case "device-record":
-      if(deviceLog.running){deviceLog.stop(performance.now());target.textContent="開始新紀錄";updateDeviceCheck();}
-      else{deviceLog.start(performance.now());deviceSampleAt=0;closeModal();}
+      if(deviceLog.running){deviceLog.stop(performance.now());saveDeviceDraft();target.textContent="開始新紀錄";updateDeviceCheck();}
+      else{deviceLog.start(performance.now());deviceSampleAt=0;saveDeviceDraft();closeModal();}
       break;
+    case 'device-draft-clear':
+      if(!deviceLog.running){deviceDraftFailed=!deviceDraft.clear();if(!deviceDraftFailed)savedDeviceDraft=null;updateDeviceCheck();}break;
+    case 'device-draft-export':
+      if(savedDeviceDraft)exportDeviceReport({...savedDeviceDraft.report,draft:{savedAt:savedDeviceDraft.savedAt,interrupted:savedDeviceDraft.interrupted}});break;
     case "device-tone":{
       const audio=sound.diagnostics(),status=byId("device-tone-status");
       if(audio.ready&&!audio.muted)sound.tone(440,.15,"sine",.15);
@@ -838,8 +859,7 @@ app.addEventListener("click", (e) => {
       break;
     }
     case "device-export":{
-      const report={...deviceLog.report(performance.now()),exportedAt:new Date().toISOString(),userAgent:navigator.userAgent,viewport:{width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio},audio:sound.diagnostics()};
-      const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:"application/json"})),link=document.createElement("a");link.href=url;link.download=`spinforge-device-${new Date().toISOString().slice(0,10)}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);break;
+      exportDeviceReport(deviceReport());break;
     }
     case "audio-recover":
       sound.recoverAudio();updateAudioStatus();
@@ -1042,7 +1062,7 @@ app.addEventListener("change", async (e) => {
   const el = e.target as HTMLInputElement;
   if(el.id==='replay-seek'){seekReplay(Number(el.value));return;}
   if(el.id==='practice-bey'){if(practiceId&&screen==='launch'&&!paused)startPractice(el.value);return;}
-  if(el.dataset.deviceCase){deviceLog.setCheck(el.dataset.deviceCase,el.value);return;}
+  if(el.dataset.deviceCase){deviceLog.setCheck(el.dataset.deviceCase,el.value);saveDeviceDraft();updateDeviceCheck();return;}
   if(el.dataset.direction!==undefined){
     const p=Number(el.dataset.direction);
     if(screen==="launch"&&!paused&&!locked[p]&&[-1,0,1].includes(Number(el.value)))inputs[p].direction=Number(el.value) as -1|0|1;
@@ -1130,6 +1150,7 @@ function pauseForBackground(){
   deviceLog.frame(performance.now(),false);
   sound.setBackground(true);
   if(["battle","launch","countdown","replay"].includes(screen))setPaused(true);
+  if(deviceLog.running)saveDeviceDraft();
 }
 document.addEventListener("visibilitychange",()=>{if(document.hidden)pauseForBackground();else sound.setBackground(false);});
 window.addEventListener("pagehide",pauseForBackground);
@@ -1306,6 +1327,7 @@ function frame(time: number) {
     if(deviceLog.running){
       const info=arena?.renderer.info,canvas=arena?.renderer.domElement,heap=(performance as Performance&{memory?:{usedJSHeapSize:number}}).memory;
       deviceLog.sample(info&&canvas?{geometries:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,drawCalls:info.render.calls,triangles:info.render.triangles,pixels:canvas.width*canvas.height}:null,heap?.usedJSHeapSize??null);
+      if(time-deviceDraftAt>=5000)saveDeviceDraft();
     }
     updateDeviceCheck();
   }

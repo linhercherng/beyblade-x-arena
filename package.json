@@ -1,6 +1,6 @@
 {
   "name": "spinforge-x-arena",
-  "version": "0.42.0",
+  "version": "0.43.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 5178 --strictPort",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:e2e": "playwright test",
+    "verify:release": "node --experimental-strip-types scripts/verify-release.ts",
     "balance": "node --experimental-strip-types scripts/balance.ts",
     "balance:check": "node --experimental-strip-types scripts/balance.ts --check",
     "catalog": "node scripts/import-catalog.mjs"

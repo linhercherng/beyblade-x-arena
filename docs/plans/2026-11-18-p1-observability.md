@@ -1,0 +1,33 @@
+# P1 診斷保存、發布驗收與型號觀測 Implementation Plan
+
+> 使用 executing-plans 逐項實作；本次沿用已授權的現有 checkout。
+
+**Goal:** 重開頁面後仍可匯出診斷、以同一命令完整驗收發布、觀察各型號表現，不修改現有物理或舊重播。
+
+**Architecture:** 沿用 DeviceCheck 快照，以單筆、有容量上限的 localStorage 草稿保存，重開後視為已中止而非繼續量測。發布驗收以 Node 順序執行既有命令，失敗即停止並留下當次報告。型號觀測讀取原 allPairs 已完成的 Battle，另寫 JSON／Markdown，不改 RNG、樣本或平衡門檻。
+
+**Tech Stack:** 現有 TypeScript、Node、Playwright、Three.js；不新增依賴。
+
+### 1. 診斷保存
+- 先寫失敗測試：草稿可跨實例讀取、保留原版本與時間、不自動恢復量測／標記通過、拒絕損毀／過大資料，儲存拒絕可降級。
+- 修改 src/diagnostics.ts、src/main.ts；既有 1 秒取樣中每 5 秒保存，開始／停止／勾選／背景時立即保存，不新增輪詢。
+- 裝置檢查呈現保存狀態、匯出與清除保存紀錄；只保存既有診斷欄位，不含戰績、錄音、裝置識別碼。
+- 核心與瀏覽器驗證：重載、清除、不可儲存、原有手動勾選與匯出。
+
+### 2. 型號觀測
+- 先以已知勝／負／平手／同型號案例驗證計數、玩家側、對手類型、終結與發射情境分組。
+- 在 scripts/balance-suite.ts 增加只讀完成回呼，原 allPairs 回傳值不變。
+- scripts/balance.ts 另外產生 artifacts/balance-observation.json/.md；包含中文名、樣本數、雙方位置、型號配對、時長、終結及離群提示。
+- 每配對只有少量樣本，警示僅供檢查，不能視為實物性能或要求每型號 40–60%；原類型門檻不變。
+- 與 v0.42 的完整 balance-check.json 深度比較，證明原結果未變。
+
+### 3. 統一發布前驗收
+- 新增 npm run verify:release：核心 → 全部瀏覽器測試（含舊引擎）→ 平衡及觀測 → TypeScript／正式建置。
+- 每次有獨立日誌、階段狀態、來源 commit、建置檔案雜湊；失敗回傳非零，不保留假成功狀態。
+- 先驗證失敗即停止、dirty checkout 與來源改動不得通過、建置產物必須存在。
+- GitHub Actions 使用同一命令並保存驗收／平衡／失敗證據；軟體 GPU 和實機驗收仍分開。
+
+### 4. 發布
+- 更新 v0.43.0 版本與繁中說明，審查改動，commit 後完整跑統一驗收及相同 SHA CI。
+- 精確同步 GitHub main 與既有公開 Sites，核對正式 JS/CSS 雜湊、診斷保存 UI、冷啟動、舊戰績與單／雙人音訊流程。
+- iPhone、真實耳機與來電驗收維持未測試。

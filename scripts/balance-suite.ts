@@ -1,5 +1,5 @@
 import { BEYS, type BeyType } from "../src/catalog.ts";
-import { createBattle, stepBattle, shout, rng } from "../src/physics.ts";
+import { createBattle, stepBattle, shout, rng, type Battle } from "../src/physics.ts";
 export const TYPES: BeyType[] = ["attack", "defense", "stamina", "balance"];
 export function runSuite(samples = 32, firstSeed = 1) {
   const pools = TYPES.map((t) => BEYS.filter((b) => b.type === t));
@@ -164,7 +164,7 @@ export function runEdges() {
   };
 }
 
-export function runAllPairs() {
+export function runAllPairs(observe?:(battle:Readonly<Battle>,profile:number)=>void) {
   let battles = 0, minSeconds = Infinity, maxSeconds = 0;
   const failures: unknown[] = [];
   for (const [i, a] of BEYS.entries()) for (const [j, b] of BEYS.entries())
@@ -182,6 +182,7 @@ export function runAllPairs() {
       battles++;
       minSeconds = Math.min(minSeconds, s.time); maxSeconds = Math.max(maxSeconds, s.time);
       if (!s.result || s.time < 15 || s.time > 40) failures.push({ beys: [a.id, b.id], seed, inputs, sample, time: s.time });
+      if(s.result)observe?.(s,sample);
     }
   return { battles, minSeconds, maxSeconds, outsideTarget: failures.length, failures };
 }

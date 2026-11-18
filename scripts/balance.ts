@@ -2,10 +2,12 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import {assertBalance} from "./balance-gates.ts";
 import { runSuite, runEdges, runAllPairs } from "./balance-suite.ts";
 import { ENGINE_VERSION, TUNING, PACING, COMBAT_STYLE } from "../src/physics.ts";
+import{BalanceObservation,observationMarkdown}from'./balance-observation.ts';
 const calibration = runSuite(256, 1);
 const validation = runSuite(1024, 20261112);
 const edges = runEdges();
-const allPairs = runAllPairs();
+const observation=new BalanceObservation();
+const allPairs = runAllPairs((s,profile)=>observation.record(s,profile));
 const report = {
   engineVersion: ENGINE_VERSION,
   method:
@@ -20,6 +22,10 @@ const report = {
 };
 const output=new URL(process.argv.includes("--check")?"../artifacts/balance-check.json":"../docs/balance-report.json",import.meta.url);
 mkdirSync(new URL("./",output),{recursive:true});
+mkdirSync(new URL('../artifacts/',import.meta.url),{recursive:true});
+const observed=observation.report();
+writeFileSync(new URL('../artifacts/balance-observation.json',import.meta.url),JSON.stringify({engineVersion:ENGINE_VERSION,...observed},null,2)+'\n');
+writeFileSync(new URL('../artifacts/balance-observation.md',import.meta.url),observationMarkdown(observed));
 writeFileSync(
   output,
   JSON.stringify(report, null, 2) + "\n",

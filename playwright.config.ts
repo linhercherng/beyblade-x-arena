@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: {
     command: "npm run dev",
     url: "http://127.0.0.1:5178",
-    reuseExistingServer: true,
+    reuseExistingServer: process.env.SPINFORGE_RELEASE_VERIFY !== '1',
     timeout: 30000,
   },
 });
