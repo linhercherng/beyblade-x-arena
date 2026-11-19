@@ -384,6 +384,8 @@ function quickBattle(){
 }
 function prepareRound(prior?:Launch) {
   if (!match) return;
+  // Stop the previous round before model rebuilds can delay the next frame.
+  sound.stopEffects();
   screen = "launch";
   battle = null;
   replay = null;
