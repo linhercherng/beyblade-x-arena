@@ -4,7 +4,7 @@
 
 [線上遊玩](https://spinforge-x-arena-20261111.will-lin.chatgpt.site/)
 
-v0.44.0 追查11款觀察型號，增加配對發射、獨立種子及固定舊對手的逐款對照；僅校準確認偏離者的耐力，新對戰使用v6，v1～v5保留原能力重播。`npm run balance:models` 產生前後證據，也整合進發布驗收。見 [型號平衡追查](docs/model-balance-v0440.md)。
+v0.44.0 追查原11款並補校準天馬九尾，僅調12款確認偏離者的耐力；新增同種子互換側、獨立驗收及固定舊對手的逐款對照。新對戰使用v7，v1～v6保留原能力重播；`npm run balance:models`與完整發布驗收同步執行。見 [型號平衡追查](docs/model-balance-v0440.md)。
 
 v0.43.0 新增有界診斷草稿保存，重開可匯出；以 `npm run verify:release` 整合完整測試、平衡與建置，並產生各型號／配對觀測報告。物理、數值與舊重播不變。見 [P1 保存與驗收](docs/p1-observability-v0430.md)。
 

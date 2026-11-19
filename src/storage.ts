@@ -186,8 +186,9 @@ export function validateMatch(v: unknown): Match {
         r.engineVersion !== 3 &&
         r.engineVersion !== 4 &&
         r.engineVersion !== 5 &&
-        r.engineVersion !== 6) ||
-      ((r.engineVersion === 5 || r.engineVersion === 6) && r.traitVersion !== 1) ||
+        r.engineVersion !== 6 &&
+        r.engineVersion !== 7) ||
+      ((r.engineVersion === 5 || r.engineVersion === 6 || r.engineVersion === 7) && r.traitVersion !== 1) ||
       r.index !== index + 1 ||
       r.slot !== slot ||
       !integer(r.seed, 0xffffffff) ||

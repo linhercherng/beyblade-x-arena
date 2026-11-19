@@ -2,8 +2,9 @@ import {ratchets,type Bey,type BeyType} from "./catalog.ts";
 import {createBattle as createV4,stepBattle as stepV4} from "./physics-v4.ts";
 import frozenStats from "./legacy-stats-v4.json" with {type:"json"};
 import frozenV5 from "./legacy-stats-v5.json" with {type:"json"};
+import frozenV6 from "./legacy-stats-v6.json" with {type:"json"};
 import {combatProfile,type CombatProfile} from "./combat-profiles.ts";
-export const ENGINE_VERSION = 6;
+export const ENGINE_VERSION = 7;
 export const COMBAT_STYLE: Record<BeyType, { label: string; description: string; force: number; brace: number; drain: number }> = {
   attack: { label: "外圈追擊", description: "高速繞行與齒軌追擊，以強衝量逼出盤外，但反作用力與耗轉較高。", force: 1.2, brace: 1.05, drain: 1.03 },
   defense: { label: "中心反擊", description: "穩守中心減少擊退，受擊後以反作用力回擊，爭取爆裂或越界。", force: .9, brace: .82, drain: 1 },
@@ -78,7 +79,7 @@ export interface BattleEvent {
   time: number;
 }
 export interface Battle {
-  version?: 1 | 2 | 3 | 4 | 5 | 6;
+  version?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   tops: [Top, Top];
   time: number;
   tick: number;
@@ -113,14 +114,15 @@ export function createBattle(
   b: Bey,
   inputs: readonly Launch[],
   seed: number,
-  version: 1 | 2 | 3 | 4 | 5 | 6 = ENGINE_VERSION,
+  version: 1 | 2 | 3 | 4 | 5 | 6 | 7 = ENGINE_VERSION,
 ): Battle {
   if(version<=4){
     const original=(bey:Bey)=>({...bey,stats:(frozenStats as Record<string,Bey["stats"]>)[bey.id]??bey.stats});
     return createV4(original(a),original(b),inputs,seed,version as 1|2|3|4);
   }
-  if(version===5){
-    const original=(bey:Bey)=>({...bey,stats:(frozenV5 as Record<string,Bey["stats"]>)[bey.id]??bey.stats});
+  if(version===5||version===6){
+    const stats=version===5?frozenV5:frozenV6;
+    const original=(bey:Bey)=>({...bey,stats:(stats as Record<string,Bey["stats"]>)[bey.id]??bey.stats});
     a=original(a);b=original(b);
   }
   const random = rng(seed);

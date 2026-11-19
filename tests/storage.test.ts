@@ -1,6 +1,7 @@
 import version4Match from "./fixtures/v4-match.json" with {type:"json"};
 import version5Match from "./fixtures/v5-match.json" with {type:"json"};
 import version6Match from "./fixtures/v6-match.json" with {type:"json"};
+import version7Match from "./fixtures/v7-match.json" with {type:"json"};
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import oldMatch from "./fixtures/v1-match.json" with { type: "json" };
@@ -17,7 +18,7 @@ import {
   exportProfile,
   validateMatch,
 } from "../src/storage.ts";
-for (const fixture of [version2Match, version3Match,version4Match,version5Match,version6Match]) test(`v${fixture.rounds[0].engineVersion}備份通過驗證並保留原報告與結果，未知引擎拒絕匯入`, () => {
+for (const fixture of [version2Match, version3Match,version4Match,version5Match,version6Match,version7Match]) test(`v${fixture.rounds[0].engineVersion}備份通過驗證並保留原報告與結果，未知引擎拒絕匯入`, () => {
   const m = validateMatch(fixture);
   for (const r of m.rounds) {
     const s = createBattle(BEYS.find(b => b.id === r.beys[0])!, BEYS.find(b => b.id === r.beys[1])!, r.inputs, r.seed, r.engineVersion);

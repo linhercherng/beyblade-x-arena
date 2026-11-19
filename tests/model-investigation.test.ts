@@ -2,6 +2,7 @@ import{test}from'node:test';
 import assert from'node:assert/strict';
 import{existsSync}from'node:fs';
 import{BEYS}from'../src/catalog.ts';
+import{ENGINE_VERSION}from'../src/physics.ts';
 async function suite(){const url=new URL('../scripts/model-balance-suite.ts',import.meta.url);assert.ok(existsSync(url),'需提供可重現的型號配對驗收');return import('../scripts/model-balance-suite.ts');}
 
 test('型號配對同種子互換兩側，分列四發射情境、對手類型與勝負終結',async()=>{
@@ -41,7 +42,7 @@ test('只調確認者：兩批同向偏離，隔離對照同種子同對手且�
  const measured=runModelTrial(target.id,1234,1,5,pool);
  const before={...measured,wins:8,losses:24,draws:0,vsTypes:Object.fromEntries(Object.entries(measured.vsTypes).map(([k,v])=>[k,{...v,wins:2,losses:6,draws:0}]))};
  const holdout={...before,firstSeed:5678};
- const isolated={...before,engineVersion:6 as const,wins:16,targetStats:{...before.targetStats,sta:before.targetStats.sta+14}};
+ const isolated:typeof before={...before,engineVersion:ENGINE_VERSION,wins:16,targetStats:{...before.targetStats,sta:before.targetStats.sta+14}};
  assert.doesNotThrow(()=>assertConfirmedAdjustment(before,holdout,isolated,14));
  assert.throws(()=>assertConfirmedAdjustment(before,{...holdout,wins:16},isolated,14),/確認/);
  assert.throws(()=>assertConfirmedAdjustment(before,holdout,isolated,-14),/方向|耐力/);

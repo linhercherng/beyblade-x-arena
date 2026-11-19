@@ -12,7 +12,7 @@ export interface TopReport {
   rpm: number;
 }
 export interface Round {
-  engineVersion?: 1 | 2 | 3 | 4 | 5 | 6;
+  engineVersion?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   traitVersion?:number;
   index: number;
   slot: number;

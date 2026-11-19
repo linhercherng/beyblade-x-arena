@@ -12,7 +12,7 @@ export function equalTypeRate(groups:Record<string,{wins:number;played:number}>)
  },0);
 }
 
-export function runModelTrial(id:string,firstSeed:number,repeats=4,version:5|6=ENGINE_VERSION,pool:readonly Bey[]=BEYS){
+export function runModelTrial(id:string,firstSeed:number,repeats=4,version:5|6|7=ENGINE_VERSION,pool:readonly Bey[]=BEYS){
  assert.ok(Number.isInteger(firstSeed)&&firstSeed>=0&&firstSeed<=0xffffffff,'種子必須是uint32');
  assert.ok(Number.isInteger(repeats)&&repeats>=1&&repeats<=64,'重複樣本必須為1–64');
  assert.equal(new Set(pool.map(b=>b.id)).size,pool.length,'對手不得重複');

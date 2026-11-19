@@ -48,7 +48,7 @@ export function runModelInvestigation(){
    const sta=legacy[id as keyof typeof legacy].sta;
    return`| ${a.zhName} | ${conclusion} | ${sta}→${sta+adjustments[id as keyof typeof adjustments]} | ${b.winRate}%／${old.winRate}% | ${report.isolated[id]?.winRate??'待測'}% | ${a.winRate}%／${v.winRate}% | ${a.equalTypeWin.toFixed(3)}%／${v.equalTypeWin.toFixed(3)}% |`;
   });
-  writeFileSync(new URL('model-balance-investigation.md',dir),`# 11款型號平衡追查\n\n來源 ${report.sourceCommit}${report.sourceDirty?'（未提交變更）':''}；引擎v${report.baselineVersion}→v${report.engineVersion}；狀態${report.status}。\n\n${report.method}\n\n${report.note}\n\n共${report.battles}場，兩個版本與兩批種子分開列；校準批另以全部v5對手只改本款STA，要求改善診斷方向，並核對實際能力與種子一致。新版本兩種權重皆須40–60%，全場15–40秒。\n\n發射情境：\n${MODEL_PROFILES.map((p,i)=>`- ${i}：${p}`).join('\n')}\n\n| 中文名稱 | 原版追查 | 耐力 | 舊版校準／驗收 | 只改本款校準 | 新版校準／驗收 | 新版四類等權校準／驗收 |\n|---|---|---:|---:|---:|---:|---:|\n${rows.join('\n')}\n\n完整JSON分列玩家側、各發射情境、對手類型／型號、平手與勝負終結，不能將不同發射條件的勝率視為同一母體。\n`);
+  writeFileSync(new URL('model-balance-investigation.md',dir),`# ${ids.length}款型號平衡追查\n\n來源 ${report.sourceCommit}${report.sourceDirty?'（未提交變更）':''}；引擎v${report.baselineVersion}→v${report.engineVersion}；狀態${report.status}。\n\n${report.method}\n\n${report.note}\n\n共${report.battles}場，兩個版本與兩批種子分開列；校準批另以全部v5對手只改本款STA，要求改善診斷方向，並核對實際能力與種子一致。新版本兩種權重皆須40–60%，全場15–40秒。\n\n發射情境：\n${MODEL_PROFILES.map((p,i)=>`- ${i}：${p}`).join('\n')}\n\n| 中文名稱 | 原版追查 | 耐力 | 舊版校準／驗收 | 只改本款校準 | 新版校準／驗收 | 新版四類等權校準／驗收 |\n|---|---|---:|---:|---:|---:|---:|\n${rows.join('\n')}\n\n完整JSON分列玩家側、各發射情境、對手類型／型號、平手與勝負終結，不能將不同發射條件的勝率視為同一母體。\n`);
  }
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
