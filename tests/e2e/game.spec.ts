@@ -76,7 +76,7 @@ test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
   await page.screenshot({ path: "artifacts/catalog-real-products-mobile.png" });
   expect(errors).toEqual([]);
 });
-for (const version of [1, 2, 3, 4, 5]) test(`已發布v${version}戰績匯入後仍使用舊引擎正確重播`, async ({ page }) => {
+for (const version of [1, 2, 3, 4, 5, 6]) test(`已發布v${version}戰績匯入後仍使用舊引擎正確重播`, async ({ page }) => {
   await installProbe(page);
   const m = JSON.parse(readFileSync(`tests/fixtures/v${version}-match.json`, "utf8"));
   const count = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
@@ -300,7 +300,7 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   const d = await download;
   await d.saveAs("artifacts/backup.json");
   const saved=JSON.parse(readFileSync("artifacts/backup.json","utf8")).recent[0];
-  expect(saved.rounds.every((r:any)=>r.engineVersion===5&&r.traitVersion===1)).toBe(true);
+  expect(saved.rounds.every((r:any)=>r.engineVersion===6&&r.traitVersion===1)).toBe(true);
   expect(saved.rounds[0].inputs[0]).toMatchObject({angle:30,direction:1});
   await page.locator("#backup-file").setInputFiles("artifacts/backup.json");
   await page.getByRole("button",{name:"確認覆蓋匯入",exact:true}).click();

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 const fixture='/tests/fixtures/combat.html'+(process.env.CI?'?software-gpu':'');
 import examples from '../fixtures/v5-combat.json' with {type:'json'};
-test('真實對決自然觸發四種終結並接續各自3D演出',async({page})=>{
+test('v5舊引擎真實對決自然觸發四種終結並接續各自3D演出',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
   await page.setViewportSize({width:1100,height:760});await page.goto(fixture);
   for(const kind of ['burst','over','extreme','spin'] as const){

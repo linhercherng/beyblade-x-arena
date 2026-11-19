@@ -1,0 +1,192 @@
+{
+  "id": "fixture-engine-v6",
+  "date": "2026-11-19T00:00:00.000Z",
+  "mode": "local",
+  "difficulty": "normal",
+  "teams": [
+    [
+      "bx-04-knight-shield",
+      "bx-31-tyranno-beat",
+      "bx-33-weiss-tiger"
+    ],
+    [
+      "ux-10-knight-mail",
+      "bx-50-heavens-ring",
+      "cx-03-perseus-dark-bumper"
+    ]
+  ],
+  "scores": [
+    4,
+    2
+  ],
+  "slot": 2,
+  "rounds": [
+    {
+      "engineVersion": 6,
+      "traitVersion": 1,
+      "index": 1,
+      "slot": 0,
+      "seed": 26756,
+      "beys": [
+        "bx-04-knight-shield",
+        "ux-10-knight-mail"
+      ],
+      "inputs": [
+        {
+          "power": 0.97,
+          "lane": 1,
+          "angle": 12,
+          "direction": -1
+        },
+        {
+          "power": 0.92,
+          "lane": 0,
+          "angle": 4,
+          "direction": 0
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          720
+        ]
+      ],
+      "result": {
+        "winner": 0,
+        "finish": "extreme",
+        "points": 3,
+        "time": 21.691666666666666
+      },
+      "reports": [
+        {
+          "id": "bx-04-knight-shield",
+          "impulse": 43.35004533408267,
+          "maxImpulse": 7.2906498612515,
+          "dashes": 0,
+          "rpm": 0.3913234699533275
+        },
+        {
+          "id": "ux-10-knight-mail",
+          "impulse": 43.35004533408267,
+          "maxImpulse": 7.2906498612515,
+          "dashes": 0,
+          "rpm": 0.3409621615405918
+        }
+      ]
+    },
+    {
+      "engineVersion": 6,
+      "traitVersion": 1,
+      "index": 2,
+      "slot": 1,
+      "seed": 34675,
+      "beys": [
+        "bx-31-tyranno-beat",
+        "bx-50-heavens-ring"
+      ],
+      "inputs": [
+        {
+          "power": 0.97,
+          "lane": 1,
+          "angle": 12,
+          "direction": -1
+        },
+        {
+          "power": 0.92,
+          "lane": 0,
+          "angle": 4,
+          "direction": 0
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          720
+        ]
+      ],
+      "result": {
+        "winner": 1,
+        "finish": "over",
+        "points": 2,
+        "time": 16.316666666666666
+      },
+      "reports": [
+        {
+          "id": "bx-31-tyranno-beat",
+          "impulse": 84.30605931015103,
+          "maxImpulse": 13.421581092812177,
+          "dashes": 3,
+          "rpm": 0.4786594423921825
+        },
+        {
+          "id": "bx-50-heavens-ring",
+          "impulse": 78.53572079944102,
+          "maxImpulse": 12.502939338136468,
+          "dashes": 0,
+          "rpm": 0.4393010355385375
+        }
+      ]
+    },
+    {
+      "engineVersion": 6,
+      "traitVersion": 1,
+      "index": 3,
+      "slot": 2,
+      "seed": 42594,
+      "beys": [
+        "bx-33-weiss-tiger",
+        "cx-03-perseus-dark-bumper"
+      ],
+      "inputs": [
+        {
+          "power": 0.97,
+          "lane": 1,
+          "angle": 12,
+          "direction": -1
+        },
+        {
+          "power": 0.92,
+          "lane": 0,
+          "angle": 4,
+          "direction": 0
+        }
+      ],
+      "shouts": [
+        [
+          720
+        ],
+        [
+          720
+        ]
+      ],
+      "result": {
+        "winner": 0,
+        "finish": "spin",
+        "points": 1,
+        "time": 31.208333333333332
+      },
+      "reports": [
+        {
+          "id": "bx-33-weiss-tiger",
+          "impulse": 5.09340986153895,
+          "maxImpulse": 3.0527413637520975,
+          "dashes": 0,
+          "rpm": 0.058556954268181756
+        },
+        {
+          "id": "cx-03-perseus-dark-bumper",
+          "impulse": 3.958322922423751,
+          "maxImpulse": 2.3724256332907845,
+          "dashes": 0,
+          "rpm": 0
+        }
+      ]
+    }
+  ],
+  "winner": 0,
+  "seed": 18837
+}

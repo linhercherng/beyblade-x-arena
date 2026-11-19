@@ -1,4 +1,5 @@
 import {combatProfile,profileStats} from "./combat-profiles.ts";
+import modelBalance from "./model-balance.json" with {type:"json"};
 import raw from "./catalog-data.json" with { type: "json" };
 import additions from "../scripts/catalog-expansion.json" with { type: "json" };
 export const NEW_BEY_IDS = new Set(additions.products.map(b => b.id));
@@ -188,6 +189,8 @@ export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
   const ratchet = ratchets[row.ratchet];
   const combat = combatProfile(row.id,row.bit,ratchet.height,ratchet.sides,bit.type);
   const stats=profileStats(combat,bit.type,bit.dash,bit.burst+5-ratchet.sides*.7+(70-ratchet.height)*.15);
+  // Paired launch/seed trials calibrate game endurance, not physical part measurements.
+  stats.sta += (modelBalance as Record<string,number>)[row.id]??0;
   blades[row.blade] ??= {name:row.name,spin,atk:stats.atk,def:stats.def,sta:stats.sta,weight:stats.weight-ratchet.weight};
   const release = (
     verified.releases as Record<string, { date: string; source: string }>

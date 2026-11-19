@@ -49,6 +49,8 @@ jobs:
             artifacts/balance-check.json
             artifacts/balance-observation.json
             artifacts/balance-observation.md
+            artifacts/model-balance-investigation.json
+            artifacts/model-balance-investigation.md
           if-no-files-found: warn
           retention-days: 14
       - name: Preserve browser failure context

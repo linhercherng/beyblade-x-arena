@@ -2,12 +2,13 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {BEYS, getBey,ratchets,bits} from "../src/catalog.ts";
 import {profileStats} from "../src/combat-profiles.ts";
-import {createBattle,stepBattle,shout,ENGINE_VERSION,energize,ROTATION_ENERGY} from "../src/physics.ts";
+import {createBattle as createLatest,stepBattle,shout,energize,ROTATION_ENERGY,type Launch} from "../src/physics.ts";
 import examples from "./fixtures/v4-combat.json" with {type:"json"};
 import legacy from "../src/legacy-stats-v4.json" with {type:"json"};
 const input={power:.9,lane:1,angle:0};
+const createBattle=(a:typeof BEYS[number],b:typeof BEYS[number],inputs:readonly Launch[],seed:number,version:1|2|3|4|5=5)=>createLatest(a,b,inputs,seed,version);
 test("v5傾角建立傾斜，方向和落點影響軌跡，力量影響初始能量",()=>{
-  assert.equal(ENGINE_VERSION,5);
+  assert.equal(createBattle(BEYS[0],BEYS[1],[input,input],55).version,5);
   const a=BEYS[0],b=BEYS[1];
   const make=(change:object)=>createBattle(a,b,[{...input,...change},input],55);
   const flat=make({}),angled=make({angle:30}),reverse=make({angle:30,direction:-1});
@@ -76,7 +77,7 @@ test("v5種子固定、運氣有界，全部91款特性有限且來源清楚",()
     assert.ok(Object.values(bey.stats).every(Number.isFinite));
     assert.ok(t.motion.profile.source.startsWith("https://"));
     const r=ratchets[bey.ratchet],bit=bits[bey.bit];
-    assert.deepEqual(profileStats(t.motion.profile,bey.type,bit.dash,bit.burst+5-r.sides*.7+(70-r.height)*.15),bey.stats);
+    assert.deepEqual(profileStats(t.motion.profile,bey.type,bit.dash,bit.burst+5-r.sides*.7+(70-r.height)*.15),t.bey.stats);
     const s=createBattle(bey,bey,[{...input,angle:30,direction:1},{...input,angle:0,direction:-1}],55);
     while(!s.result&&s.time<40){
       stepBattle(s);
