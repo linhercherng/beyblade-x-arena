@@ -37,6 +37,7 @@ jobs:
             artifacts/release-verification/
             artifacts/highlight-software-gpu-v0420.json
             artifacts/*-software-v0430.json
+            artifacts/p0-resource-preflight-v0206.json
           if-no-files-found: error
           retention-days: 14
       - name: Preserve balance and model observations

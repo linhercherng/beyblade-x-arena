@@ -5,6 +5,12 @@ const arena=new Arena(),sound=new Sound(),log=new DeviceCheck(),pair=[BEYS[0],BE
 let battle,last=0,started=0,roundStart=0,rounds=0,nextEvent=0,running=false;
 function reset(){arena.setBeys(pair);battle=createBattle(...pair,[{power:.9,lane:1,angle:5},{power:.9,lane:2,angle:10}],10+rounds++);roundStart=performance.now();nextEvent=0;sound.stopEffects();}
 reset();
+function resourceSnapshot(){
+ const states=[],geometries=new Set();arena.scene.traverse(o=>{states.push([o,o.visible,o.frustumCulled]);o.visible=true;o.frustumCulled=false;if(o.geometry)geometries.add(o.geometry);});
+ // Warm hidden effects before comparing GPU residency; undisposed old geometry still increases the count.
+ try{arena.renderer.render(arena.scene,arena.camera);}finally{for(const[o,visible,culled]of states){o.visible=visible;o.frustumCulled=culled;}}
+ return{...window.soak.snapshot(),resourceScope:'all-scene-geometries',sceneGeometries:geometries.size};
+}
 document.querySelector('#start').onclick=()=>{sound.unlock();sound.setMusicVolume(.2);running=true;started=performance.now();roundStart=started;log.start(started);};
 document.querySelector('#recover').onclick=()=>sound.recoverAudio();
 function frame(now){const dt=Math.min(.05,(now-last)/1000||0);last=now;if(running){let age=(now-roundStart)/1000;if(age>=6){reset();age=0;}
@@ -13,5 +19,5 @@ if(age>=nextEvent){nextEvent=age+.4;const e={type:age<1?'dash':'hit',player:roun
 if(age>2){const finish=['burst','over','extreme','spin'][rounds%4];battle.result={winner:0,finish,points:finish==='spin'?1:finish==='extreme'?3:2,time:20};sound.finish(battle.result,arena.finish(battle));}}
 }
 arena.draw(running?dt:0,battle);sound.update(battle,running&&!battle.result,running?(battle.result?'results':'battle'):null);log.frame(now,running);requestAnimationFrame(frame);}
-window.soak={reset,snapshot:()=>{const info=arena.renderer.info,canvas=arena.renderer.domElement;log.sample({geometries:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,drawCalls:info.render.calls,triangles:info.render.triangles,pixels:canvas.width*canvas.height},performance.memory?.usedJSHeapSize??null);return {rounds,elapsedMs:started?performance.now()-started:0,geometry:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,particles:arena.particles.length,audio:sound.diagnostics(),performance:log.report(performance.now())};}};requestAnimationFrame(frame);
+window.soak={reset,resourceSnapshot,snapshot:()=>{const info=arena.renderer.info,canvas=arena.renderer.domElement;log.sample({geometries:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,drawCalls:info.render.calls,triangles:info.render.triangles,pixels:canvas.width*canvas.height},performance.memory?.usedJSHeapSize??null);return {rounds,elapsedMs:started?performance.now()-started:0,geometry:info.memory.geometries,textures:info.memory.textures,programs:info.programs?.length??0,particles:arena.particles.length,audio:sound.diagnostics(),performance:log.report(performance.now())};}};requestAnimationFrame(frame);
 </script></html>

@@ -35,6 +35,6 @@ test('四分片僅影響該次瀏覽器參數，其他階段與本機全集不�
  const {verifyRelease}=await release();for(const shard of ['2/4',undefined,'0/4','1/3','']){const root=workspace(),seen:any[]=[];try{
   const run=async(step:any,_root:string,log:string)=>{seen.push(step);browser(step,log);if(step.id==='build'){mkdirSync(join(root,'dist'));writeFileSync(join(root,'dist/index.html'),'ok');writeFileSync(join(root,'dist/game.js'),'ok');}return 0;};
   if(shard!==undefined&&shard!=='2/4'){await assert.rejects(verifyRelease(root,run,shard),/分片/);assert.equal(seen.length,0);continue;}
-  const result=await verifyRelease(root,run,shard);assert.equal(result.environment.browserShard,shard??null);const args=seen.find(s=>s.id==='browser').args;assert.equal(args.includes('--shard=2/4'),shard==='2/4');assert.equal(args.includes('--fully-parallel'),shard==='2/4');assert.deepEqual(seen.filter(s=>s.id!=='browser').map(s=>s.args),[['test'],['run','balance:check'],['run','build']]);
+  const result=await verifyRelease(root,run,shard);assert.equal(result.environment.browserShard,shard??null);const args=seen.find(s=>s.id==='browser').args;assert.equal(args.includes('--shard=2/4'),shard==='2/4');assert.equal(args.includes('--fully-parallel'),shard==='2/4');assert.equal(args.includes('--max-failures=0'),shard==='2/4');assert.equal(args.includes('--max-failures=1'),shard===undefined);assert.deepEqual(seen.filter(s=>s.id!=='browser').map(s=>s.args),[['test'],['run','balance:check'],['run','build']]);
  }finally{clean(root);}}
 });

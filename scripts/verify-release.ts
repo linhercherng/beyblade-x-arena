@@ -13,7 +13,7 @@ async function runCommand(step:Step,root:string,log:string):Promise<number>{
  });
 }
 export async function verifyRelease(root:string,run=runCommand,browserShard?:string){
- const selectedSteps=steps.map(step=>({...step,args:step.id==='browser'&&browserShard?[...step.args,`--shard=${browserShard}`,'--fully-parallel','--workers=1']:step.args}));
+ const selectedSteps=steps.map(step=>({...step,args:step.id==='browser'&&browserShard?[...step.args.map(arg=>arg==='--max-failures=1'?'--max-failures=0':arg),`--shard=${browserShard}`,'--fully-parallel','--workers=1']:step.args}));
  const dir=join(root,'artifacts/release-verification',new Date().toISOString().replace(/[:.]/g,'-'));mkdirSync(dir,{recursive:true});
  const report={environment:{platform:process.platform,node:process.version,ci:!!process.env.CI,scope:process.env.CI?'ci-fixture-profile':'local-default-profile',physicalDeviceVerified:false,browserShard:browserShard??null},version:null as string|null,commit:'',startedAt:new Date().toISOString(),finishedAt:null as string|null,status:'running',error:null as string|null,browser:null as null|{expected:number;unexpected:number;skipped:number;flaky:number},steps:selectedSteps.map(s=>({id:s.id,command:['npm',...s.args],status:'pending',exitCode:null as number|null,seconds:0,log:relative(root,join(dir,s.id+'.log')).replaceAll('\\','/')})),assets:[] as {path:string;bytes:number;sha256:string}[]};
  const save=()=>{const json=JSON.stringify(report,null,2)+'\n';writeFileSync(join(dir,'summary.json'),json);writeFileSync(join(root,'artifacts/release-verification.json'),json);};
