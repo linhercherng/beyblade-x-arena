@@ -12,17 +12,19 @@ async function runCommand(step:Step,root:string,log:string):Promise<number>{
   child.on('error',error=>{output.end();reject(error);});child.on('close',code=>output.end(()=>done(code??-1)));
  });
 }
-export async function verifyRelease(root:string,run=runCommand){
+export async function verifyRelease(root:string,run=runCommand,browserShard?:string){
+ const selectedSteps=steps.map(step=>({...step,args:step.id==='browser'&&browserShard?[...step.args,`--shard=${browserShard}`,'--fully-parallel','--workers=1']:step.args}));
  const dir=join(root,'artifacts/release-verification',new Date().toISOString().replace(/[:.]/g,'-'));mkdirSync(dir,{recursive:true});
- const report={environment:{platform:process.platform,node:process.version,ci:!!process.env.CI,scope:process.env.CI?'ci-fixture-profile':'local-default-profile',physicalDeviceVerified:false},version:null as string|null,commit:'',startedAt:new Date().toISOString(),finishedAt:null as string|null,status:'running',error:null as string|null,browser:null as null|{expected:number;unexpected:number;skipped:number;flaky:number},steps:steps.map(s=>({id:s.id,command:['npm',...s.args],status:'pending',exitCode:null as number|null,seconds:0,log:relative(root,join(dir,s.id+'.log')).replaceAll('\\','/')})),assets:[] as {path:string;bytes:number;sha256:string}[]};
+ const report={environment:{platform:process.platform,node:process.version,ci:!!process.env.CI,scope:process.env.CI?'ci-fixture-profile':'local-default-profile',physicalDeviceVerified:false,browserShard:browserShard??null},version:null as string|null,commit:'',startedAt:new Date().toISOString(),finishedAt:null as string|null,status:'running',error:null as string|null,browser:null as null|{expected:number;unexpected:number;skipped:number;flaky:number},steps:selectedSteps.map(s=>({id:s.id,command:['npm',...s.args],status:'pending',exitCode:null as number|null,seconds:0,log:relative(root,join(dir,s.id+'.log')).replaceAll('\\','/')})),assets:[] as {path:string;bytes:number;sha256:string}[]};
  const save=()=>{const json=JSON.stringify(report,null,2)+'\n';writeFileSync(join(dir,'summary.json'),json);writeFileSync(join(root,'artifacts/release-verification.json'),json);};
  const git=(...args:string[])=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
  const checkSource=()=>{if(git('status','--porcelain')||git('rev-parse','HEAD')!==report.commit)throw Error('驗收來源必須已提交且全程保持不變');};
  save();
  try{
+  if(browserShard!==undefined&&!/^[1-4]\/4$/.test(browserShard))throw Error('發布分片必須為1/4至4/4');
   report.commit=git('rev-parse','HEAD');checkSource();
   report.version=JSON.parse(readFileSync(join(root,'package.json'),'utf8')).version;
-  for(const [i,step]of steps.entries()){
+  for(const [i,step]of selectedSteps.entries()){
    const current=report.steps[i],start=Date.now();current.status='running';save();console.log(`[verify:release] ${step.id} 開始，日誌 ${current.log}`);
    try{
     current.exitCode=await run(step,root,join(dir,step.id+'.log'));if(current.exitCode!==0)throw Error(`${step.id} 未通過（exit ${current.exitCode}）`);
@@ -44,5 +46,5 @@ export async function verifyRelease(root:string,run=runCommand){
  finally{report.finishedAt=new Date().toISOString();save();}
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- verifyRelease(fileURLToPath(new URL('..',import.meta.url))).then(r=>console.log(`[verify:release] 全部通過：${r.commit}，${r.browser?.expected}項瀏覽器案例，${r.assets.length}個產物檔案`)).catch(error=>{console.error(error.message);process.exitCode=1;});
+ verifyRelease(fileURLToPath(new URL('..',import.meta.url)),runCommand,process.env.SPINFORGE_BROWSER_SHARD).then(r=>console.log(`[verify:release] ${r.environment.browserShard?`分片${r.environment.browserShard}通過，尚須合併驗收`:'全部通過'}：${r.commit}，${r.browser?.expected}項瀏覽器案例，${r.assets.length}個產物檔案`)).catch(error=>{console.error(error.message);process.exitCode=1;});
 }

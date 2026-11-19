@@ -31,7 +31,8 @@ npm run verify:release
 - 最新摘要：`artifacts/release-verification.json`。
 - 每次獨立紀錄：`artifacts/release-verification/<時間>/`，含各階段日誌、完整瀏覽器JSON及摘要。
 - 成功摘要包含來源commit、版本、各階段結果、瀏覽器案例數，以及dist每個檔案的SHA-256與大小。
-- GitHub push／PR／手動執行使用相同命令，保留`release-verification`和`balance-report` artifact 14天；失敗另存瀏覽器上下文。總工作預算120分鐘供完整套件使用。
+- GitHub push／PR／手動執行使用相同命令，透過明示的1/4～4/4將瀏覽器案例分到四台獨立runner；每台仍workers=1，core／balance／build均完整執行。本機不帶分片，維持完整套件。各分片artifact獨立命名，保留14天；總工作預算每台120分鐘。
+- 分片成功只代表該子集，不能單獨當成完整發布驗收。只有四台實際成功後才執行acceptance：核對相同HEAD／版本／產物及所有階段成功，與當次`--list`完整測試ID集合逐一比對，拒絕缺漏、重複、額外、失敗、略過或重試。產生`release-acceptance`與`release-verification-combined.json`；失敗覆寫過去成功，不沿用舊報告。分片採用[Playwright官方方式](https://playwright.dev/docs/test-sharding)，保留原局部時限與所有斷言。
 
 CI仍使用軟體GPU profile做功能與資源驗收；不把它當成原生GPU或手機FPS標準。本機原生效能門檻維持原值。15分鐘獨立合成壓測及實機測試仍另列，不冒稱包含在一般發布驗收。
 
@@ -99,3 +100,5 @@ Game整合案例失敗會先附加控制操作前的原生音訊／畫面狀態�
 再輪正式CI前106項通過，桌面完整流程的重播45秒等待逾時，但失敗截圖已顯示「從頭重播」及結果一致。完成文字會保留在DOM，沿用原比對；只將此例CI重播等待改90秒、整案改600秒（含完整賽事、重載、重播與匯出），原生仍45／180秒。另要求真正完成後的「從頭重播」按鈕狀態，v1～v5原60秒與結果比對不變。
 
 隔離Linux的開場、快速開局與縮放六項通過；完整賽事在第4場16.3秒終結重播時才送出呼喊，不能據此判定鍵盤失效。該例現在每場在真正battle狀態先以一次性RAF窗送出實際Space／Enter並要求各自disabled，finally永久放行，held=0且至少兩次產品callback後才做原鏡頭與截圖工作；不把終結後拒絕呼喊改成成功，也不修改呼喊、賽事、勝負或物理。
+
+完整Linux單工後續108項通過，鍵盤暫停例在countdown首個畫格前已真正暫停，0.0秒尚無count-beat，原測試卻直接讀數字而用完整案預算。現在先以共用一次性觀測窗等真正首個數字，再按Escape；永久放行且resumed>=2／held=0後仍須3500ms精確凍結、恢復後剩餘數字至GO的完整順序與原10秒進入battle。本機及隔離Linux皆通過，產品frame／倒數／音訊均未改。單工每輪後段問題回饋過慢，CI因此改為四台獨立分片及嚴格全集合併，沒有以選定案例代替完整套件。

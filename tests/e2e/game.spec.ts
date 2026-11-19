@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import{installProbe}from'./audio-probe.ts';
+import{holdFrameAt}from'./frame-hold.ts';
 const action = (page: Page, a: string) => page.locator(`[data-action="${a}"]`);
 test.afterEach(async({page},info)=>{
  if(info.status===info.expectedStatus)return;
@@ -336,6 +337,8 @@ test("手機：響應式配置與2P遮蔽、鍵盤分鍵、完整一局", async 
   expect(errors).toEqual([]);
 });
 test("暫停時鍵盤不會繞過遮罩鎖定發射，恢復後可正常倒數", async ({ page }) => {
+  await holdFrameAt(page,'#app[data-screen="countdown"] #battle-message .count-beat');
+  try{
   await page.goto("/");
   await action(page, "play").first().click();
   await buildTeam(page);
@@ -352,10 +355,14 @@ test("暫停時鍵盤不會繞過遮罩鎖定發射，恢復後可正常倒數",
     "countdown",
   );
   await expect(page.locator("#pause-overlay")).toBeHidden();
+  await expect.poll(()=>page.evaluate(()=>(window as any).stageFrameHold.state().held)).toBeGreaterThan(0);
   await page.keyboard.press("Escape");
   await expect(page.locator('#pause-overlay')).toBeVisible();
   await expect(page.locator('#app')).toHaveAttribute('data-screen','countdown');
   const frozenCue=await page.locator('#battle-message .count-beat').innerText();expect(['3','2','1']).toContain(frozenCue);
+  await page.evaluate(()=>(window as any).stageFrameHold.release());
+  await expect.poll(()=>page.evaluate(()=>(window as any).stageFrameHold.state().resumed)).toBeGreaterThanOrEqual(2);
+  expect(await page.evaluate(()=>(window as any).stageFrameHold.state().held)).toBe(0);
   await page.evaluate(() => {
     const start = performance.now();
     while (performance.now() - start < 3500) {
@@ -376,6 +383,7 @@ test("暫停時鍵盤不會繞過遮罩鎖定發射，恢復後可正常倒數",
   });
   const observed=await page.evaluate(()=>(window as any).keyboardCountdownValues);writeFileSync(`artifacts/keyboard-countdown-${process.env.CI?'software':'native'}-v0430.json`,JSON.stringify({frozenCue,observed},null,2));
   expect(observed).toEqual([...['3','2','1'].slice(['3','2','1'].indexOf(frozenCue)),'GO SHOOT!']);await page.evaluate(()=>(window as any).keyboardCountdownObserver.disconnect());
+  }finally{await page.evaluate(()=>(window as any).stageFrameHold?.release()).catch(()=>{});}
 });
 test("瀏覽器禁用設定儲存時可啟動與切換音效", async ({ page }) => {
   const errors: string[] = [];
