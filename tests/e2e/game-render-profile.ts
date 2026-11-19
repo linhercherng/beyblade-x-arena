@@ -1,5 +1,5 @@
 import type{Page}from'@playwright/test';
-export async function profileGameClock(page:Page){
+export async function profileGame(page:Page){
  if(!process.env.CI)return;
  await page.route(url=>url.pathname==='/src/arena.ts',async route=>{
   const response=await route.fetch(),source=await response.text();

@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test';
-import{profileGameClock}from'./game-render-profile.ts';import{writeFileSync}from'node:fs';
+import{profileGame}from'./game-render-profile.ts';import{writeFileSync}from'node:fs';
 if(process.env.CI)test.use({viewport:{width:640,height:480}});
 test('低幀率下對決時鐘仍跟隨實際經過時間',async({page})=>{
-  await profileGameClock(page);
+  await profileGame(page);
   await page.addInitScript(()=>{
     const request=window.requestAnimationFrame.bind(window);
     window.requestAnimationFrame=callback=>request(()=>{setTimeout(()=>callback(performance.now()),130);});

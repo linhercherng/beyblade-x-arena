@@ -1,10 +1,10 @@
 import{test,expect,type Page}from'@playwright/test';import clips from'../../src/countdown-voice-data.json' with{type:'json'};
 import{installProbe}from'./audio-probe.ts';import{writeFileSync}from'node:fs';
-import{profileGameClock}from'./game-render-profile.ts';
+import{profileGame}from'./game-render-profile.ts';
 const gameUrl=process.env.CI?'/?software-gpu&audio-only':'/';
 const network=new WeakMap<Page,{pending:Set<import('@playwright/test').Request>;failed:{url:string;error?:string}[];errors:string[]}>();
 test.beforeEach(async({page})=>{
- await profileGameClock(page);
+ await profileGame(page);
  const state={pending:new Set<import('@playwright/test').Request>(),failed:[]as{url:string;error?:string}[],errors:[]as string[]};network.set(page,state);
  page.on('request',r=>state.pending.add(r));page.on('requestfinished',r=>state.pending.delete(r));page.on('requestfailed',r=>{state.pending.delete(r);state.failed.push({url:r.url(),error:r.failure()?.errorText});});page.on('pageerror',e=>state.errors.push(e.message));
  await installProbe(page);

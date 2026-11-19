@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import{installProbe}from'./audio-probe.ts';
 import{holdFrameAt}from'./frame-hold.ts';
+import{profileGame}from'./game-render-profile.ts';
 const action = (page: Page, a: string) => page.locator(`[data-action="${a}"]`);
 test.afterEach(async({page},info)=>{
  if(info.status===info.expectedStatus)return;
@@ -174,6 +175,7 @@ async function playMatch(page: Page, local = false) {
       await page.keyboard.press("Space");
       await expect(action(page, "shout").first()).toBeDisabled();
       if(local){await page.keyboard.press("Enter");await expect(action(page,"shout").nth(1)).toBeDisabled();}
+      while((await action(page,"speed").textContent())!=="1×")await action(page,"speed").click();
     }finally{await page.evaluate(()=>(window as any).releaseBattleInput());}
     await expect.poll(()=>page.evaluate(()=>(window as any).battleInputFrames().resumed)).toBeGreaterThanOrEqual(2);
     expect(await page.evaluate(()=>(window as any).battleInputFrames().held)).toBe(0);
@@ -240,12 +242,13 @@ async function playMatch(page: Page, local = false) {
 }
 test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備份", async ({
   page,
-}) => {
+},info) => {
   if(process.env.CI)test.setTimeout(600000);
+  await profileGame(page);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto("/");
+  await page.goto(process.env.CI?"/?software-gpu":"/");
   await expect(
     page.getByRole("heading", { name: "準備好，突破極限。" }),
   ).toBeVisible();
@@ -302,13 +305,15 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   await page.locator("#backup-file").setInputFiles("artifacts/backup.json");
   await page.getByRole("button",{name:"確認覆蓋匯入",exact:true}).click();
   await expect(page.locator("#toast")).toContainText("已匯入");
+  if(process.env.CI){const profiles=await page.evaluate(()=>(window as any).gameRenderProfiles?.map((info:()=>unknown)=>info())??[]);await info.attach('game-render-profile',{body:JSON.stringify({scope:'software-gpu-interactive-full-scene',profiles}),contentType:'application/json'});expect(profiles.length).toBeGreaterThan(0);expect(profiles.every((p:any)=>p.softwareGpu&&!p.audioOnly)).toBe(true);}
   expect(errors).toEqual([]);
 });
-test("手機：響應式配置與2P遮蔽、鍵盤分鍵、完整一局", async ({ page }) => {
+test("手機：響應式配置與2P遮蔽、鍵盤分鍵、完整一局", async ({ page },info) => {
+  await profileGame(page);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto(process.env.CI?"/?software-gpu":"/");
   await page.screenshot({ path: "artifacts/home-mobile.png", fullPage: true });
   expect(
     await page.evaluate(
@@ -334,6 +339,7 @@ test("手機：響應式配置與2P遮蔽、鍵盤分鍵、完整一局", async 
   await page.locator('[data-action="stats-mode"][data-value="local"]').click();
   await expect(page.locator(".stats-metrics").first()).toContainText("1");
   await page.screenshot({ path: "artifacts/stats-mobile.png", fullPage: true });
+  if(process.env.CI){const profiles=await page.evaluate(()=>(window as any).gameRenderProfiles?.map((info:()=>unknown)=>info())??[]);await info.attach('game-render-profile',{body:JSON.stringify({scope:'software-gpu-interactive-full-scene',profiles}),contentType:'application/json'});expect(profiles.length).toBeGreaterThan(0);expect(profiles.every((p:any)=>p.softwareGpu&&!p.audioOnly)).toBe(true);}
   expect(errors).toEqual([]);
 });
 test("暫停時鍵盤不會繞過遮罩鎖定發射，恢復後可正常倒數", async ({ page }) => {

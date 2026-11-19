@@ -114,3 +114,7 @@ Game整合案例失敗會先附加控制操作前的原生音訊／畫面狀態�
 同輪低幀率例在5.5秒只前進2.2秒，畫面未暫停；缺callback原始間隔，不能精確歸因。CI的countdown-load及pacing第一例明示`?software-gpu&audio-only`，經測試路由在dev Arena.attach套用既有fixtureProfile；保留真Arena.draw、world矩陣、音訊、物理與130ms延遲，只省略GPU提交。每份成功倒數結果附profile且驗證softwareGpu／audioOnly已套用；pacing另保存scope與時鐘資料。這只驗證受控模型相位與原生音訊／模擬時鐘，**不證明不可控GPU阻塞下的呈現、FPS或牆鐘追趕**。原生不攔路由、不加query，保留完整GPU與原3秒／5.5秒門檻；其他視覺例及pacing第二例也保留原GPU範圍。
 
 三項原生與本機CI-profile皆通過，隔離Linux另各連跑三次，共9次全部通過、無略過或重試。Linux全段撞擊峰值0.0687、同時配樂0.00713、混音峰值0.1502；純時鐘觀測0.1→3.9秒。這些是測試前提／觀測範圍修正，不當作產品音量或物理變更，也不取代最終四片完整合併。
+
+該輪最終219項為215成功、4失敗，沒有略過或重試。新增的第4項是手機完整流程在camera操作後已進round結果頁，找不到speed而用完360秒；原程式在每回合沿用上一輪4×。測試現在於既有一次性battle輸入窗內透過實際speed按鈕回1×，放行RAF後才做原camera／截圖，完成後再按4×。產品速度與物理未改。
+
+桌面／手機兩個CI完整流程另明示`?software-gpu`，同一profile helper設定0.25 buffer與停用陰影，仍每幀真GPU繪完整場景；成功必須附profile並驗證softwareGpu且audioOnly=false。CSS尺寸、控制、賽事、重播、動畫與結果斷言保留。這兩個CI例屬功能與軟體GPU場景驗收，**不作原生畫質或陰影驗收**；原生不攔路由、不帶query，全畫質與原等待保留，其他視覺例、原生FPS及DPR2／240萬像素縮放例也不變。
