@@ -166,7 +166,7 @@ async function playMatch(page: Page, local = false) {
     await expect(page.locator("#app")).toHaveAttribute(
       "data-screen",
       "battle",
-      { timeout: 12000 },
+      { timeout: process.env.CI ? 30000 : 12000 },
     );
     // Capture the real battle input window before slow camera/screenshot work can finish a round.
     try{
