@@ -1,3 +1,4 @@
+import{GAME_VERSION}from'../../src/diagnostics.ts';
 import {test,expect} from '@playwright/test';
 test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
 test.afterEach(async({page},info)=>{
@@ -39,7 +40,7 @@ test('裝置檢查可記錄、勾選與匯出，暫停時間不列入效能',asy
   await page.getByRole('button',{name:'停止紀錄',exact:true}).tap();
   const download=page.waitForEvent('download');await page.getByRole('button',{name:'匯出檢查紀錄',exact:true}).tap();const file=await download;
   const fs=await import('node:fs/promises');const report=JSON.parse(await fs.readFile((await file.path())!,'utf8'));
-  expect(report.version).toBe('0.43.0');expect(report.frames).toBeGreaterThan(10);expect(report.fps).toBeGreaterThan(0);expect(report.checks.bluetooth).toBe('fail');expect(report.checks.call).toBe('untested');expect(report.audio.events.length).toBeLessThanOrEqual(60);expect(report.profile).toBeUndefined();
+  expect(report.version).toBe(GAME_VERSION);expect(report.frames).toBeGreaterThan(10);expect(report.fps).toBeGreaterThan(0);expect(report.checks.bluetooth).toBe('fail');expect(report.checks.call).toBe('untested');expect(report.audio.events.length).toBeLessThanOrEqual(60);expect(report.profile).toBeUndefined();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:'artifacts/device-check-mobile-v0206.png',fullPage:true});
   await page.getByLabel('關閉裝置檢查',{exact:true}).tap();await expect(page.locator('#pause-overlay')).toBeVisible();

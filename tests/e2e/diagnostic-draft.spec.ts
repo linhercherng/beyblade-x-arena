@@ -1,5 +1,6 @@
 import{test,expect}from'@playwright/test';
 import{readFile}from'node:fs/promises';
+import{GAME_VERSION}from'../../src/diagnostics.ts';
 test.use({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
 async function open(page:any){if(!await page.locator('.music-controls').evaluate((n:HTMLDetailsElement)=>n.open))await page.getByLabel('配樂設定',{exact:true}).click();await page.getByRole('button',{name:'裝置檢查',exact:true}).click();}
 async function download(page:any,name:string){const pending=page.waitForEvent('download');await page.getByRole('button',{name,exact:true}).click();return JSON.parse(await readFile((await(await pending).path())!,'utf8'));}
@@ -15,7 +16,7 @@ test('背景立即保存未完成紀錄，重開不自行續錄或變成實機�
 });
 test('保存遭拒時明確提示並可直接匯出，不阻止開局',async({page})=>{
  await page.addInitScript(()=>{const set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k==='spinforge-device-draft-v1')throw new DOMException('quota','QuotaExceededError');return set.call(this,k,v);};});
- await page.goto('/');await open(page);await page.getByRole('button',{name:'開始新紀錄',exact:true}).click();await open(page);await expect(page.locator('#device-draft-status')).toContainText('無法保存');await page.getByRole('button',{name:'停止紀錄',exact:true}).click();expect((await download(page,'匯出檢查紀錄')).version).toBe('0.43.0');await page.getByLabel('關閉裝置檢查',{exact:true}).click();await page.locator('[data-action=quick-battle]').click();await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:12000});
+ await page.goto('/');await open(page);await page.getByRole('button',{name:'開始新紀錄',exact:true}).click();await open(page);await expect(page.locator('#device-draft-status')).toContainText('無法保存');await page.getByRole('button',{name:'停止紀錄',exact:true}).click();expect((await download(page,'匯出檢查紀錄')).version).toBe(GAME_VERSION);await page.getByLabel('關閉裝置檢查',{exact:true}).click();await page.locator('[data-action=quick-battle]').click();await expect(page.locator('#app')).toHaveAttribute('data-screen','battle',{timeout:12000});
 });
 test('沿用既有更新循環定期保存，不必等待離開頁面',async({page})=>{
  await page.goto('/');await open(page);await page.getByRole('button',{name:'開始新紀錄',exact:true}).click();await open(page);await expect(page.locator('#device-draft-status')).toContainText(/· (?:[5-9]|\d{2,})秒/,{timeout:15000});
