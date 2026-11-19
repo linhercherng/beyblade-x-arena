@@ -8,6 +8,8 @@ async function localLaunch(page:Page){
  await action(page,'handoff').click();await action(page,'quick').click();await action(page,'confirm-team').click();await action(page,'begin-match').click();
 }
 test('雙方同時微調一度，另一方保持拖曳與鎖定，窄螢幕觸控目標不重疊',async({page})=>{
+ // CI retains full rendering and all three viewport checks with a larger whole-case budget.
+ if(process.env.CI)test.setTimeout(120000);
  await localLaunch(page);const secondStart=Number(await page.getByLabel('2P 發射傾角').inputValue());const cdp=await page.context().newCDPSession(page);
  const point=async(selector:string,id:number,f=.5)=>{const b=(await page.locator(selector).boundingBox())!;return{id,x:b.x+b.width*f,y:b.y+b.height/2};};
  const touch=(type:string,touchPoints:object[])=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints});
