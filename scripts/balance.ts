@@ -4,6 +4,7 @@ import { runSuite, runEdges, runAllPairs } from "./balance-suite.ts";
 import { ENGINE_VERSION, TUNING, PACING, COMBAT_STYLE } from "../src/physics.ts";
 import{BalanceObservation,observationMarkdown}from'./balance-observation.ts';
 import{runModelInvestigation}from'./model-balance-investigation.ts';
+import{runMummyInvestigation,assertBoundaryRelease}from'./mummy-boundary.ts';
 const calibration = runSuite(256, 1);
 const validation = runSuite(1024, 20261112);
 const edges = runEdges();
@@ -50,3 +51,4 @@ console.log(
 );
 assertBalance(report);
 runModelInvestigation();
+assertBoundaryRelease(runMummyInvestigation());

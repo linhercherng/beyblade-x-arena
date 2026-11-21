@@ -1,6 +1,6 @@
 {
   "name": "spinforge-x-arena",
-  "version": "0.44.0",
+  "version": "0.44.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "balance": "node --experimental-strip-types scripts/balance.ts",
     "balance:check": "node --experimental-strip-types scripts/balance.ts --check",
     "balance:models": "node --experimental-strip-types scripts/model-balance-investigation.ts",
+    "balance:mummy": "node --experimental-strip-types scripts/mummy-boundary.ts",
     "catalog": "node scripts/import-catalog.mjs"
   },
   "dependencies": {
