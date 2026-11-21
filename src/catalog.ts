@@ -1,5 +1,6 @@
 import {combatProfile,profileStats} from "./combat-profiles.ts";
 import modelBalance from "./model-balance.json" with {type:"json"};
+import{catalogRevision}from'./catalog-revisions.ts';
 import raw from "./catalog-data.json" with { type: "json" };
 import additions from "../scripts/catalog-expansion.json" with { type: "json" };
 export const NEW_BEY_IDS = new Set(additions.products.map(b => b.id));
@@ -226,15 +227,20 @@ export function filterBeys(
   line = "all",
   type = "all",
   sort = "code",
+  includeRevisions = false,
 ) {
   const q = query.toLowerCase().trim();
   return BEYS.filter(
-    (b) =>
-      (line === "all" || (line === "new" ? NEW_BEY_IDS.has(b.id) : b.line === line)) &&
-      (type === "all" || b.type === type) &&
-      `${b.zhName} ${b.name} ${b.code} ${b.combo} ${b.feature} ${TYPE[b.type].label}`
-        .toLowerCase()
-        .includes(q),
+    (b) => {
+      const revision=includeRevisions?catalogRevision(b.id):undefined;
+      return (
+        (line === "all" || (line === "new" ? NEW_BEY_IDS.has(b.id) : b.line === line)) &&
+        (type === "all" || b.type === type) &&
+        `${b.zhName} ${b.name} ${b.code} ${b.combo} ${b.feature} ${TYPE[b.type].label} ${revision?`${revision.productCode} ${revision.zhName} ${revision.name} V2 2.0`:''}`
+          .toLowerCase()
+          .includes(q)
+      );
+    },
   ).sort((a, b) =>
     sort === "atk"
       ? b.stats.atk - a.stats.atk

@@ -1,0 +1,1461 @@
+{
+  "source": "f2641c06ebb69ec556d9e4b9c146dfa7cd92e1a6",
+  "beys": [
+    {
+      "id": "bx-01-dran-sword",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 83,
+        "weight": 83
+      },
+      "spin": "R",
+      "ratchet": "3-60",
+      "bit": "F",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-02-hells-scythe",
+      "stats": {
+        "atk": 69,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 78,
+        "weight": 83
+      },
+      "spin": "R",
+      "ratchet": "4-60",
+      "bit": "T",
+      "height": 60,
+      "type": "balance"
+    },
+    {
+      "id": "bx-03-wizard-arrow",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 61,
+        "weight": 77
+      },
+      "spin": "R",
+      "ratchet": "4-80",
+      "bit": "B",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "bx-04-knight-shield",
+      "stats": {
+        "atk": 58,
+        "def": 83,
+        "sta": 86,
+        "dash": 31,
+        "burst": 84,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "3-80",
+      "bit": "N",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "bx-13-knight-lance",
+      "stats": {
+        "atk": 57,
+        "def": 84,
+        "sta": 82,
+        "dash": 31,
+        "burst": 83,
+        "weight": 97
+      },
+      "spin": "R",
+      "ratchet": "4-80",
+      "bit": "HN",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "bx-14-shark-edge",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 83,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "3-60",
+      "bit": "LF",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-15-leon-claw",
+      "stats": {
+        "atk": 70,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 77,
+        "weight": 81
+      },
+      "spin": "R",
+      "ratchet": "5-60",
+      "bit": "P",
+      "height": 60,
+      "type": "balance"
+    },
+    {
+      "id": "bx-16-viper-tail",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 60,
+        "weight": 78
+      },
+      "spin": "R",
+      "ratchet": "5-80",
+      "bit": "O",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "bx-19-rhino-horn",
+      "stats": {
+        "atk": 57,
+        "def": 84,
+        "sta": 84,
+        "dash": 31,
+        "burst": 84,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "3-80",
+      "bit": "S",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "bx-20-dran-dagger",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 81,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "4-60",
+      "bit": "R",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-21-hells-chain",
+      "stats": {
+        "atk": 70,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 77,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "5-60",
+      "bit": "HT",
+      "height": 60,
+      "type": "balance"
+    },
+    {
+      "id": "bx-23-phoenix-wing",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 100,
+        "burst": 74,
+        "weight": 88
+      },
+      "spin": "R",
+      "ratchet": "9-60",
+      "bit": "GF",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-24-wyvern-gale",
+      "stats": {
+        "atk": 54,
+        "def": 58,
+        "sta": 84,
+        "dash": 50,
+        "burst": 60,
+        "weight": 78
+      },
+      "spin": "R",
+      "ratchet": "5-80",
+      "bit": "GB",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "bx-26-unicorn-sting",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 78,
+        "burst": 77,
+        "weight": 82
+      },
+      "spin": "R",
+      "ratchet": "5-60",
+      "bit": "GP",
+      "height": 60,
+      "type": "balance"
+    },
+    {
+      "id": "bx-27-sphinx-cowl",
+      "stats": {
+        "atk": 60,
+        "def": 83,
+        "sta": 82,
+        "dash": 45,
+        "burst": 76,
+        "weight": 100
+      },
+      "spin": "R",
+      "ratchet": "9-80",
+      "bit": "GN",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "bx-31-tyranno-beat",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 94,
+        "dash": 83,
+        "burst": 78,
+        "weight": 90
+      },
+      "spin": "R",
+      "ratchet": "4-70",
+      "bit": "Q",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "bx-33-weiss-tiger",
+      "stats": {
+        "atk": 73,
+        "def": 70,
+        "sta": 68,
+        "dash": 61,
+        "burst": 80,
+        "weight": 81
+      },
+      "spin": "R",
+      "ratchet": "3-60",
+      "bit": "U",
+      "height": 60,
+      "type": "balance"
+    },
+    {
+      "id": "bx-34-cobalt-dragoon",
+      "stats": {
+        "atk": 87,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 84,
+        "weight": 84
+      },
+      "spin": "L",
+      "ratchet": "2-60",
+      "bit": "C",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-35-black-shell",
+      "stats": {
+        "atk": 59,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 89,
+        "weight": 95
+      },
+      "spin": "R",
+      "ratchet": "4-60",
+      "bit": "D",
+      "height": 60,
+      "type": "defense"
+    },
+    {
+      "id": "bx-36-whale-wave",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 71,
+        "weight": 87
+      },
+      "spin": "R",
+      "ratchet": "5-80",
+      "bit": "E",
+      "height": 80,
+      "type": "balance"
+    },
+    {
+      "id": "bx-37-bear-scratch",
+      "stats": {
+        "atk": 83,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 80,
+        "weight": 85
+      },
+      "spin": "R",
+      "ratchet": "5-60",
+      "bit": "F",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-38-crimson-garuda",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 75,
+        "weight": 82
+      },
+      "spin": "R",
+      "ratchet": "4-70",
+      "bit": "TP",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "bx-39-shelter-drake",
+      "stats": {
+        "atk": 75,
+        "def": 69,
+        "sta": 74,
+        "dash": 78,
+        "burst": 68,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "7-80",
+      "bit": "GP",
+      "height": 80,
+      "type": "balance"
+    },
+    {
+      "id": "bx-44-tricera-press",
+      "stats": {
+        "atk": 58,
+        "def": 83,
+        "sta": 82,
+        "dash": 31,
+        "burst": 79,
+        "weight": 100
+      },
+      "spin": "R",
+      "ratchet": "M-85",
+      "bit": "BS",
+      "height": 85,
+      "type": "defense"
+    },
+    {
+      "id": "bx-45-samurai-calibur",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 72,
+        "weight": 83
+      },
+      "spin": "R",
+      "ratchet": "6-70",
+      "bit": "M",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "bx-46-cobalt-drake",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 74,
+        "weight": 89
+      },
+      "spin": "R",
+      "ratchet": "9-60",
+      "bit": "R",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-46-goat-tackle",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 71,
+        "weight": 85
+      },
+      "spin": "R",
+      "ratchet": "7-70",
+      "bit": "T",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "bx-48-mammoth-tusk",
+      "stats": {
+        "atk": 58,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 85,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "7-60",
+      "bit": "S",
+      "height": 60,
+      "type": "defense"
+    },
+    {
+      "id": "bx-49-dran-strike",
+      "stats": {
+        "atk": 87,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 84,
+        "weight": 83
+      },
+      "spin": "R",
+      "ratchet": "4-50",
+      "bit": "FF",
+      "height": 50,
+      "type": "attack"
+    },
+    {
+      "id": "bx-50-heavens-ring",
+      "stats": {
+        "atk": 56,
+        "def": 84,
+        "sta": 86,
+        "dash": 31,
+        "burst": 89,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "0-80",
+      "bit": "DS",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "bx-52-luster-dragoon",
+      "stats": {
+        "atk": 83,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 78,
+        "weight": 87
+      },
+      "spin": "L",
+      "ratchet": "6-60",
+      "bit": "LC",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "bx-54-sieg-superion",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 81,
+        "weight": 83
+      },
+      "spin": "R",
+      "ratchet": "0-70",
+      "bit": "LP",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "ux-01-dran-buster",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 86,
+        "weight": 89
+      },
+      "spin": "R",
+      "ratchet": "1-60",
+      "bit": "A",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "ux-02-hells-hammer",
+      "stats": {
+        "atk": 73,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 77,
+        "weight": 83
+      },
+      "spin": "R",
+      "ratchet": "3-70",
+      "bit": "H",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "ux-03-wizard-rod",
+      "stats": {
+        "atk": 54,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 63,
+        "weight": 78
+      },
+      "spin": "R",
+      "ratchet": "5-70",
+      "bit": "DB",
+      "height": 70,
+      "type": "stamina"
+    },
+    {
+      "id": "ux-05-shinobi-shadow",
+      "stats": {
+        "atk": 57,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 87,
+        "weight": 93
+      },
+      "spin": "R",
+      "ratchet": "1-80",
+      "bit": "MN",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "ux-06-leon-crest",
+      "stats": {
+        "atk": 58,
+        "def": 84,
+        "sta": 72,
+        "dash": 45,
+        "burst": 85,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "7-60",
+      "bit": "GN",
+      "height": 60,
+      "type": "defense"
+    },
+    {
+      "id": "ux-07-phoenix-rudder",
+      "stats": {
+        "atk": 54,
+        "def": 58,
+        "sta": 84,
+        "dash": 47,
+        "burst": 58,
+        "weight": 79
+      },
+      "spin": "R",
+      "ratchet": "9-70",
+      "bit": "G",
+      "height": 70,
+      "type": "stamina"
+    },
+    {
+      "id": "ux-08-silver-wolf",
+      "stats": {
+        "atk": 56,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 63,
+        "weight": 81
+      },
+      "spin": "R",
+      "ratchet": "3-80",
+      "bit": "FB",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "ux-09-samurai-saber",
+      "stats": {
+        "atk": 83,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 81,
+        "weight": 88
+      },
+      "spin": "R",
+      "ratchet": "2-70",
+      "bit": "L",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "ux-10-knight-mail",
+      "stats": {
+        "atk": 57,
+        "def": 84,
+        "sta": 84,
+        "dash": 31,
+        "burst": 83,
+        "weight": 100
+      },
+      "spin": "R",
+      "ratchet": "3-85",
+      "bit": "BS",
+      "height": 85,
+      "type": "defense"
+    },
+    {
+      "id": "ux-10-ptera-swing",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 60,
+        "weight": 77
+      },
+      "spin": "R",
+      "ratchet": "7-70",
+      "bit": "B",
+      "height": 70,
+      "type": "stamina"
+    },
+    {
+      "id": "ux-11-impact-drake",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 74,
+        "weight": 90
+      },
+      "spin": "R",
+      "ratchet": "9-60",
+      "bit": "LR",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "ux-12-ghost-circle",
+      "stats": {
+        "atk": 53,
+        "def": 58,
+        "sta": 84,
+        "dash": 50,
+        "burst": 67,
+        "weight": 77
+      },
+      "spin": "R",
+      "ratchet": "0-80",
+      "bit": "GB",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "ux-13-golem-rock",
+      "stats": {
+        "atk": 58,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 94,
+        "weight": 100
+      },
+      "spin": "R",
+      "ratchet": "1-60",
+      "bit": "UN",
+      "height": 60,
+      "type": "defense"
+    },
+    {
+      "id": "ux-14-scorpio-spear",
+      "stats": {
+        "atk": 70,
+        "def": 70,
+        "sta": 74,
+        "dash": 65,
+        "burst": 81,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "0-70",
+      "bit": "Z",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "ux-15-shark-scale",
+      "stats": {
+        "atk": 83,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 84,
+        "weight": 90
+      },
+      "spin": "R",
+      "ratchet": "4-50",
+      "bit": "UF",
+      "height": 50,
+      "type": "attack"
+    },
+    {
+      "id": "ux-15-tyranno-roar",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 82,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "1-70",
+      "bit": "L",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "ux-16-clock-mirage",
+      "stats": {
+        "atk": 54,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 59,
+        "weight": 81
+      },
+      "spin": "R",
+      "ratchet": "9-65",
+      "bit": "B",
+      "height": 65,
+      "type": "stamina"
+    },
+    {
+      "id": "ux-17-meteor-dragoon",
+      "stats": {
+        "atk": 91,
+        "def": 58,
+        "sta": 80,
+        "dash": 88,
+        "burst": 80,
+        "weight": 83
+      },
+      "spin": "L",
+      "ratchet": "3-70",
+      "bit": "J",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "ux-18-mummy-curse",
+      "stats": {
+        "atk": 59,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 87,
+        "weight": 96
+      },
+      "spin": "R",
+      "ratchet": "7-55",
+      "bit": "W",
+      "height": 55,
+      "type": "defense"
+    },
+    {
+      "id": "ux-19-bullet-griffon",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 77,
+        "weight": 87
+      },
+      "spin": "R",
+      "ratchet": "integrated-H",
+      "bit": "H",
+      "height": 65,
+      "type": "balance"
+    },
+    {
+      "id": "ux-20-glory-valkyrie",
+      "stats": {
+        "atk": 86,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 80,
+        "weight": 87
+      },
+      "spin": "R",
+      "ratchet": "integrated-LF",
+      "bit": "LF",
+      "height": 65,
+      "type": "attack"
+    },
+    {
+      "id": "ux-21-hells-nether",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 65,
+        "burst": 77,
+        "weight": 88
+      },
+      "spin": "R",
+      "ratchet": "integrated-Z",
+      "bit": "Z",
+      "height": 65,
+      "type": "balance"
+    },
+    {
+      "id": "ux-21-wyvern-hover",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 57,
+        "weight": 80
+      },
+      "spin": "R",
+      "ratchet": "8-80",
+      "bit": "B",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "bx-53-aero-pegasus",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 80,
+        "weight": 89
+      },
+      "spin": "R",
+      "ratchet": "3-70",
+      "bit": "A",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "cx-01-dran-brave-slash",
+      "stats": {
+        "atk": 87,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 78,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "6-60",
+      "bit": "V",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "cx-02-wizard-arc-round",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 68,
+        "weight": 76
+      },
+      "spin": "R",
+      "ratchet": "4-55",
+      "bit": "LO",
+      "height": 55,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-03-perseus-dark-bumper",
+      "stats": {
+        "atk": 58,
+        "def": 84,
+        "sta": 80,
+        "dash": 31,
+        "burst": 80,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "6-80",
+      "bit": "W",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "cx-05-hells-reaper-turn",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 75,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "4-70",
+      "bit": "K",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "cx-05-rhino-reaper-charge",
+      "stats": {
+        "atk": 58,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 91,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "4-55",
+      "bit": "D",
+      "height": 55,
+      "type": "defense"
+    },
+    {
+      "id": "cx-05-hells-arc-turn",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 61,
+        "weight": 78
+      },
+      "spin": "R",
+      "ratchet": "3-85",
+      "bit": "O",
+      "height": 85,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-06-fox-brush-jaggy",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 80,
+        "dash": 93,
+        "burst": 71,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "9-70",
+      "bit": "GR",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "cx-07-pegasus-blast-assault",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 99,
+        "burst": 80,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "integrated-Tr",
+      "bit": "Tr",
+      "height": 65,
+      "type": "attack"
+    },
+    {
+      "id": "cx-08-cerberus-flame-wheel",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 60,
+        "weight": 80
+      },
+      "spin": "R",
+      "ratchet": "5-80",
+      "bit": "WB",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-08-whale-flame-massive",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 72,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "3-85",
+      "bit": "HT",
+      "height": 85,
+      "type": "balance"
+    },
+    {
+      "id": "cx-08-cerberus-dark-wheel",
+      "stats": {
+        "atk": 83,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 86,
+        "weight": 89
+      },
+      "spin": "R",
+      "ratchet": "1-60",
+      "bit": "F",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "cx-09-sol-eclipse-dual",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 74,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "5-70",
+      "bit": "TK",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "cx-10-wolf-hunt-free",
+      "stats": {
+        "atk": 55,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 72,
+        "weight": 78
+      },
+      "spin": "R",
+      "ratchet": "0-60",
+      "bit": "DB",
+      "height": 60,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-11-emperor-might-heavy",
+      "stats": {
+        "atk": 70,
+        "def": 70,
+        "sta": 74,
+        "dash": 73,
+        "burst": 77,
+        "weight": 89
+      },
+      "spin": "R",
+      "ratchet": "integrated-Op",
+      "bit": "Op",
+      "height": 65,
+      "type": "balance"
+    },
+    {
+      "id": "cx-12-phoenix-flare-zillion",
+      "stats": {
+        "atk": 57,
+        "def": 84,
+        "sta": 82,
+        "dash": 31,
+        "burst": 76,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "9-80",
+      "bit": "WW",
+      "height": 80,
+      "type": "defense"
+    },
+    {
+      "id": "cx-13-bahamut-blitz-break-knuckle",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 89,
+        "weight": 89
+      },
+      "spin": "R",
+      "ratchet": "1-50",
+      "bit": "I",
+      "height": 50,
+      "type": "attack"
+    },
+    {
+      "id": "cx-14-knight-fortress-guard-vertical",
+      "stats": {
+        "atk": 59,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 80,
+        "weight": 99
+      },
+      "spin": "R",
+      "ratchet": "8-70",
+      "bit": "UN",
+      "height": 70,
+      "type": "defense"
+    },
+    {
+      "id": "cx-15-ragna-rage-flow-erase",
+      "stats": {
+        "atk": 56,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 68,
+        "weight": 78
+      },
+      "spin": "R",
+      "ratchet": "4-55",
+      "bit": "Y",
+      "height": 55,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-17-unicorn-delta-peak-odd",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 69,
+        "burst": 80,
+        "weight": 82
+      },
+      "spin": "R",
+      "ratchet": "3-60",
+      "bit": "GU",
+      "height": 60,
+      "type": "balance"
+    },
+    {
+      "id": "cx-18-brachio-whip-outer-wheel",
+      "stats": {
+        "atk": 54,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 63,
+        "weight": 77
+      },
+      "spin": "R",
+      "ratchet": "5-70",
+      "bit": "Nr",
+      "height": 70,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-19-croco-tread-tough-quell",
+      "stats": {
+        "atk": 57,
+        "def": 84,
+        "sta": 72,
+        "dash": 45,
+        "burst": 91,
+        "weight": 99
+      },
+      "spin": "R",
+      "ratchet": "5-50",
+      "bit": "GN",
+      "height": 50,
+      "type": "defense"
+    },
+    {
+      "id": "cx-20-phoenix-force-weight-heavy",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 74,
+        "weight": 87
+      },
+      "spin": "R",
+      "ratchet": "M-65",
+      "bit": "MT",
+      "height": 65,
+      "type": "balance"
+    },
+    {
+      "id": "ux-15-hells-brave-jaggy",
+      "stats": {
+        "atk": 87,
+        "def": 59,
+        "sta": 80,
+        "dash": 100,
+        "burst": 83,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "3-60",
+      "bit": "GF",
+      "height": 60,
+      "type": "attack"
+    },
+    {
+      "id": "ux-18-pegasus-brush-massive",
+      "stats": {
+        "atk": 58,
+        "def": 83,
+        "sta": 80,
+        "dash": 31,
+        "burst": 83,
+        "weight": 96
+      },
+      "spin": "R",
+      "ratchet": "3-85",
+      "bit": "W",
+      "height": 85,
+      "type": "defense"
+    },
+    {
+      "id": "ux-18-sol-brave-charge",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 68,
+        "weight": 84
+      },
+      "spin": "R",
+      "ratchet": "9-70",
+      "bit": "TP",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "bx-50-wolf-flame-dual",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 83,
+        "burst": 73,
+        "weight": 87
+      },
+      "spin": "R",
+      "ratchet": "9-65",
+      "bit": "L",
+      "height": 65,
+      "type": "attack"
+    },
+    {
+      "id": "bx-50-cerberus-reaper-bumper",
+      "stats": {
+        "atk": 56,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 67,
+        "weight": 80
+      },
+      "spin": "R",
+      "ratchet": "0-80",
+      "bit": "WB",
+      "height": 80,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-00-valkyrie-volt-slash",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 80,
+        "dash": 84,
+        "burst": 78,
+        "weight": 87
+      },
+      "spin": "R",
+      "ratchet": "4-70",
+      "bit": "V",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "cx-00-bucks-antlers-bumper",
+      "stats": {
+        "atk": 57,
+        "def": 84,
+        "sta": 72,
+        "dash": 31,
+        "burst": 92,
+        "weight": 98
+      },
+      "spin": "R",
+      "ratchet": "2-60",
+      "bit": "D",
+      "height": 60,
+      "type": "defense"
+    },
+    {
+      "id": "cx-00-kraken-wriggle-slash",
+      "stats": {
+        "atk": 56,
+        "def": 58,
+        "sta": 84,
+        "dash": 36,
+        "burst": 65,
+        "weight": 79
+      },
+      "spin": "R",
+      "ratchet": "3-70",
+      "bit": "O",
+      "height": 70,
+      "type": "stamina"
+    },
+    {
+      "id": "cx-00-hornet-fort-round",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 61,
+        "burst": 74,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "7-60",
+      "bit": "T",
+      "height": 60,
+      "type": "balance"
+    },
+    {
+      "id": "cx-00-drake-brave-gravity",
+      "stats": {
+        "atk": 85,
+        "def": 59,
+        "sta": 80,
+        "dash": 84,
+        "burst": 78,
+        "weight": 88
+      },
+      "spin": "R",
+      "ratchet": "4-70",
+      "bit": "I",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "bx-00-storm-pegasus",
+      "stats": {
+        "atk": 84,
+        "def": 59,
+        "sta": 80,
+        "dash": 84,
+        "burst": 80,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "3-70",
+      "bit": "RA",
+      "height": 70,
+      "type": "attack"
+    },
+    {
+      "id": "bx-00-storm-spriggan",
+      "stats": {
+        "atk": 71,
+        "def": 70,
+        "sta": 74,
+        "dash": 62,
+        "burst": 78,
+        "weight": 82
+      },
+      "spin": "R",
+      "ratchet": "2-70",
+      "bit": "M",
+      "height": 70,
+      "type": "balance"
+    },
+    {
+      "id": "cx-00-tiga-rage-flow-turn",
+      "stats": {
+        "atk": 72,
+        "def": 70,
+        "sta": 74,
+        "dash": 62,
+        "burst": 80,
+        "weight": 86
+      },
+      "spin": "R",
+      "ratchet": "3-60",
+      "bit": "T",
+      "height": 60,
+      "type": "balance"
+    }
+  ]
+}

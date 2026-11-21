@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-11-21",
+  "revisions": {
+    "bx-01-dran-sword": {
+      "productCode": "BX-00",
+      "zhName": "蒼龍神劍 V2",
+      "name": "Dran Sword Version 2.0",
+      "originalName": "ドランソード3-60F バージョン2.0",
+      "releaseDate": "2026-08-08",
+      "spin": "R",
+      "combo": "Dran Sword 3-60F Version 2.0",
+      "scope": "完整原廠組合",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ds_v2.html",
+      "detailSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG49.png",
+      "note": "原廠說明為重新檢視並調整戰刃性能的2.0改版；B4商店限定，原廠組合仍為3-60F。",
+      "photos": [
+        {
+          "src": "/beys/revisions/dran-sword-v2-top.png",
+          "imageSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/BXG49_01@1.png",
+          "label": "正面",
+          "sha256": "5b6e2c35b0665b1f8547e15227e681917fa1de8855d41f2aa48438cace149381",
+          "bytes": 267574
+        },
+        {
+          "src": "/beys/revisions/dran-sword-v2-angle.png",
+          "imageSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/BXG49_02@1.png",
+          "label": "斜視",
+          "sha256": "6f8978922bc2f5a1a4b37e552e7e54b006f4866d0467f3953967bb9100b3998f",
+          "bytes": 248773
+        }
+      ]
+    },
+    "bx-02-hells-scythe": {
+      "productCode": "CX-20",
+      "zhName": "惡魔紅鐮 V2",
+      "name": "Hells Scythe Version 2.0",
+      "originalName": "ヘルズサイズ バージョン2.0",
+      "releaseDate": "2026-11-21",
+      "spin": "R",
+      "combo": null,
+      "scope": "CX-20套裝刃片",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html",
+      "detailSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX20.png",
+      "note": "CX-20套裝內的性能更新V2刃片；原廠未為此刃片單獨列出整顆組合，因此不自行指定棘輪與軸心。",
+      "photos": [
+        {
+          "src": "/beys/revisions/hells-scythe-v2-blade.png",
+          "imageSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/CX20_12@1.png",
+          "label": "刃片",
+          "sha256": "834625c9639aeb5e665c4c7382a60e93280122fc43cb4183ec3ba5c8ac3f8b65",
+          "bytes": 258868
+        }
+      ]
+    }
+  }
+}

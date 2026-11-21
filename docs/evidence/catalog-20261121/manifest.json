@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-11-21",
+  "images": [
+    {
+      "file": "detail_BXG49.png",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG49.png",
+      "bytes": 767918,
+      "sha256": "3b0cce8b6b7832e98ebdb9e29a8112b9417ebedd23b7acfb8c35d4fc41c5b3bf"
+    },
+    {
+      "file": "detail_CX20.png",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX20.png",
+      "bytes": 2115596,
+      "sha256": "a076277813b4b0ecbe13970ea4dc1e56d46922702df1bf7d2ec69c2dba098a1b"
+    }
+  ]
+}

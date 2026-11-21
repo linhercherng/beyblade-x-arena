@@ -857,6 +857,25 @@ main {
 .bey-card.chosen {
   border-color: var(--accent);
 }
+.revision-card-note { color: var(--accent); font-size: .875rem; }
+.catalog-revision-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.catalog-revision-panel h3 { margin: .5rem 0; }
+.catalog-revision-panel p { font-size: 1rem; line-height: 1.65; overflow-wrap: anywhere; }
+.revision-scope { color: var(--muted); }
+.revision-photos { display: flex; gap: .75rem; align-items: start; }
+.revision-photos a { flex: 1; min-width: 0; font-size: .875rem; }
+.revision-photos img { width: 100%; height: 13rem; object-fit: contain; border-radius: 7px; background: #f4f4f8; }
+@media (max-width: 768px) {
+  .catalog-revision-panel { grid-template-columns: minmax(0, 1fr); padding: 1rem; }
+}
 .card-meta {
   display: flex;
   align-items: center;
