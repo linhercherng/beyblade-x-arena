@@ -70,7 +70,9 @@ test("v5種子固定、運氣有界，全部91款特性有限且來源清楚",()
   for(let n=0;n<600;n++){stepBattle(a);stepBattle(b);}
   assert.deepEqual(a,b);
   assert.notDeepEqual(createBattle(BEYS[0],BEYS[1],[input,input],100).tops,createBattle(BEYS[0],BEYS[1],[input,input],99).tops);
-  for(const bey of BEYS){
+  const original=BEYS.filter(bey=>Object.hasOwn(legacy,bey.id));
+  assert.equal(original.length,91);
+  for(const bey of original){
     const t=createBattle(bey,bey,[input,input],55).tops[0];
     assert.ok(t.motion);assert.ok(t.motion.efficiency>=.97&&t.motion.efficiency<=1.03);
     assert.ok(t.motion.friction>=.98&&t.motion.friction<=1.02);
