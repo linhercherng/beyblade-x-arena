@@ -12,10 +12,11 @@ export function runModelInvestigation(){
  const ids=Object.keys(adjustments),git=(...args:string[])=>execFileSync('git',args,{encoding:'utf8'}).trim();
  const report={engineVersion:ENGINE_VERSION,baselineVersion:5,sourceCommit:git('rev-parse','HEAD'),sourceDirty:!!git('status','--porcelain'),
   status:'running',error:null as string|null,startedAt:new Date().toISOString(),finishedAt:null as string|null,repeats:4,profiles:MODEL_PROFILES,
-  method:'每款對所有其他90款；四發射情境、每情境四個種子，以同種子及同輸入互換玩家側，呼喊同時。校準與保留驗收使用不同種子。原始勝率按型號等量，另列四類各25%等權結果；平手仍計入分母。',
+  method:'歷史校準研究固定原91款，每款對所有其他90款；四發射情境、每情境四個種子，以同種子及同輸入互換玩家側，呼喊同時。校準與保留驗收使用不同種子。原始勝率按型號等量，另列四類各25%等權結果；平手仍計入分母。',
   note:'結論限此遊戲與列明情境。相同種子的兩側是配對資料，不視為兩個獨立樣本；兩批重現方向與單變數對照用於判斷，非實物勝率或普遍統計保證。',
   battles:0,isolated:{}as Record<string,ModelTrial>,sets:{}as Record<string,{seed:number;before:Record<string,ModelTrial>;after:Record<string,ModelTrial>}>};
- const fixedOpponents=BEYS.map(b=>({...b,stats:legacy[b.id as keyof typeof legacy]??b.stats}));
+ const originalPool=BEYS.filter(b=>Object.hasOwn(legacy,b.id));
+ const fixedOpponents=originalPool.map(b=>({...b,stats:legacy[b.id as keyof typeof legacy]??b.stats}));
  const dir=new URL('../artifacts/',import.meta.url);mkdirSync(dir,{recursive:true});
  const save=()=>writeFileSync(new URL('model-balance-investigation.json',dir),JSON.stringify(report,null,2)+'\n');
  save();
@@ -23,8 +24,8 @@ export function runModelInvestigation(){
   for(const[name,seed]of Object.entries(MODEL_SEEDS)){
    const set:typeof report.sets[string]=report.sets[name]={seed,before:{},after:{}};
    for(const id of ids){
-    set.before[id]=runModelTrial(id,seed,4,5);
-    set.after[id]=runModelTrial(id,seed,4,ENGINE_VERSION);
+    set.before[id]=runModelTrial(id,seed,4,5,originalPool);
+    set.after[id]=runModelTrial(id,seed,4,ENGINE_VERSION,originalPool);
     report.battles+=set.before[id].played+set.after[id].played;save();
     console.log(`[model-balance] ${name}/${id}: ${set.before[id].winRate}% → ${set.after[id].winRate}%；四類等權${set.after[id].equalTypeWin.toFixed(3)}%`);
    }

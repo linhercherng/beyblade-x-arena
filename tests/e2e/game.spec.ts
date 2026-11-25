@@ -18,7 +18,7 @@ test.afterEach(async({page},info)=>{
  }catch{}
 });
 
-test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識", async ({ page }) => {
+test("93張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -29,7 +29,7 @@ test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
     .evaluateAll((imgs) =>
       imgs.map((img) => (img as HTMLImageElement).getAttribute("src")!),
     );
-  expect(new Set(sources).size).toBe(91);
+  expect(new Set(sources).size).toBe(93);
   for (const src of sources)
     expect((await page.request.get(src)).ok(), src).toBe(true);
   await expect
@@ -42,7 +42,7 @@ test("91張實物圖可載入，3D預覽無溢出，手機卡片保持可辨識"
     .toBeGreaterThan(0);
   await page.screenshot({ path: "artifacts/catalog-real-products.png" });
   await page
-    .getByRole("button", { name: /查看.*Dran Sword.*資訊/, exact: true })
+    .getByRole("button", { name: "查看 蒼龍神劍（Dran Sword）資訊", exact: true })
     .click();
   await expect(
     page.getByRole("img", { name: /Dran Sword：實物貼圖/ }),
@@ -256,7 +256,7 @@ test("桌面：圖鑑、3D卡牌、完整1P、戰績重載、重播與無效備�
   mkdirSync("artifacts", { recursive: true });
   await page.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
   await action(page, "catalog").first().click();
-  await expect(page.locator(".bey-card")).toHaveCount(91);
+  await expect(page.locator(".bey-card")).toHaveCount(93);
   await page.getByRole("searchbox").fill("Wizard Rod");
   await expect(page.locator(".bey-card")).toHaveCount(1);
   await page.locator(".art-button").click();

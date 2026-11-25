@@ -402,6 +402,64 @@
         },
         "detailSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_BXG70.png"
       }
+    },
+    {
+      "id": "bx-00-dran-sword-v2",
+      "code": "BX-00",
+      "line": "BX",
+      "name": "Dran Sword V2",
+      "combo": "Dran Sword V2 3-60F",
+      "blade": "dran-sword-v2",
+      "ratchet": "3-60",
+      "bit": "F",
+      "spin": "R",
+      "typeNote": "攻擊",
+      "feature": "三翼上擊刃與平底軸形成外圈追擊；接觸與慣量依V2照片獨立估算，2.0性能為遊戲設定。",
+      "zhName": "蒼龍神劍 V2",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ds_v2.html",
+      "released": "2026-08-08",
+      "originalName": "ドランソード3-60F バージョン2.0",
+      "details": {
+        "sourceCombo": "Dran Sword 3-60F Version 2.0",
+        "variant": "version-2.0",
+        "releaseLabel": "発売",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "official-blade-data",
+        "notes": [
+          "原廠說明為重新檢視並調整戰刃性能的2.0改版；B4商店限定，原廠組合仍為3-60F。",
+          "3D與能力均為照片推導的遊戲近似，非原廠性能或實物量測。"
+        ]
+      }
+    },
+    {
+      "id": "cx-20-hells-scythe-v2",
+      "code": "CX-20",
+      "line": "BX",
+      "name": "Hells Scythe V2",
+      "combo": "Hells Scythe V2 4-60T（遊戲搭配）",
+      "blade": "hells-scythe-v2",
+      "ratchet": "4-60",
+      "bit": "T",
+      "spin": "R",
+      "typeNote": "平衡",
+      "feature": "四向寬刃配錐形軸，在巡航與進攻間切換；4-60T僅為遊戲搭配，2.0原廠資料只確認刃片。",
+      "zhName": "惡魔紅鐮 V2",
+      "nameStatus": "translated",
+      "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html",
+      "released": "2026-11-21",
+      "originalName": "ヘルズサイズ バージョン2.0",
+      "details": {
+        "sourceCombo": null,
+        "variant": "version-2.0",
+        "releaseLabel": "発売",
+        "typeVerification": "game-bit-type-mapping",
+        "spinVerification": "official-blade-data",
+        "notes": [
+          "CX-20套裝內的性能更新V2刃片；原廠未為此刃片單獨列出整顆組合，因此不自行指定棘輪與軸心。",
+          "3D與能力均為照片推導的遊戲近似，非原廠性能或實物量測。"
+        ]
+      }
     }
   ]
 }

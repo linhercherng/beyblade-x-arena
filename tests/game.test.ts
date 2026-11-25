@@ -72,12 +72,12 @@ test("新引擎仍能依物理狀態產生越界、極限及爆裂終結", () =>
   assert.equal(s.result?.finish, "burst");
 });
 
-test("原企劃83顆加8款新版，型號重複仍有獨立ID且數值有效", () => {
-  assert.equal(BEYS.length, 91);
-  assert.equal(new Set(BEYS.map((b) => b.id)).size, 91);
+test("原企劃83顆加8款新版及2款V2，型號重複仍有獨立ID且數值有效", () => {
+  assert.equal(BEYS.length, 93);
+  assert.equal(new Set(BEYS.map((b) => b.id)).size, 93);
   assert.deepEqual(
     ["BX", "UX", "CX"].map((l) => BEYS.filter((b) => b.line === l).length),
-    [34, 24, 33],
+    [36, 24, 33],
   );
   for (const b of BEYS) {
     assert.ok(bits[b.bit]);

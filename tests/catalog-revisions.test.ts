@@ -27,18 +27,18 @@ test('只補已發售V2參考資料，完整組合與單獨刃片分開，不收
  assert.equal(catalogRevision('__proto__'),undefined);
 });
 
-test('V2與2.0只在圖鑑擴充搜尋，不讓選隊誤選為新版',()=>{
- assert.equal(filterBeys('V2').length,0);
- assert.deepEqual(filterBeys('V2','all','all','code',true).map(b=>b.id),['bx-01-dran-sword','bx-02-hells-scythe']);
- assert.equal(filterBeys('2.0','all','all','code',true).length,2);
- assert.equal(filterBeys('蒼龍神劍 V2','all','all','code',true)[0].id,'bx-01-dran-sword');
- assert.ok(filterBeys('BX-00','all','all','code',true).some(b=>b.id==='bx-01-dran-sword'));
- assert.ok(filterBeys('CX-20','all','all','code',true).some(b=>b.id==='bx-02-hells-scythe'));
- assert.ok(!filterBeys('BX-00').some(b=>b.id==='bx-01-dran-sword'));
+test('V2與2.0選隊搜尋只回傳獨立新版，不把舊版冒充V2',()=>{
+ const ids=['bx-00-dran-sword-v2','cx-20-hells-scythe-v2'];
+ for(const q of ['V2','2.0'])assert.deepEqual(new Set(filterBeys(q).map(b=>b.id)),new Set(ids));
+ for(const[id,r]of Object.entries(CATALOG_REVISIONS)){
+  assert.ok(filterBeys(r.productCode).some(b=>b.id===r.battleId));
+  assert.equal(filterBeys(r.zhName)[0].id,r.battleId);
+  assert.ok(!filterBeys('V2').some(b=>b.id===id));
+ }
 });
 
-test('新增參考資料不改f2641c0的91款順序、能力、旋向及零件',()=>{
+test('獨立新增V2仍不改f2641c0的91款順序、能力、旋向及零件',()=>{
  const frozen=JSON.parse(readFileSync(new URL('./fixtures/catalog-v0441.json',import.meta.url),'utf8'));
  assert.equal(frozen.source,'f2641c06ebb69ec556d9e4b9c146dfa7cd92e1a6');
- assert.deepEqual(BEYS.map(({id,stats,spin,ratchet,bit,height,type})=>({id,stats,spin,ratchet,bit,height,type})),frozen.beys);
+ assert.deepEqual(BEYS.slice(0,91).map(({id,stats,spin,ratchet,bit,height,type})=>({id,stats,spin,ratchet,bit,height,type})),frozen.beys);
 });

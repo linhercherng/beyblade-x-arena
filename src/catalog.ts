@@ -1,6 +1,6 @@
 import {combatProfile,profileStats} from "./combat-profiles.ts";
 import modelBalance from "./model-balance.json" with {type:"json"};
-import{catalogRevision}from'./catalog-revisions.ts';
+import v2Tuning from "./v2-tuning.json" with {type:"json"};
 import raw from "./catalog-data.json" with { type: "json" };
 import additions from "../scripts/catalog-expansion.json" with { type: "json" };
 export const NEW_BEY_IDS = new Set(additions.products.map(b => b.id));
@@ -192,6 +192,7 @@ export const BEYS: Bey[] = [...raw, ...additions.products].map((row) => {
   const stats=profileStats(combat,bit.type,bit.dash,bit.burst+5-ratchet.sides*.7+(70-ratchet.height)*.15);
   // Paired launch/seed trials calibrate game endurance, not physical part measurements.
   stats.sta += (modelBalance as Record<string,number>)[row.id]??0;
+  stats.sta += (v2Tuning as Record<string,number>)[row.id]??0;
   blades[row.blade] ??= {name:row.name,spin,atk:stats.atk,def:stats.def,sta:stats.sta,weight:stats.weight-ratchet.weight};
   const release = (
     verified.releases as Record<string, { date: string; source: string }>
@@ -227,16 +228,14 @@ export function filterBeys(
   line = "all",
   type = "all",
   sort = "code",
-  includeRevisions = false,
 ) {
   const q = query.toLowerCase().trim();
   return BEYS.filter(
     (b) => {
-      const revision=includeRevisions?catalogRevision(b.id):undefined;
       return (
         (line === "all" || (line === "new" ? NEW_BEY_IDS.has(b.id) : b.line === line)) &&
         (type === "all" || b.type === type) &&
-        `${b.zhName} ${b.name} ${b.code} ${b.combo} ${b.feature} ${TYPE[b.type].label} ${revision?`${revision.productCode} ${revision.zhName} ${revision.name} V2 2.0`:''}`
+        `${b.zhName} ${b.name} ${b.code} ${b.combo} ${b.feature} ${TYPE[b.type].label}`
           .toLowerCase()
           .includes(q)
       );

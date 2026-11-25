@@ -544,5 +544,17 @@
     "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-tiga.html",
     "status": "translated",
     "note": "遊戲繁中參考譯名；未確認臺灣代理正式名稱。原文名稱、零件及來源見新版資料核對。"
+  },
+  "bx-00-dran-sword-v2": {
+    "name": "蒼龍神劍 V2",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ds_v2.html",
+    "status": "translated",
+    "note": "沿用既有中文參考譯名，加V2辨識改版。"
+  },
+  "cx-20-hells-scythe-v2": {
+    "name": "惡魔紅鐮 V2",
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html",
+    "status": "translated",
+    "note": "沿用既有中文參考譯名，加V2辨識改版。"
   }
 }

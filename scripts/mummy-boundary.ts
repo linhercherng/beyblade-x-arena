@@ -116,7 +116,7 @@ function checkSeedSets(){
 export function runMummyInvestigation(){
  const git=(...args:string[])=>execFileSync('git',args,{encoding:'utf8'}).trim(),dir=new URL('../artifacts/',import.meta.url);mkdirSync(dir,{recursive:true});
  const report={model:MUMMY_ID,engineVersion:ENGINE_VERSION,sourceCommit:git('rev-parse','HEAD'),sourceDirty:!!git('status','--porcelain'),status:'running',error:null as string|null,startedAt:new Date().toISOString(),finishedAt:null as string|null,profiles:BOUNDARY_PROFILES,
-  method:'三批獨立種子，每款對全部其他90款、16情境×8種子×互換兩側，現有／v5對手能力以同種子對照。原觀測4組與等條件12組分開統計。',
+  method:'歷史邊界研究固定原91款，三批獨立種子，每款對全部其他90款、16情境×8種子×互換兩側，現有／v5對手能力以同種子對照。原觀測4組與等條件12組分開統計。',
   decisionRule:'三批現有對手等條件主分析，原始與四類等權95%配對Hoeffding區間全部同向越過40或60才確認；單條件／偏重對手不能觸發調值。',
   note:'同種子兩側是配對，不視為獨立樣本；兩個對手池是控制對照，不能加總為獨立樣本。區間假設各新種子獨立，限列明固定遊戲條件，非實物或所有玩家勝率。偏重組成是重加權，沒有新增對戰。',
   seedAudit:null as ReturnType<typeof checkSeedSets>|null,battles:0,decision:'pending',batches:[]as ReturnType<typeof runBoundaryBatch>[]};
@@ -125,7 +125,7 @@ export function runMummyInvestigation(){
  try{
   report.seedAudit=checkSeedSets();save();
   for(const seed of BOUNDARY_SEEDS){
-   const batch=runBoundaryBatch(seed,8,BEYS,row=>{writeSync(records,JSON.stringify(row)+'\n');report.battles+=row.results.length;});
+   const batch=runBoundaryBatch(seed,8,BEYS.filter(b=>Object.hasOwn(legacy,b.id)),row=>{writeSync(records,JSON.stringify(row)+'\n');report.battles+=row.results.length;});
    report.batches.push(batch);save();console.log(`[mummy] ${seed}: 原觀測${batch.current.canonical.raw!.rate.toFixed(3)}%／等條件${batch.current.matched.raw!.rate.toFixed(3)}%，四類等權${batch.current.matched.equal!.rate.toFixed(3)}%`);
   }
   report.decision=boundaryDecision(report.batches.map(b=>({raw:b.current.matched.raw!,equal:b.current.matched.equal!})));

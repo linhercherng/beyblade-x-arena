@@ -7,9 +7,9 @@ import { beyModel, modelSpec, MODEL_REFERENCES } from "../src/bey-model.ts";
 import legacy from "./fixtures/catalog-v080.json" with { type: "json" };
 
 const ids = ["cx-00-valkyrie-volt-slash", "cx-00-bucks-antlers-bumper", "cx-00-kraken-wriggle-slash", "cx-00-hornet-fort-round", "cx-00-drake-brave-gravity", "bx-00-storm-pegasus", "bx-00-storm-spriggan", "cx-00-tiga-rage-flow-turn"];
-test("新增8款獨立型號，圖鑑91顆且凍結原83顆ID及舊能力值", () => {
-  assert.equal(BEYS.length, 91);
-  assert.equal(new Set(BEYS.map(b => b.id)).size, 91);
+test("新增8款獨立型號，圖鑑93顆且凍結原83顆ID及舊能力值", () => {
+  assert.equal(BEYS.length, 93);
+  assert.equal(new Set(BEYS.map(b => b.id)).size, 93);
   for (const previous of legacy) {
     const {id,spin,ratchet,bit,height}=getBey(previous.id);
     const stats=frozenStats[id as keyof typeof frozenStats];

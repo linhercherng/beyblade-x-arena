@@ -11,7 +11,7 @@ test("全部陀螺各有獨立實物原圖、來源、輪廓，檔案雜湊相�
   for (const bey of BEYS) {
     const p = PRODUCT_IMAGES[bey.id];
     assert.ok(p, bey.id);
-    assert.ok(/^\/(beys|model-references)\/[a-z0-9_-]+\.(png|webp)$/i.test(p.src));
+    assert.ok(/^\/(beys(?:\/revisions)?|model-references)\/[a-z0-9_-]+\.(png|webp)$/i.test(p.src));
     assert.ok(
       ["beygear.app", "beyblade.takaratomy.co.jp"].includes(
         new URL(p.source).hostname,
@@ -37,7 +37,7 @@ test("全部陀螺各有獨立實物原圖、來源、輪廓，檔案雜湊相�
 test("原廠組合各角度原圖可追溯，未遺漏卡牌、色碼或輪廓", () => {
   for (const bey of BEYS) {
     const ref = MODEL_REFERENCES[bey.id];
-    assert.equal(ref.confidence, "official-combo", bey.id);
+    assert.equal(ref.confidence, bey.id === "cx-20-hells-scythe-v2" ? "official-blade-game-combo" : "official-combo", bey.id);
     assert.equal(new URL(ref.source).hostname, "beyblade.takaratomy.co.jp");
     assert.ok(
       ref.top.label && ref.top.teeth > 0 && ref.top.secondaryColor,
@@ -48,7 +48,7 @@ test("原廠組合各角度原圖可追溯，未遺漏卡牌、色碼或輪廓",
       assert.ok(color === null || /^#[a-f\d]{6}$/i.test(color), bey.id);
     for (const photo of [ref.top, ref.side, ref.ratchetPhoto, ref.bitPhoto]) {
       if (!photo) continue;
-      assert.match(photo.src, /^\/model-references\/[a-z\d_]+\.png$/i);
+      assert.match(photo.src, /^\/(?:model-references\/[a-z\d_]+|beys\/revisions\/[a-z\d-]+)\.png$/i);
       assert.equal(
         new URL(photo.imageSource).hostname,
         "beyblade.takaratomy.co.jp",

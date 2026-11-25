@@ -21,7 +21,7 @@ test("原廠配色、側面厚度與三段拆解在桌機和手機可使用", as
     await page.getByRole("searchbox").fill(name);
     await page
       .getByRole("button", {
-        name: new RegExp(`查看.*${name}.*資訊`),
+        name: new RegExp(`查看.*（${name}）資訊`),
         exact: true,
       })
       .click();
@@ -60,7 +60,7 @@ test("原廠配色、側面厚度與三段拆解在桌機和手機可使用", as
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("searchbox").fill("Dran Sword");
   await page
-    .getByRole("button", { name: /查看.*Dran Sword.*資訊/, exact: true })
+    .getByRole("button", { name: "查看 蒼龍神劍（Dran Sword）資訊", exact: true })
     .click();
   await page.locator('[data-action="model-explode"]').click();
   expect(

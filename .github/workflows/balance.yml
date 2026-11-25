@@ -49,6 +49,7 @@ jobs:
             artifacts/balance-check.json
             artifacts/balance-observation.json
             artifacts/balance-observation.md
+            artifacts/v2-balance.json
             artifacts/model-balance-investigation.json
             artifacts/model-balance-investigation.md
             artifacts/mummy-boundary.json

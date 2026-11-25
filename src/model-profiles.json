@@ -1409,5 +1409,37 @@
     "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx00-tiga.html",
     "confidence": "photo-approximation",
     "note": "紅色Tiga晶片座、藍色Flow上刃、銀色金屬外環及紅色Turn下環，整體多層且較高；主圖採紅晶片／藍Flow，不使用附贈銀晶片／紅Flow。 各數值以此顆官方俯視及斜視照片單獨分級，非實物量測、掃描或原廠CAD；未複製既有陀螺模型。"
+  },
+  "bx-00-dran-sword-v2": {
+    "bladeThickness": 0.112,
+    "coreRadius": 0.174,
+    "coreRise": 0.017,
+    "shoulderDrop": 0.03,
+    "tipRadius": 0.085,
+    "gearRadius": 0.083,
+    "features": [
+      "three-wing",
+      "swept-edge",
+      "stepped-shoulder"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/bx00-ds_v2.html",
+    "confidence": "photo-approximation",
+    "note": "三個折角上擊長刃與較寬金屬外肩；藍色中央環較窄，斜視有明顯金屬側壁及塑膠下架。各數值依本款正面、斜視及原廠詳圖分級近似，非重量、慣量、CAD或實物量測；3-60與F依原廠組合。"
+  },
+  "cx-20-hells-scythe-v2": {
+    "bladeThickness": 0.104,
+    "coreRadius": 0.193,
+    "coreRise": 0.013,
+    "shoulderDrop": 0.026,
+    "tipRadius": 0.084,
+    "gearRadius": 0.083,
+    "features": [
+      "four-wing",
+      "stepped-shoulder",
+      "smash-edge"
+    ],
+    "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html",
+    "confidence": "family-approximation",
+    "note": "四組外凸撞擊肩與內收削口，寬銀色斜面包圍紅色中環。輪廓依本款刃片照片取樣；缺乏獨立側視，厚度、核心層高依可見肩部和BX同族近似，非實物量測。遊戲搭配4-60T，棘輪、軸心與其顏色均非原廠指定組合。"
   }
 }

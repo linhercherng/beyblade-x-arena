@@ -8,7 +8,7 @@ import frozen from'./fixtures/v5-model-balance.json'with{type:'json'};
 import adjustments from'../src/model-balance.json'with{type:'json'};
 
 test('新版校準使用新引擎，v5重播恢復改值前的91款能力',()=>{
- assert.equal(Object.keys(legacy).length,BEYS.length);
+ assert.equal(Object.keys(legacy).length,91);
  const e=frozen.cases[0],original=getBey(e.beys[0]);
  const altered={...original,stats:{atk:1,def:1,sta:1,dash:1,burst:1,weight:1}};
  const s=createBattle(altered,getBey(e.beys[1]),e.inputs as Launch[],e.seed,5);
@@ -34,7 +34,7 @@ test('12款v5原始能力、48組中途運動與最終結果逐值一致',()=>{
 test('只有12款的耐力校準，其他能力、未標記型號與原廠零件不變',()=>{
  assert.equal(Object.keys(adjustments).length,12);
  for(const[id,delta]of Object.entries(adjustments)){assert.ok(BEYS.some(b=>b.id===id));assert.ok(Number.isInteger(delta)&&delta!==0);}
- for(const b of BEYS){
+ for(const b of BEYS.filter(b=>Object.hasOwn(legacy,b.id))){
   const old=legacy[b.id as keyof typeof legacy];
   assert.deepEqual({...b.stats,sta:old.sta},old);
   assert.equal(b.stats.sta,old.sta+((adjustments as Record<string,number>)[b.id]??0));
@@ -43,8 +43,8 @@ test('只有12款的耐力校準，其他能力、未標記型號與原廠零件
 });
 
 test('v6試跑能力凍結，額外校準不改變既有v6紀錄的91款能力',()=>{
- assert.equal(Object.keys(legacyV6).length,BEYS.length);
- for(const b of BEYS){
+ assert.equal(Object.keys(legacyV6).length,91);
+ for(const b of BEYS.filter(b=>Object.hasOwn(legacy,b.id))){
   const s=createBattle({...b,stats:{...b.stats,sta:1}},b,[{power:.9,lane:1,angle:10},{power:.9,lane:1,angle:10}],123,6);
   assert.deepEqual(s.tops[0].bey.stats,legacyV6[b.id as keyof typeof legacyV6]);
  }

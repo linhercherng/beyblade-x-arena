@@ -28,7 +28,8 @@
           "sha256": "6f8978922bc2f5a1a4b37e552e7e54b006f4866d0467f3953967bb9100b3998f",
           "bytes": 248773
         }
-      ]
+      ],
+      "battleId": "bx-00-dran-sword-v2"
     },
     "bx-02-hells-scythe": {
       "productCode": "CX-20",
@@ -41,7 +42,7 @@
       "scope": "CX-20套裝刃片",
       "source": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/cx20.html",
       "detailSource": "https://beyblade.takaratomy.co.jp/beyblade-x/lineup/_image/detail_CX20.png",
-      "note": "CX-20套裝內的性能更新V2刃片；原廠未為此刃片單獨列出整顆組合，因此不自行指定棘輪與軸心。",
+      "note": "CX-20套裝內的性能更新V2刃片；原廠未為此刃片單獨列出整顆組合，原廠資料不填入棘輪與軸心；遊戲選配另行標示。",
       "photos": [
         {
           "src": "/beys/revisions/hells-scythe-v2-blade.png",
@@ -50,7 +51,8 @@
           "sha256": "834625c9639aeb5e665c4c7382a60e93280122fc43cb4183ec3ba5c8ac3f8b65",
           "bytes": 258868
         }
-      ]
+      ],
+      "battleId": "cx-20-hells-scythe-v2"
     }
   }
 }

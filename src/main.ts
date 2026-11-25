@@ -1,5 +1,5 @@
 import{beySignature}from'./bey-effects.ts';
-import{CATALOG_CHECKED_AT,catalogRevision}from'./catalog-revisions.ts';
+import{CATALOG_CHECKED_AT,catalogRevision,battleRevision}from'./catalog-revisions.ts';
 import{backupSummary}from'./backup-preview.ts';
 import{LaunchCountdown}from'./launch-countdown.ts';
 import{replayAt,replayMoments}from'./replay-navigation.ts';
@@ -164,7 +164,7 @@ const tag = (b: Bey) =>
   `<span class="type-tag" style="--type:${b.color}">${TYPE[b.type].icon} ${TYPE[b.type].label}</span>`;
 const spinBadge=(b:Bey)=>`<span class="spin-badge" data-spin="${b.spin}" title="${safe(SPIN[b.spin].description+(b.spinNote?"；"+b.spinNote:""))}"><i aria-hidden="true">${SPIN[b.spin].arrow}</i> ${SPIN[b.spin].label}${b.spinNote?' <small>推定</small>':''}</span>`;
 const beyName = (b: Bey) =>
-  `<span class="bey-name">${safe(b.zhName)}<small>${safe(b.name)}</small></span>`;
+  `<span class="bey-name">${safe(b.zhName)}<small>${safe(b.name)}${battleRevision(b.id)?.combo===null?' · 遊戲搭配 4-60T':''}</small></span>`;
 function art(b: Bey, size = 100) {
   const image = modelSpec(b).photo;
   const [x, y, w, h] = image.imageBounds;
@@ -285,12 +285,12 @@ function filters() {
     )}</select><select id="sort" aria-label="排序"><option value="code">型號排序</option><option value="atk" ${filter.sort === "atk" ? "selected" : ""}>攻擊優先</option><option value="sta" ${filter.sort === "sta" ? "selected" : ""}>持久優先</option></select></div>`;
 }
 function cards() {
-  const beys = filterBeys(filter.query, filter.line, filter.type, filter.sort, screen === 'catalog');
+  const beys = filterBeys(filter.query, filter.line, filter.type, filter.sort);
   return `<div class="results-count">${beys.length} 顆陀螺 <span>性能數值為遊戲平衡設定</span></div><div class="bey-grid">${beys
     .map((b) => {
       const index = teams[teamPlayer].findIndex((v) => v.id === b.id),
         selected = screen === "team" && index >= 0;
-      return `<article class="bey-card ${selected ? "chosen" : ""}" style="--type:${b.color}"><div class="card-meta"><span>${b.code} <em>${b.line}</em>${NEW_BEY_IDS.has(b.id) ? ' <b class="new-bey-label">NEW</b>' : ""}</span>${tag(b)}</div><button class="art-button" data-action="detail" data-id="${b.id}" aria-label="查看 ${safe(b.zhName)}（${b.name}）資訊">${art(b, 130)}<span class="art-detail">查看卡牌 ↗</span></button><div class="card-content"><h2>${beyName(b)}</h2>${screen === "catalog" && catalogRevision(b.id) ? '<p class="revision-card-note">已補V2改版資料</p>' : ""}<div class="combo">${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet} / ${b.bit} ${spinBadge(b)}</div><p>${safe(b.feature)}</p><div class="mini-stats"><span>攻 <b>${b.stats.atk}</b></span><span>防 <b>${b.stats.def}</b></span><span>持 <b>${b.stats.sta}</b></span></div>${screen === "team" ? btn(selected ? `已選 ${["先鋒", "中堅", "大將"][index]} ✓` : "加入隊伍 ＋", "select", selected ? "select-bey selected" : "select-bey", `data-id="${b.id}" ${!selected && teams[teamPlayer].length === 3 ? "disabled" : ""}`) : btn("卡牌詳細資料 ↗", "detail", "detail-link", `data-id="${b.id}"`)}</div></article>`;
+      return `<article class="bey-card ${selected ? "chosen" : ""}" style="--type:${b.color}"><div class="card-meta"><span>${b.code} <em>${b.line}</em>${NEW_BEY_IDS.has(b.id) ? ' <b class="new-bey-label">NEW</b>' : ""}</span>${tag(b)}</div><button class="art-button" data-action="detail" data-id="${b.id}" aria-label="查看 ${safe(b.zhName)}（${b.name}）資訊">${art(b, 130)}<span class="art-detail">查看卡牌 ↗</span></button><div class="card-content"><h2>${beyName(b)}</h2>${screen === "catalog" && catalogRevision(b.id) ? '<p class="revision-card-note">V2已獨立收錄</p>' : ""}<div class="combo">${b.ratchet.startsWith("integrated") ? "一體式" : b.ratchet} / ${b.bit} ${spinBadge(b)}</div><p>${safe(b.feature)}</p><div class="mini-stats"><span>攻 <b>${b.stats.atk}</b></span><span>防 <b>${b.stats.def}</b></span><span>持 <b>${b.stats.sta}</b></span></div>${screen === "team" ? btn(selected ? `已選 ${["先鋒", "中堅", "大將"][index]} ✓` : "加入隊伍 ＋", "select", selected ? "select-bey selected" : "select-bey", `data-id="${b.id}" ${!selected && teams[teamPlayer].length === 3 ? "disabled" : ""}`) : btn("卡牌詳細資料 ↗", "detail", "detail-link", `data-id="${b.id}"`)}</div></article>`;
     })
     .join(
       "",
@@ -300,7 +300,7 @@ function catalog() {
   practiceId=null;
   screen = "catalog";
   shell(
-    `${title("BEY ARCHIVE", "找到你的致勝搭檔。", `${BEYS.length} 顆可對戰原廠組合；另補2筆已發售V2改版資料。原廠清單核對至 ${CATALOG_CHECKED_AT}，可搜尋 V2 查看。`, btn("開始組隊 →", "play", "primary"))}${filters()}<div id="catalog-list">${cards()}</div><p class="source-note">類型與日本列定發售日依 Takara Tomy 官方資料核對，不代表即時通路庫存。V2參考資料與原版對戰模型分開標示；本次不收錄12/26未發售新品。實物圖引自 BeyGear 與官方商品頁；3D 輪廓為近似，數值為遊戲設定。</p>`,
+    `${title("BEY ARCHIVE", "找到你的致勝搭檔。", `${BEYS.length} 顆可對戰陀螺，包含2款獨立V2；惡魔紅鐮V2採遊戲搭配。原廠清單核對至 ${CATALOG_CHECKED_AT}，可搜尋 V2 查看。`, btn("開始組隊 →", "play", "primary"))}${filters()}<div id="catalog-list">${cards()}</div><p class="source-note">類型與日本列定發售日依 Takara Tomy 官方資料核對，不代表即時通路庫存。惡魔紅鐮V2原廠僅確認刃片，4-60T為遊戲搭配，非原廠套裝組合。本次不收錄12/26未發售新品。實物圖引自 BeyGear 與官方商品頁；3D 輪廓為近似，數值為遊戲設定。</p>`,
   );
 }
 function startTeam() {
@@ -622,8 +622,8 @@ function stats() {
   );
 }
 function revisionPanel(id:string){
-  const r=catalogRevision(id);if(!r)return'';
-  return `<section class="catalog-revision-panel" aria-label="已發售V2改版資料"><div><span class="eyebrow">已發售改版資料</span><h3>${safe(r.zhName)}</h3><p>${safe(r.name)} · 中文參考譯名</p><p>${safe(r.productCode)} · ${safe(r.scope)} · 原廠列定發售日 ${safe(r.releaseDate)} · 右迴旋</p><p>${safe(r.combo??'僅刃片，未指定棘輪與軸心')}</p><p>${safe(r.note)}</p><p class="revision-scope">此卡的3D預覽與對戰仍使用原版，V2尚未建立獨立對戰設定。</p><a href="${safe(r.source)}" target="_blank" rel="noopener">V2原廠商品資料</a> · <a href="${safe(r.detailSource)}" target="_blank" rel="noopener">原廠零件詳解</a></div><div class="revision-photos">${r.photos.map(photo=>`<a href="${safe(photo.imageSource)}" target="_blank" rel="noopener"><img src="${safe(photo.src)}" alt="${safe(r.zhName)} ${safe(photo.label)}原廠實物" loading="lazy"><span>${safe(photo.label)}實物圖</span></a>`).join('')}</div></section>`;
+  const r=catalogRevision(id)??battleRevision(id);if(!r)return'';
+  return `<section class="catalog-revision-panel" aria-label="已發售V2改版資料"><div><span class="eyebrow">已發售改版資料</span><h3>${safe(r.zhName)}</h3><p>${safe(r.name)} · 中文參考譯名</p><p>${safe(r.productCode)} · ${safe(r.scope)} · 原廠列定發售日 ${safe(r.releaseDate)} · 右迴旋</p><p>${safe(r.combo??'僅刃片，未指定棘輪與軸心')}</p><p>${safe(r.note)}</p><p class="revision-scope">${id===r.battleId?(r.combo===null?'遊戲搭配：Hells Scythe V2 4-60T。棘輪、軸心及其配色為遊戲選配，非原廠指定組合。':'原廠組合：Dran Sword V2 3-60F。使用獨立V2模型與戰鬥特性。'):'此卡保留原版模型與能力；V2已獨立收錄，請搜尋V2選擇新版。'}</p><a href="${safe(r.source)}" target="_blank" rel="noopener">V2原廠商品資料</a> · <a href="${safe(r.detailSource)}" target="_blank" rel="noopener">原廠零件詳解</a></div><div class="revision-photos">${r.photos.map(photo=>`<a href="${safe(photo.imageSource)}" target="_blank" rel="noopener"><img src="${safe(photo.src)}" alt="${safe(r.zhName)} ${safe(photo.label)}原廠實物" loading="lazy"><span>${safe(photo.label)}實物圖</span></a>`).join('')}</div></section>`;
 }
 function showDetail(id: string) {
   const b = getBey(id);

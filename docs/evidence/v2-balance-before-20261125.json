@@ -1,0 +1,92 @@
+{
+  "method": "兩款V2各對所有其他92款；四種發射情境、每情境四個種子，同種子同輸入互換玩家側。校準與保留驗收分開，平手計入分母；原始與四類等權勝率皆須40–60%，全部對決15–40秒。",
+  "note": "固定遊戲條件的模擬估值，非實物勝率。只校準新增型號，不改原91款或物理時間限制。",
+  "seeds": {
+    "calibration": 1815746949,
+    "validation": 3833950905
+  },
+  "repeats": 4,
+  "roster": 93,
+  "battles": 11776,
+  "profiles": [
+    "雙方65%／0°／中圈／沿旋",
+    "雙方100%／15°／外圈／內切＋同時呼喊",
+    "雙方85%／30°／內圈／外切",
+    "獨立65–100%／傾角／落點／方向＋同時呼喊"
+  ],
+  "stage": "before new Hells V2 STA calibration; uncommitted development observation",
+  "sets": {
+    "calibration": {
+      "bx-00-dran-sword-v2": {
+        "targetStats": {
+          "atk": 85,
+          "def": 59,
+          "sta": 80,
+          "dash": 83,
+          "burst": 83,
+          "weight": 83
+        },
+        "played": 2944,
+        "wins": 1241,
+        "draws": 254,
+        "winRate": 42.154,
+        "equalTypeWin": 42.90541056166056,
+        "minSeconds": 15.016666666666666,
+        "maxSeconds": 31.325
+      },
+      "cx-20-hells-scythe-v2": {
+        "targetStats": {
+          "atk": 71,
+          "def": 70,
+          "sta": 74,
+          "dash": 61,
+          "burst": 78,
+          "weight": 81
+        },
+        "played": 2944,
+        "wins": 1913,
+        "draws": 49,
+        "winRate": 64.98,
+        "equalTypeWin": 62.2254849137931,
+        "minSeconds": 15.083333333333334,
+        "maxSeconds": 31.791666666666668
+      }
+    },
+    "validation": {
+      "bx-00-dran-sword-v2": {
+        "targetStats": {
+          "atk": 85,
+          "def": 59,
+          "sta": 80,
+          "dash": 83,
+          "burst": 83,
+          "weight": 83
+        },
+        "played": 2944,
+        "wins": 1240,
+        "draws": 271,
+        "winRate": 42.12,
+        "equalTypeWin": 42.87335927960928,
+        "minSeconds": 15,
+        "maxSeconds": 31.325
+      },
+      "cx-20-hells-scythe-v2": {
+        "targetStats": {
+          "atk": 71,
+          "def": 70,
+          "sta": 74,
+          "dash": 61,
+          "burst": 78,
+          "weight": 81
+        },
+        "played": 2944,
+        "wins": 1921,
+        "draws": 47,
+        "winRate": 65.251,
+        "equalTypeWin": 62.336895354406124,
+        "minSeconds": 15.108333333333333,
+        "maxSeconds": 31.791666666666668
+      }
+    }
+  }
+}

@@ -1,16 +1,16 @@
 import { test, expect } from "@playwright/test";
 import additions from "../../scripts/catalog-expansion.json" with { type: "json" };
 
-test("8款新版可篩選、中文搜尋、查看各自實物與三段模型，手機可選隊發射", async ({ page }) => {
+test("10款新版可篩選、中文搜尋、查看各自實物與三段模型，手機可選隊發射", async ({ page }) => {
   const errors: string[]=[];
   page.on("pageerror",e=>errors.push(e.message));
   await page.setViewportSize({width:1440,height:1000});
   await page.goto("/");
   await page.locator('[data-action="catalog"]').first().click();
-  await expect(page.locator(".bey-card")).toHaveCount(91);
+  await expect(page.locator(".bey-card")).toHaveCount(93);
   await page.locator('[data-action="line"][data-value="new"]').click();
-  await expect(page.locator(".bey-card")).toHaveCount(8);
-  await expect(page.locator(".new-bey-label")).toHaveCount(8);
+  await expect(page.locator(".bey-card")).toHaveCount(10);
+  await expect(page.locator(".new-bey-label")).toHaveCount(10);
   await expect.poll(()=>page.locator(".bey-card img").evaluateAll(imgs=>imgs.every(img=>(img as HTMLImageElement).naturalWidth>0))).toBe(true);
   await page.screenshot({path:"artifacts/catalog-new-v090.png",fullPage:true});
   for(const bey of additions.products){
