@@ -6,9 +6,9 @@ test("中文名稱可搜尋，戰鬥全寬放大且可切換全螢幕", async ({
   await action("catalog").first().click();
   await expect(page.locator(".bey-card .bey-name")).toHaveCount(93);
   await page.getByRole("searchbox").fill("蒼龍神劍");
-  await expect(page.locator(".bey-card")).toHaveCount(1);
-  await expect(page.locator(".bey-card")).toContainText("Dran Sword");
-  await action("detail").first().click();
+  await expect(page.locator(".bey-card")).toHaveCount(2);
+  await expect(page.locator('.art-button[data-id="bx-00-dran-sword-v2"]')).toBeVisible();
+  await page.locator('.art-button[data-id="bx-01-dran-sword"]').click();
   await expect(page.getByRole("dialog")).toContainText("中文參考譯名");
   await page.keyboard.press("Escape");
   await action("play").first().click();
